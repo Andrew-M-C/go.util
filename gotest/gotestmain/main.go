@@ -11,5 +11,4 @@ func main() {
 		fmt.Println("ERROR, should NOT in go test mode")
 	}
 	fmt.Println("OK, now is not in go test mode")
-	return
 }
