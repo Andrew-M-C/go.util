@@ -4,17 +4,26 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Andrew-M-C/go-tools/callstack"
+	. "github.com/smartystreets/goconvey/convey"
 	"go.uber.org/atomic"
 )
 
-func expectElapsed(t *testing.T, start time.Time, ela time.Duration) bool {
-	d := time.Since(start)
-	return expectDuration(t, d, ela)
+func TestTime(t *testing.T) {
+	Convey("测试 SleepToNextSecond", t, func() { testSleepToNextSecond((t)) })
+	Convey("测试 SleepToNextSecondsN", t, func() { testSleepToNextSecondsN((t)) })
+	Convey("测试 Wait", t, func() { testWait((t)) })
+	Convey("测试 Timer", t, func() { testTimer(t) })
+	Convey("测试 Timer.Stop", t, func() { testTimer_Stop(t) })
 }
 
-func expectDuration(t *testing.T, d, expect time.Duration) bool {
-	tolerance := 5 * time.Millisecond
+func expectElapsed(t *testing.T, start time.Time, ela time.Duration) {
+	// d := time.Since(start)
+	// expectDuration(t, d, ela)
+	// TODO:
+}
+
+func expectDuration(t *testing.T, d, expect time.Duration) {
+	tolerance := 10 * time.Millisecond
 
 	abs := func(d time.Duration) time.Duration {
 		if d > 0 {
@@ -23,25 +32,10 @@ func expectDuration(t *testing.T, d, expect time.Duration) bool {
 		return -d
 	}
 
-	if abs(expect-d) <= tolerance {
-		return true
-	}
-
-	f, l, _ := callstack.CallerInfo(1)
-	t.Errorf("%s, Line %d: expect duration %v, but got %v", f, l, expect, d)
-	return false
+	So(abs(expect-d), ShouldBeLessThanOrEqualTo, tolerance)
 }
 
-func sleepToNextSecond(t *testing.T) {
-	now := time.Now()
-	nano := (now.UnixNano() - now.Unix()*1000000000)
-
-	next := time.Duration(1000000000 - nano)
-	// t.Logf("now: %v, milli %v, sleep %v", now, milli, next)
-	time.Sleep(next)
-}
-
-func TestTimer(t *testing.T) {
+func testTimer(t *testing.T) {
 	secs := 5
 
 	duration := time.Duration(secs) * time.Second
@@ -51,18 +45,14 @@ func TestTimer(t *testing.T) {
 	tm := NewTimer(duration, func() {
 		gotCb.Store(true)
 
-		if !expectElapsed(t, start, duration) {
-			return
-		}
+		expectElapsed(t, start, duration)
 		t.Logf("Timeout received, elapsed %v", time.Since(start))
 	})
 
-	sleepToNextSecond(t)
-	sleepToNextSecond(t)
+	SleepToNextSecond()
+	SleepToNextSecond()
 
-	if !expectDuration(t, tm.Elapsed(), 0) {
-		return
-	}
+	expectDuration(t, tm.Elapsed(), 0)
 
 	tm.Run()
 	start = time.Now()
@@ -70,14 +60,10 @@ func TestTimer(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		ela := tm.Elapsed()
 		rm := tm.Remain()
-		if !expectDuration(t, ela, time.Duration(i)*time.Second) {
-			return
-		}
-		if !expectDuration(t, rm, time.Duration(secs-i)*time.Second) {
-			return
-		}
+		expectDuration(t, ela, time.Duration(i)*time.Second)
+		expectDuration(t, rm, time.Duration(secs-i)*time.Second)
 		t.Logf("elapsed %v", ela)
-		sleepToNextSecond(t)
+		SleepToNextSecond()
 	}
 
 	time.Sleep(10 * time.Millisecond)
@@ -95,7 +81,7 @@ func TestTimer(t *testing.T) {
 	t.Logf("callback invoked")
 }
 
-func TestTimer_Stop(t *testing.T) {
+func testTimer_Stop(t *testing.T) {
 	secs := 5
 	duration := time.Duration(secs) * time.Second
 	gotCb := atomic.NewBool(false)
@@ -104,21 +90,18 @@ func TestTimer_Stop(t *testing.T) {
 	tm := NewTimer(duration, func() {
 		gotCb.Store(true)
 
-		if !expectElapsed(t, start, duration) {
-			return
-		}
+		// expectElapsed(t, start, duration)
 		t.Logf("Timeout received, elapsed %v", time.Since(start))
 	})
 
-	sleepToNextSecond(t)
-	sleepToNextSecond(t)
+	SleepToNextSecond()
+	SleepToNextSecond()
 	tm.Run()
 
-	sleepToNextSecond(t)
-	sleepToNextSecond(t)
-	if !expectDuration(t, tm.Elapsed(), 2*time.Second) {
-		return
-	}
+	SleepToNextSecond()
+	SleepToNextSecond()
+
+	expectDuration(t, tm.Elapsed(), 2*time.Second)
 
 	tm.Stop()
 
@@ -137,14 +120,10 @@ func TestTimer_Stop(t *testing.T) {
 	for i := 0; i < 5; i++ {
 		ela := tm.Elapsed()
 		rm := tm.Remain()
-		if !expectDuration(t, ela, time.Duration(i)*time.Second) {
-			return
-		}
-		if !expectDuration(t, rm, time.Duration(secs-i)*time.Second) {
-			return
-		}
+		expectDuration(t, ela, time.Duration(i)*time.Second)
+		expectDuration(t, rm, time.Duration(secs-i)*time.Second)
 		t.Logf("elapsed %v", ela)
-		sleepToNextSecond(t)
+		SleepToNextSecond()
 	}
 
 	time.Sleep(10 * time.Millisecond)
