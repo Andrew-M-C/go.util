@@ -20,6 +20,7 @@ func test(t *testing.T, scene string, f func(*testing.T)) {
 
 func TestSlice(t *testing.T) {
 	test(t, "CombineEvenly", testCombineEvenly)
+	test(t, "LCS", testLCS)
 }
 
 func testCombineEvenly(t *testing.T) {
