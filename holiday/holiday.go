@@ -54,7 +54,7 @@ func NextWorkdayForDate(date time.Time) int {
 	for i := yday; i <= lastday; i++ {
 		desc := days[i]
 		if isWorkday(desc) {
-			return i
+			return i - yday
 		}
 	}
 

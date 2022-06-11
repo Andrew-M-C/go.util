@@ -53,7 +53,7 @@ func test2022(t *testing.T) {
 	// 	}
 	// })
 
-	cv("假日检查", func() {
+	cv("假日列表", func() {
 		firstDay := Day(2022, 1, 1)
 
 		for i := 0; i < 365+7; i++ {
@@ -62,15 +62,19 @@ func test2022(t *testing.T) {
 			dayDesc := day.Format("01月02日")
 			if off == 0 {
 				t.Logf("%v, %v, %v", dayDesc, wdays[day.Weekday()], name)
+				off := NextWorkdayForDate(day)
+				so(off, ne, 0)
 			} else {
 				t.Logf("%v, %v, 上班, %d天后是%v", dayDesc, wdays[day.Weekday()], off, name)
+				off := NextWorkdayForDate(day)
+				so(off, eq, 0)
 			}
 		}
 	})
 
 	cv("Override", func() {
-		so(NextWorkdayForDate(Day(2022, 1, 30)), ne, 0)
-		so(NextWorkdayForDate(Day(2022, 2, 7)), ne, 0)
+		so(NextWorkdayForDate(Day(2022, 1, 30)), eq, 0)
+		so(NextWorkdayForDate(Day(2022, 2, 7)), eq, 0)
 
 		Override(Day(2022, 1, 30), "春节假期")
 		Override(Day(2022, 2, 7), "春节假期")
