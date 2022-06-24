@@ -11,7 +11,7 @@ const (
 
 // SpinLock 表示一个自旋锁
 type SpinLock struct {
-	flag uint32
+	flag int32
 	opt  option
 }
 
@@ -31,19 +31,21 @@ func (lck *SpinLock) Lock() {
 	if intvl < minSpinLockInterval {
 		intvl = minSpinLockInterval
 	}
-	locked := atomic.CompareAndSwapUint32(&lck.flag, 0, 1)
+	locked := atomic.CompareAndSwapInt32(&lck.flag, 0, 1)
 	for !locked {
 		time.Sleep(intvl)
-		locked = atomic.CompareAndSwapUint32(&lck.flag, 0, 1)
+		locked = atomic.CompareAndSwapInt32(&lck.flag, 0, 1)
 	}
 }
 
 // Unlock 解锁
 func (lck *SpinLock) Unlock() {
-	atomic.StoreUint32(&lck.flag, 0)
+	if atomic.AddInt32(&lck.flag, -1) < 0 {
+		panic("try to unlock an unlocked spinlock!")
+	}
 }
 
 // TryLock 尝试是否加锁
 func (lck *SpinLock) TryLock() bool {
-	return atomic.CompareAndSwapUint32(&lck.flag, 0, 1)
+	return atomic.CompareAndSwapInt32(&lck.flag, 0, 1)
 }
