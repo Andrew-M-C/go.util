@@ -5,6 +5,7 @@ go 1.16
 require (
 	github.com/Andrew-M-C/go.emoji v1.0.1
 	github.com/fatih/color v1.12.0
+	github.com/google/uuid v1.3.0
 	github.com/martinlindhe/base36 v1.1.0
 	github.com/smartystreets/goconvey v1.6.4
 	go.uber.org/atomic v1.7.0

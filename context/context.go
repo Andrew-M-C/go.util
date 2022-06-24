@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 // Cancel is equavalent to context.WithCancel(context.Background())
@@ -42,4 +44,36 @@ func HandleContext(ctx context.Context, f func() error) error {
 	case <-ctx.Done():
 		return ctx.Err()
 	}
+}
+
+// uniqIDKeyType 定义 context 中的 uniq ID key
+type uniqIDKeyType string
+
+const (
+	uniqIDKey = uniqIDKeyType("uid")
+)
+
+// WithUniqueID 返回一个新的、内置了 uniqID 的 context, 便于新建 context 的时候区分
+// goroutine。如果不指定 uniqID 或者指定了空字符串, 则使用 Google 的 uuid算法生成 uid。
+//
+// 返回新的 context 以及 unique ID。
+func WithUniqueID(parent context.Context, uniqID ...string) (context.Context, string) {
+	uid := ""
+	if len(uniqID) > 0 {
+		uid = uniqID[0]
+	}
+	if uid == "" {
+		uid = uuid.New().String()
+	}
+	return context.WithValue(parent, uniqIDKey, uid), uid
+}
+
+// UniqueID 返回保存在 context 中的 unique ID。如果不存在则返回空
+func UniqueID(ctx context.Context) (uniqID string) {
+	v := ctx.Value(uniqIDKey)
+	if v == nil {
+		return ""
+	}
+	id, _ := v.(string)
+	return id
 }
