@@ -12,6 +12,7 @@ import (
 var (
 	cv = convey.Convey
 	so = convey.So
+	eq = convey.ShouldEqual
 
 	isTrue  = convey.ShouldBeTrue
 	isFalse = convey.ShouldBeFalse

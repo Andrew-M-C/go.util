@@ -5,6 +5,8 @@ import "time"
 
 type option struct {
 	interval time.Duration
+
+	reentrantNotify ReentrantNotifyFunc
 }
 
 type Option func(opt *option)
@@ -15,5 +17,15 @@ func WithRetryInterval(intvl time.Duration) Option {
 		if intvl > 0 {
 			opt.interval = intvl
 		}
+	}
+}
+
+// ReentrantNotifyFunc 表示发生重入时的通知函数
+type ReentrantNotifyFunc func(goroutineID int64)
+
+// WithReentrantNotification 指定发生
+func WithReentrantNotification(f ReentrantNotifyFunc) Option {
+	return func(opt *option) {
+		opt.reentrantNotify = f
 	}
 }

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"math/rand"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 )
@@ -94,7 +95,15 @@ func testReentrantLockConcurrencyReentrantly(t *testing.T) {
 	const concurrency = 500
 	const tm = time.Second
 	m := make(map[int64]bool)
-	lck := ReentrantLock{}
+
+	var notifyCnt int64
+	var expectedNotifyCnt int64
+
+	notify := func(_ int64) {
+		atomic.AddInt64(&notifyCnt, 1)
+	}
+
+	lck := NewReentrantLock(WithReentrantNotification(notify))
 	// lck := sync.Mutex{}
 
 	so(func() {
@@ -108,6 +117,7 @@ func testReentrantLockConcurrencyReentrantly(t *testing.T) {
 				repeat := bytes.Repeat([]byte{'0'}, rand.Intn(10)+1)
 				// repeat := []int{1}
 				lock := func() {
+					atomic.AddInt64(&expectedNotifyCnt, int64(len(repeat)-1))
 					for range repeat {
 						lck.Lock()
 					}
@@ -143,4 +153,6 @@ func testReentrantLockConcurrencyReentrantly(t *testing.T) {
 
 		wg.Wait()
 	}, notPanic)
+
+	so(notifyCnt, eq, expectedNotifyCnt)
 }

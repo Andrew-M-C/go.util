@@ -16,18 +16,28 @@ type ReentrantLock struct {
 	cond      *sync.Cond
 	recursion int32
 	host      int64
+	opt       option
 }
 
 // NewReentrantLock 返回一个新的可重入锁
-func NewReentrantLock() *ReentrantLock {
+func NewReentrantLock(opts ...Option) *ReentrantLock {
 	lck := &ReentrantLock{}
 	lck.lazyInitCond()
+	for _, o := range opts {
+		o(&lck.opt)
+	}
 	return lck
 }
 
 func (lck *ReentrantLock) lazyInitCond() {
 	if lck.cond == nil {
 		lck.cond = sync.NewCond(&lck.lock)
+	}
+}
+
+func (lck *ReentrantLock) notifyReentrant(gid int64) {
+	if f := lck.opt.reentrantNotify; f != nil {
+		go f(gid)
 	}
 }
 
@@ -42,6 +52,9 @@ func (lck *ReentrantLock) Lock() {
 
 	if lck.host == gid {
 		lck.recursion++
+		if lck.recursion > 1 {
+			lck.notifyReentrant(gid)
+		}
 		return
 	}
 
