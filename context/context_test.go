@@ -3,6 +3,7 @@ package context
 import (
 	"context"
 	"errors"
+	"sync"
 	"testing"
 	"time"
 
@@ -26,6 +27,8 @@ func TestContext(t *testing.T) {
 	cv("测试 Timeout 函数", t, func() { testTimeout(t) })
 	cv("测试 HandleTimeout 函数", t, func() { testHandleContext(t) })
 	cv("测试 WithUniqID 和 UniqueID 函数", t, func() { testWithUniqueID(t) })
+
+	// time.Sleep(time.Second)
 }
 
 func testCancel(t *testing.T) {
@@ -36,11 +39,19 @@ func testCancel(t *testing.T) {
 		cancel()
 	}()
 
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+
 	err := HandleContext(ctx, func() error {
 		time.Sleep(time.Second)
+		t.Logf("done")
+		wg.Done()
+		// panic("done")
 		return nil
 	})
 	so(errors.Is(err, context.Canceled), isTrue)
+
+	wg.Wait()
 }
 
 func testDeadline(t *testing.T) {
