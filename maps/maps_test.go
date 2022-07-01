@@ -70,9 +70,9 @@ func testIntKeys(t *testing.T) {
 func testUintKeys(t *testing.T) {
 	cv("基本逻辑", func() {
 		const repeat = 10000
-		m := map[uint]int{
-			1:     -1,
-			10000: 1,
+		m := map[uint64]bool{
+			1:     true,
+			10000: false,
 		}
 
 		keys := UintKeys(m)

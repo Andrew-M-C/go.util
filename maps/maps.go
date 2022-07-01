@@ -36,7 +36,10 @@ func IntKeys(m interface{}) (keys []int64) {
 	if v.Kind() != reflect.Map {
 		return nil
 	}
-	if v.Type().Key().Kind() != reflect.Int {
+	switch v.Type().Key().Kind() {
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		// OK
+	default:
 		return nil
 	}
 
@@ -62,7 +65,11 @@ func UintKeys(m interface{}) (keys []uint64) {
 	if v.Kind() != reflect.Map {
 		return nil
 	}
-	if v.Type().Key().Kind() != reflect.Uint {
+
+	switch v.Type().Key().Kind() {
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		// OK
+	default:
 		return nil
 	}
 
