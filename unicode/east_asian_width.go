@@ -23,6 +23,7 @@ const (
 // Reference:
 //
 // - golang获取字符的宽度(East_Asian_Width) - http://www.nbtuan.vip/2017/05/10/golang-char-width/
+// - Unicode中文和特殊字符的编码范围 - https://www.cnblogs.com/sosoft/p/3456631.html
 func ActualEastAsianWidth(v interface{}, asciiWidth int, opts ...Option) Formatter {
 	f := eastAsianWidthFmt{
 		v:     v,
