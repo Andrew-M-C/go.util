@@ -6,14 +6,25 @@ import (
 	"strconv"
 	"testing"
 
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/smartystreets/goconvey/convey"
+)
+
+var (
+	cv = convey.Convey
+	so = convey.So
+
+	eq = convey.ShouldEqual
+
+	isErr   = convey.ShouldBeError
+	isNil   = convey.ShouldBeNil
+	isFalse = convey.ShouldBeFalse
 )
 
 func test(t *testing.T, scene string, f func(*testing.T)) {
 	if t.Failed() {
 		return
 	}
-	Convey(scene, t, func() {
+	cv(scene, t, func() {
 		f(t)
 	})
 }
@@ -59,7 +70,7 @@ func testCombineEvenlyProcess(t *testing.T, numA, numB int) {
 	printTestCombineEvenlyType(t, b)
 
 	slice, err := CombineEvenly(a, b)
-	So(err, ShouldBeNil)
+	so(err, isNil)
 
 	res := slice.([]*testCombineEvenlyType)
 	printTestCombineEvenlyType(t, res)
@@ -69,14 +80,14 @@ func testCombineEvenlyProcess(t *testing.T, numA, numB int) {
 
 	for _, r := range res {
 		_, exist := existedID[r.ID]
-		So(exist, ShouldBeFalse)
+		so(exist, isFalse)
 
 		counts[r.Display] = counts[r.Display] + 1
 		existedID[r.ID] = struct{}{}
 	}
 
-	So(counts['|'], ShouldEqual, numA)
-	So(counts['.'], ShouldEqual, numB)
+	so(counts['|'], eq, numA)
+	so(counts['.'], eq, numB)
 }
 
 func testCombineEvenlyTypeSlice(r rune, repeat int) []*testCombineEvenlyType {
@@ -105,26 +116,26 @@ func printTestCombineEvenlyType(t *testing.T, slice []*testCombineEvenlyType) {
 }
 
 func testCombineEvenlyErrors(t *testing.T) {
-	Convey("mismatch element types", func() {
+	cv("mismatch element types", func() {
 		type integer int
 		s1 := []int{1, 2, 3, 4}
 		s2 := []integer{1, 2, 3, 4}
 		_, err := CombineEvenly(s1, s2)
-		So(err, ShouldBeError)
+		so(err, isErr)
 	})
 
-	Convey("matched underlying types", func() {
+	cv("matched underlying types", func() {
 		type ints []int
 		s1 := []int{1, 2, 3, 4}
 		s2 := ints{5, 6, 7, 8}
 		_, err := CombineEvenly(s1, s2)
-		So(err, ShouldBeNil)
+		so(err, isNil)
 	})
 
-	Convey("not array types", func() {
+	cv("not array types", func() {
 		_, err := CombineEvenly(12, []int{})
-		So(err, ShouldBeError)
+		so(err, isErr)
 		_, err = CombineEvenly([]int{}, 34)
-		So(err, ShouldBeError)
+		so(err, isErr)
 	})
 }

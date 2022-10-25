@@ -3,8 +3,6 @@ package time
 import (
 	"testing"
 	"time"
-
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func testSleepToNextSecond(t *testing.T) {
@@ -14,12 +12,12 @@ func testSleepToNextSecond(t *testing.T) {
 	for i := 0; i < N; i++ {
 		SleepToNextSecond()
 		// t.Logf("now: %v", time.Now())
-		So(time.Now().Unix()-start.Unix(), ShouldEqual, i+1)
+		so(time.Now().Unix()-start.Unix(), eq, i+1)
 	}
 
 	end := time.Now()
 
-	So(end.Unix()-start.Unix(), ShouldEqual, N)
+	so(end.Unix()-start.Unix(), eq, N)
 }
 
 func testSleepToNextSecondsN(t *testing.T) {
@@ -30,7 +28,7 @@ func testSleepToNextSecondsN(t *testing.T) {
 
 	end := time.Now()
 
-	So(end.Unix()-start.Unix(), ShouldEqual, N)
+	so(end.Unix()-start.Unix(), eq, N)
 }
 
 func testWait(t *testing.T) {
@@ -41,5 +39,5 @@ func testWait(t *testing.T) {
 		return time.Since(start) > (N * time.Second)
 	})
 
-	So(int(time.Since(start).Seconds()), ShouldEqual, N)
+	so(int(time.Since(start).Seconds()), eq, N)
 }

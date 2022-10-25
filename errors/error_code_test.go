@@ -6,40 +6,54 @@ import (
 	"testing"
 
 	"github.com/martinlindhe/base36"
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/smartystreets/goconvey/convey"
+)
+
+var (
+	cv = convey.Convey
+	so = convey.So
+
+	eq = convey.ShouldEqual
+	le = convey.ShouldBeLessThanOrEqualTo
+	ge = convey.ShouldBeGreaterThanOrEqualTo
+
+	isTrue  = convey.ShouldBeTrue
+	isFalse = convey.ShouldBeFalse
+
+	isEmpty = convey.ShouldBeEmpty
 )
 
 func TestErrors(t *testing.T) {
-	Convey("测试 error_code 逻辑", t, func() { testErrorCode(t) })
+	cv("测试 error_code 逻辑", t, func() { testErrorCode(t) })
 }
 
 func testErrorCode(t *testing.T) {
-	Convey("易认错的字符", func() {
+	cv("易认错的字符", func() {
 		c, ok := decode("IiII")
-		So(ok, ShouldBeTrue)
-		So(c, ShouldEqual, (36*36*36)+(36*36)+(36)+1)
+		so(ok, isTrue)
+		so(c, eq, (36*36*36)+(36*36)+(36)+1)
 
 		c, ok = decode("ilI1")
-		So(ok, ShouldBeTrue)
-		So(c, ShouldEqual, (36*36*36)+(36*36)+(36)+1)
+		so(ok, isTrue)
+		so(c, eq, (36*36*36)+(36*36)+(36)+1)
 
 		code := ErrorToCode(nil)
-		So(code, ShouldBeEmpty)
+		so(code, isEmpty)
 	})
 
-	Convey("正式逻辑", func() {
+	cv("正式逻辑", func() {
 		iterCount := 0
 		zeroCount := 0
 		values := map[string]struct{}{}
 
-		gothrough := func(from, to rune) {
+		goThrough := func(from, to rune) {
 			for r := from; r <= to; r++ {
 				e := errors.New(string(r))
 				c := ErrorToCode(e)
-				So(strings.ContainsAny(c, "Il O"), ShouldBeFalse)
+				so(strings.ContainsAny(c, "Il O"), isFalse)
 				i := base36.Decode(c)
-				So(i, ShouldBeLessThanOrEqualTo, 0xFFFFF)
-				So(i, ShouldBeGreaterThanOrEqualTo, 0)
+				so(i, le, 0xFFFFF)
+				so(i, ge, 0)
 
 				if i == 0 {
 					zeroCount++
@@ -49,12 +63,12 @@ func testErrorCode(t *testing.T) {
 			}
 		}
 
-		gothrough('a', 'z')
-		gothrough('A', 'Z')
-		gothrough('0', '9')
+		goThrough('a', 'z')
+		goThrough('A', 'Z')
+		goThrough('0', '9')
 
-		So(zeroCount, ShouldBeLessThanOrEqualTo, 2)
-		So(iterCount, ShouldEqual, len(values))
+		so(zeroCount, le, 2)
+		so(iterCount, eq, len(values))
 		t.Logf("zero count: %d, all value count: %d, iter count: %d", zeroCount, len(values), iterCount)
 	})
 }

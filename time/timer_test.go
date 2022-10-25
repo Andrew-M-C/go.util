@@ -4,16 +4,24 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/smartystreets/goconvey/convey"
+	"github.com/smartystreets/goconvey/convey"
 	"go.uber.org/atomic"
 )
 
+var (
+	cv = convey.Convey
+	so = convey.So
+
+	eq = convey.ShouldEqual
+	le = convey.ShouldBeLessThanOrEqualTo
+)
+
 func TestTime(t *testing.T) {
-	Convey("测试 SleepToNextSecond", t, func() { testSleepToNextSecond((t)) })
-	Convey("测试 SleepToNextSecondsN", t, func() { testSleepToNextSecondsN((t)) })
-	Convey("测试 Wait", t, func() { testWait((t)) })
-	Convey("测试 Timer", t, func() { testTimer(t) })
-	Convey("测试 Timer.Stop", t, func() { testTimer_Stop(t) })
+	cv("测试 SleepToNextSecond", t, func() { testSleepToNextSecond((t)) })
+	cv("测试 SleepToNextSecondsN", t, func() { testSleepToNextSecondsN((t)) })
+	cv("测试 Wait", t, func() { testWait((t)) })
+	cv("测试 Timer", t, func() { testTimer(t) })
+	cv("测试 Timer.Stop", t, func() { testTimer_Stop(t) })
 }
 
 func expectElapsed(t *testing.T, start time.Time, ela time.Duration) {
@@ -32,7 +40,7 @@ func expectDuration(t *testing.T, d, expect time.Duration) {
 		return -d
 	}
 
-	So(abs(expect-d), ShouldBeLessThanOrEqualTo, tolerance)
+	so(abs(expect-d), le, tolerance)
 }
 
 func testTimer(t *testing.T) {

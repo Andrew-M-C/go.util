@@ -46,11 +46,11 @@ func testLCS(t *testing.T) {
 
 		printRes(t, res)
 
-		So(res.MaxSubLen(), ShouldEqual, maxLen)
-		So(res.MaxSubLen(), ShouldNotBeZeroValue)
+		so(res.MaxSubLen(), eq, maxLen)
+		so(res.MaxSubLen(), ShouldNotBeZeroValue)
 
-		So(len(r.XIndexes), ShouldEqual, res.MaxSubLen())
-		So(len(r.YIndexes), ShouldEqual, res.MaxSubLen())
+		so(len(r.XIndexes), eq, res.MaxSubLen())
+		so(len(r.YIndexes), eq, res.MaxSubLen())
 	}
 
 	x = []byte("abcbdab")

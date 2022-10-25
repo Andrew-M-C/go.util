@@ -2,12 +2,10 @@ package math
 
 import (
 	"testing"
-
-	. "github.com/smartystreets/goconvey/convey"
 )
 
 func testIntSqrt(t *testing.T) {
-	Convey("simple logic", func() {
+	cv("simple logic", func() {
 		check := func(x uint64) {
 			if t.Failed() {
 				return
@@ -15,7 +13,7 @@ func testIntSqrt(t *testing.T) {
 			a := newtonIntSqrt(x)
 			b := bitwiseSqrt(x)
 
-			So(b, ShouldEqual, a)
+			so(b, eq, a)
 			t.Logf("sqrt(%d) = %d", x, a)
 		}
 
