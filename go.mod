@@ -11,5 +11,6 @@ require (
 	github.com/petermattis/goid v0.0.0-20220526132513-07eaf5d0b9f4
 	github.com/smartystreets/goconvey v1.6.4
 	go.uber.org/atomic v1.7.0
+	golang.org/x/sys v0.1.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1
 )
