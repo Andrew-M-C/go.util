@@ -2,6 +2,7 @@
 package caller
 
 import (
+	"encoding/json"
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
@@ -18,6 +19,7 @@ func TestCaller(t *testing.T) {
 	cv("基础逻辑", t, func() { testCallerGeneral(t) })
 	cv("在方法内调用", t, func() { testCallerMethod(t) })
 	cv("在闭包内调用", t, func() { testCallerInClosure(t) })
+	cv("测试 GetAllCallers", t, func() { testGetAllCallers(t) })
 }
 
 func testCallerGeneral(t *testing.T) {
@@ -28,7 +30,7 @@ func testCallerGeneral(t *testing.T) {
 	so(c.Func.Name(), eq, "testCallerGeneral")
 	so(c.Func.Package(), eq, "caller")
 	// so(c.Func.ReceiverType(), eq, "")
-	so(c.Line, eq, 25)
+	so(c.Line, eq, 27)
 
 	c = GetCaller(1)
 	t.Logf("Got: %v", c)
@@ -36,7 +38,7 @@ func testCallerGeneral(t *testing.T) {
 	so(c.Func.Name(), eq, "func1")
 	so(c.Func.Package(), eq, "caller")
 	so(c.Func.Base(), eq, "caller.TestCaller.func1")
-	so(c.Line, eq, 18)
+	so(c.Line, eq, 19)
 }
 
 func testCallerMethod(t *testing.T) {
@@ -47,7 +49,7 @@ func testCallerMethod(t *testing.T) {
 	so(c.Func.Name(), eq, "getCaller")
 	so(c.Func.Package(), eq, "caller")
 	so(c.Func.Base(), eq, "caller.dummy.getCaller")
-	so(c.Line, eq, 68)
+	so(c.Line, eq, 70)
 
 }
 
@@ -59,7 +61,7 @@ func testCallerInClosure(t *testing.T) {
 	so(c.Func.Name(), eq, "func1")
 	so(c.Func.Package(), eq, "caller")
 	so(c.Func.Base(), eq, "caller.dummy.getCallerByClosure.func1")
-	so(c.Line, eq, 73)
+	so(c.Line, eq, 75)
 }
 
 type dummy struct{}
@@ -73,4 +75,11 @@ func (dummy) getCallerByClosure() Caller {
 		return GetCaller(0)
 	}()
 	return c
+}
+
+func testGetAllCallers(t *testing.T) {
+	callers := GetAllCallers()
+
+	b, _ := json.Marshal(callers)
+	t.Logf("Got callers: %s", b)
 }
