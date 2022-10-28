@@ -9,6 +9,19 @@ import (
 	emoji "github.com/Andrew-M-C/go.emoji"
 )
 
+// EastAsianDisplayWidth 返回一段包含东亚字符和 emoji 字符串在等宽字符集中的展示宽度。
+// 其中 opts 暂时只支持 WithTabWidth
+func EastAsianDisplayWidth(s string, opts ...Option) int {
+	opt := defaultOption()
+	for _, o := range opts {
+		o(opt)
+	}
+	if opt.tab != "" {
+		s = strings.ReplaceAll(s, "\t", opt.tab)
+	}
+	return eastAsianStringWidth(s)
+}
+
 // Align 表示对齐方式
 type Align int
 
@@ -18,13 +31,13 @@ const (
 	AlignCenter
 )
 
-// ActualEastAsianWidth 返回一个 Formatter 用于按照东亚字符真正的字符宽度进行展示
+// EastAsianStringer 返回一个 fmt.Stringer 用于按照东亚字符真正的字符宽度进行展示
 //
 // Reference:
 //
 // - golang获取字符的宽度(East_Asian_Width) - http://www.nbtuan.vip/2017/05/10/golang-char-width/
 // - Unicode中文和特殊字符的编码范围 - https://www.cnblogs.com/sosoft/p/3456631.html
-func ActualEastAsianWidth(v interface{}, asciiWidth int, opts ...Option) Formatter {
+func EastAsianStringer(v interface{}, asciiWidth int, opts ...Option) fmt.Stringer {
 	f := eastAsianWidthFmt{
 		v:     v,
 		width: asciiWidth,
@@ -45,6 +58,10 @@ type eastAsianWidthFmt struct {
 func (f eastAsianWidthFmt) String() string {
 	orig := fmt.Sprint(f.v)
 	s := orig
+
+	if f.opt.tab != "" {
+		s = strings.ReplaceAll(s, "\t", f.opt.tab)
+	}
 
 	actualWidth := eastAsianStringWidth(s)
 	if actualWidth >= f.width {

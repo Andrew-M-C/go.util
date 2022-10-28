@@ -3,7 +3,7 @@ package unicode
 import (
 	"bytes"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"testing"
 
 	rbtree "github.com/emirpasic/gods/trees/redblacktree"
@@ -12,6 +12,7 @@ import (
 func testEastAsianWidth(t *testing.T) {
 	cv("简单打印数据情况", func() { testEastAsianWidthPrintInternalData(t) })
 	cv("基本功能", func() { testEastAsianWidthBasicFunction(t) })
+	cv("测试 EastAsianDisplayWidth", func() { testEastAsianDisplayWidth(t) })
 }
 
 func testEastAsianWidthPrintInternalData(t *testing.T) {
@@ -62,14 +63,13 @@ func testEastAsianWidthPrintInternalData(t *testing.T) {
 
 	// t.Logf("完整的汉字列表:\n%s", buff.String())
 	const outfile = "./.all_runes.txt"
-	ioutil.WriteFile(outfile, buff.Bytes(), 0644)
+	os.WriteFile(outfile, buff.Bytes(), 0644)
 }
 
 func testEastAsianWidthBasicFunction(t *testing.T) {
 	lines := []string{
 		"0123456789",
 		"一二三四五",
-		//lint:ignore ST1018 intend to do this to check emoji
 		"👦👧👨👩👨‍👩‍👧‍👧",
 	}
 
@@ -79,12 +79,22 @@ func testEastAsianWidthBasicFunction(t *testing.T) {
 	}
 
 	for _, line := range lines {
-		t.Logf("|%v|", ActualEastAsianWidth(line, 30, WithAlign(AlignLeft), WithBlank("-")))
+		t.Logf("|%v|", EastAsianStringer(line, 30, WithAlign(AlignLeft), WithBlank("-")))
 	}
 	for _, line := range lines {
-		t.Logf("|%v|", ActualEastAsianWidth(line, 30, WithAlign(AlignCenter), WithBlank("二")))
+		t.Logf("|%v|", EastAsianStringer(line, 30, WithAlign(AlignCenter), WithBlank("二")))
 	}
 	for _, line := range lines {
-		t.Logf("|%v|", ActualEastAsianWidth(line, 30, WithAlign(AlignRight), WithBlank("=")))
+		t.Logf("|%v|", EastAsianStringer(line, 30, WithAlign(AlignRight), WithBlank("=")))
 	}
+}
+
+func testEastAsianDisplayWidth(t *testing.T) {
+	s := "一二三四五"
+	w := EastAsianDisplayWidth(s)
+	so(w, eq, 10)
+
+	s = "\t一二三四五"
+	w = EastAsianDisplayWidth(s, WithTabWidth(4))
+	so(w, eq, 14)
 }
