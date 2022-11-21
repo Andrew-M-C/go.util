@@ -38,7 +38,7 @@ func testStringKeys(t *testing.T) {
 		so(len(keys), eq, len(m))
 
 		for i := 0; i < repeat; i++ {
-			keys := KeysSorted(m)
+			keys := Keys(m).SortAsc()
 			// keys := StringKeys(m)
 			so(keys[0], eq, "one")
 			so(keys[1], eq, "two")
@@ -59,13 +59,13 @@ func testIntKeys(t *testing.T) {
 		so(len(keys), eq, len(m))
 
 		for i := 0; i < repeat; i++ {
-			keys := KeysSorted(m)
+			keys := Keys(m).SortAsc()
 			// keys := StringKeys(m)
 			so(keys[0], eq, -10000)
 			so(keys[1], eq, 10000)
 		}
 
-		keys = KeysSortedAndDeduplicated(m)
+		keys = Keys(m).Deduplicate().SortAsc()
 		so(len(keys), eq, 2)
 		so(keys[0], eq, -10000)
 		so(keys[1], eq, 10000)
@@ -85,7 +85,7 @@ func testUintKeys(t *testing.T) {
 		so(len(keys), eq, len(m))
 
 		for i := 0; i < repeat; i++ {
-			keys := KeysSorted(m)
+			keys := Keys(m).SortAsc()
 			// keys := StringKeys(m)
 			so(keys[0], eq, 1)
 			so(keys[1], eq, 10000)
