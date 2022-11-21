@@ -2,89 +2,48 @@
 package maps
 
 import (
-	"reflect"
 	"sort"
+
+	"golang.org/x/exp/constraints"
 )
 
-// StringKeys 简单返回某个 key 是 string 的 map 的所有 key
-func StringKeys(m interface{}) (keys []string) {
-	v := reflect.ValueOf(m)
-	if v.Kind() != reflect.Map {
-		return nil
-	}
-	if v.Type().Key().Kind() != reflect.String {
-		return nil
-	}
-
-	vkeys := v.MapKeys()
-	for _, k := range vkeys {
-		keys = append(keys, k.String())
+// StringKeys 返回所有的 key
+func Keys[K comparable, V any](m map[K]V) (keys []K) {
+	keys = make([]K, 0, len(m))
+	for k := range m {
+		keys = append(keys, k)
 	}
 	return keys
 }
 
-// StringKeysSorted 在 StringKeys 基础上对返回值进行排序
-func StringKeysSorted(m interface{}) (keys []string) {
-	keys = StringKeys(m)
-	sort.Strings(keys)
-	return keys
-}
-
-// IntKeys 简单返回某个 key 是有符号数的 map 的所有 key
-func IntKeys(m interface{}) (keys []int64) {
-	v := reflect.ValueOf(m)
-	if v.Kind() != reflect.Map {
-		return nil
-	}
-	switch v.Type().Key().Kind() {
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		// OK
-	default:
-		return nil
-	}
-
-	vkeys := v.MapKeys()
-	for _, k := range vkeys {
-		keys = append(keys, k.Int())
+// KeysDeduplicated 返回所有的 key 并去重
+func KeysDeduplicated[K comparable, V any](m map[K]V) (keys []K) {
+	keys = make([]K, 0, len(m))
+	set := make(map[K]struct{}, len(m))
+	for k := range m {
+		if _, exist := set[k]; exist {
+			continue
+		}
+		set[k] = struct{}{}
+		keys = append(keys, k)
 	}
 	return keys
 }
 
-// IntKeysSorted 在 IntKeys 基础上对返回值进行排序
-func IntKeysSorted(m interface{}) (keys []int64) {
-	keys = IntKeys(m)
+// KeysSorted 在 Keys 基础上对返回值进行排序
+func KeysSorted[K constraints.Ordered, V any](m map[K]V) (keys []K) {
+	keys = Keys(m)
 	sort.Slice(keys, func(i, j int) bool {
-		return keys[i] <= keys[j]
+		return keys[i] < keys[j]
 	})
 	return keys
 }
 
-// UintKeys 简单返回某个 key 是无符号数的 map 的所有 key
-func UintKeys(m interface{}) (keys []uint64) {
-	v := reflect.ValueOf(m)
-	if v.Kind() != reflect.Map {
-		return nil
-	}
-
-	switch v.Type().Key().Kind() {
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		// OK
-	default:
-		return nil
-	}
-
-	vkeys := v.MapKeys()
-	for _, k := range vkeys {
-		keys = append(keys, k.Uint())
-	}
-	return keys
-}
-
-// UintKeysSorted 在 UintKeys 基础上对返回值进行排序
-func UintKeysSorted(m interface{}) (keys []uint64) {
-	keys = UintKeys(m)
+// KeysSortedAndDeduplicated 在 Keys 基础上对返回值进行排序和去重复
+func KeysSortedAndDeduplicated[K constraints.Ordered, V any](m map[K]V) (keys []K) {
+	keys = KeysDeduplicated(m)
 	sort.Slice(keys, func(i, j int) bool {
-		return keys[i] <= keys[j]
+		return keys[i] < keys[j]
 	})
 	return keys
 }
