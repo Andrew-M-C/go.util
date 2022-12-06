@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	github.com/Andrew-M-C/go.emoji v1.0.1
+	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b
 	github.com/emirpasic/gods v1.18.1
 	github.com/fatih/color v1.12.0
 	github.com/google/uuid v1.3.0
