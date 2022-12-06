@@ -29,8 +29,14 @@ func NewPoint[T1, T2 Number](x T1, y T2) Point {
 // Canvas 表示一个画板
 type Canvas interface {
 	SetDrawColor(clr color.Color)
+
 	DrawPoint(center Point, radius float64)
-	DrawCircle(center Point, radius, width float64)
+	DrawHollowCircle(center Point, radius, width float64)
+
 	DrawLine(from, to Point, width float64)
+
+	DrawHollowRect(endpoint1, endpoint2 Point, width float64)
+	DrawSolidRect(endpoint1, endpoint2 Point)
+
 	Save(filepath string) error
 }

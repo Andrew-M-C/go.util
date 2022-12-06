@@ -92,8 +92,8 @@ func (c *Canvas) DrawPoint(center draw.Point, radius float64) {
 	c.svg().Circle(int(center.X), int(center.Y), absint(radius), opt)
 }
 
-// DrawCircle 绘制一个空心圆
-func (c *Canvas) DrawCircle(center draw.Point, radius, width float64) {
+// DrawHollowCircle 绘制一个空心圆
+func (c *Canvas) DrawHollowCircle(center draw.Point, radius, width float64) {
 	opt := fmt.Sprintf(
 		`stroke-width="%d" stroke="%s" style="opacity:%s" fill="none"`,
 		absint(width), c.hexRGBString(), c.opacityString(),
@@ -105,6 +105,21 @@ func (c *Canvas) DrawCircle(center draw.Point, radius, width float64) {
 func (c *Canvas) DrawLine(from, to draw.Point, width float64) {
 	opt := fmt.Sprintf(`style="stroke:%s;stroke-width:%d"`, c.rgbString(), absint(width))
 	c.svg().Line(int(from.X), int(from.Y), int(to.X), int(to.Y), opt)
+}
+
+// DrawHollowRect 绘制一个空心矩形
+func (c *Canvas) DrawHollowRect(from, to draw.Point, width float64) {
+	opt := fmt.Sprintf(
+		`stroke-width="%d" stroke="%s" style="opacity:%s" fill="none"`,
+		absint(width), c.hexRGBString(), c.opacityString(),
+	)
+	c.svg().Rect(int(from.X), int(from.Y), int(to.X), int(to.Y), opt)
+}
+
+// DrawSolidRect 绘制一个实心矩形
+func (c *Canvas) DrawSolidRect(from, to draw.Point) {
+	opt := fmt.Sprintf(`stroke-width="0" style="fill:%s;opacity:%s"`, c.rgbString(), c.opacityString())
+	c.svg().Rect(int(from.X), int(from.Y), int(to.X), int(to.Y), opt)
 }
 
 // Save 保存到文件
