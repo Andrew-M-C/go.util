@@ -25,6 +25,7 @@ func testGeneral(t *testing.T) {
 	// 边缘镶一圈矩形
 	c.SetDrawColor(draw.White)
 	c.DrawHollowRect(draw.NewPoint(0, 0), draw.NewPoint(200, 100), 1)
+	draw.DrawHollowRectXY(c, 0, 0, 200, 100, 1)
 
 	// 角落里画一个实心矩形
 	c.SetDrawColor(draw.Blue)
@@ -46,7 +47,11 @@ func testGeneral(t *testing.T) {
 	c.SetDrawColor(draw.Green)
 	c.DrawLine(draw.NewPoint(150, 150), draw.NewPoint(100, 50), 1)
 
-	// 保存
-	err := c.Save("./svg_test.svg")
+	// 保存 png
+	err := c.SaveToImageFormat("./svg_test.png", 200, 100)
+	so(err, isNil)
+
+	// 保存 svg
+	err = c.Save("./svg_test.svg")
 	so(err, isNil)
 }

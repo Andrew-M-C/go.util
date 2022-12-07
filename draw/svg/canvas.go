@@ -122,7 +122,7 @@ func (c *Canvas) DrawSolidRect(from, to draw.Point) {
 	c.svg().Rect(int(from.X), int(from.Y), int(to.X), int(to.Y), opt)
 }
 
-// Save 保存到文件
+// Save 关闭并保存到文件
 func (c *Canvas) Save(filepath string) error {
 	f, err := os.Create(filepath)
 	if err != nil {
@@ -139,5 +139,11 @@ func (c *Canvas) Save(filepath string) error {
 	c.storage.buff.Reset()
 	c.storage.svg = nil
 
+	return nil
+}
+
+// SaveToImageFormat 保存到文件，无需关闭
+func (c *Canvas) SaveToImageFormat(filepath string, width, height int) error {
+	c.svg().Image(0, 0, height, width, filepath)
 	return nil
 }

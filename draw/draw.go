@@ -40,3 +40,35 @@ type Canvas interface {
 
 	Save(filepath string) error
 }
+
+// DrawPointXY 封装 DrawPoint, 但是提供具体的 XY 值而不是 Point
+func DrawPointXY[TP, TR Number](canvas Canvas, centerX, centerY TP, radius TR) {
+	canvas.DrawPoint(NewPoint(centerX, centerY), float64(radius))
+}
+
+// DrawHollowCircle 封装 DrawHollowCircle, 但是提供具体的 XY 值而不是 Point
+func DrawHollowCircleXY[TC, TR, TW Number](canvas Canvas, centerX, centerY TC, radius TR, width TW) {
+	center := NewPoint(centerX, centerY)
+	canvas.DrawHollowCircle(center, float64(radius), float64(width))
+}
+
+// DrawLineXY 封装 DrawLine, 但是提供具体的 XY 值而不是 Point
+func DrawLineXY[TP, TW Number](canvas Canvas, x1, y1, x2, y2 TP, width TW) {
+	from := NewPoint(x1, y1)
+	to := NewPoint(x2, y2)
+	canvas.DrawLine(from, to, float64(width))
+}
+
+// DrawHollowRectXY 封装 DrawHollowRect, 但是提供具体的 XY 值而不是 Point
+func DrawHollowRectXY[TP, TW Number](canvas Canvas, x1, y1, x2, y2 TP, width TW) {
+	p1 := NewPoint(x1, y1)
+	p2 := NewPoint(x2, y2)
+	canvas.DrawHollowRect(p1, p2, float64(width))
+}
+
+// DrawSolidRectXY 封装 DrawSolidRect, 但是提供具体的 XY 值而不是 Point
+func DrawSolidRectXY[T Number](canvas Canvas, x1, y1, x2, y2 T) {
+	p1 := NewPoint(x1, y1)
+	p2 := NewPoint(x2, y2)
+	canvas.DrawSolidRect(p1, p2)
+}
