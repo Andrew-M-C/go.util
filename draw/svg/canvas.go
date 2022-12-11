@@ -38,25 +38,18 @@ func absint[T draw.Number](i T) int {
 	return int(i)
 }
 
-func (c *Canvas) color() color.Color {
-	if clr := c.storage.color; clr != nil {
-		return clr
-	}
-	return color.Black
-}
-
-func (c *Canvas) hexRGBString() string {
-	r, g, b, _ := c.color().RGBA()
+func hexRGBString(o draw.MergedOptions) string {
+	r, g, b, _ := o.Color().RGBA()
 	return fmt.Sprintf("#%02X%02X%02X", r>>8, g>>8, b>>8)
 }
 
-func (c *Canvas) rgbString() string {
-	r, g, b, _ := c.color().RGBA()
+func rgbString(o draw.MergedOptions) string {
+	r, g, b, _ := o.Color().RGBA()
 	return fmt.Sprintf("rgb(%d,%d,%d)", r>>8, g>>8, b>>8)
 }
 
-func (c *Canvas) opacityString() string {
-	_, _, _, alpha := c.color().RGBA()
+func opacityString(o draw.MergedOptions) string {
+	_, _, _, alpha := o.Color().RGBA()
 	return fmt.Sprintf("%f", float64(alpha)/0xFFFF)
 }
 
@@ -79,6 +72,11 @@ func NewCanvas[T1, T2 draw.Number](width T1, height T2) *Canvas {
 	return c
 }
 
+// Size 返回画布大小
+func (c *Canvas) Size() (width, height float64) {
+	return c.width, c.height
+}
+
 // SetDrawColor 设置后续的绘制颜色
 func (c *Canvas) SetDrawColor(clr color.Color) {
 	if clr != nil {
@@ -86,39 +84,52 @@ func (c *Canvas) SetDrawColor(clr color.Color) {
 	}
 }
 
+// CurrentDrawColor 返回当前的颜色
+func (c *Canvas) CurrentDrawColor() color.Color {
+	if clr := c.storage.color; clr != nil {
+		return clr
+	}
+	return color.Black
+}
+
 // DrawPoint 绘制一个实心圆
 func (c *Canvas) DrawPoint(center draw.Point, radius float64) {
-	opt := fmt.Sprintf(`fill="%s" style="opacity:%s"`, c.hexRGBString(), c.opacityString())
+	o := draw.MergeOptions(c, nil)
+	opt := fmt.Sprintf(`fill="%s" style="opacity:%s"`, hexRGBString(o), opacityString(o))
 	c.svg().Circle(int(center.X), int(center.Y), absint(radius), opt)
 }
 
 // DrawHollowCircle 绘制一个空心圆
 func (c *Canvas) DrawHollowCircle(center draw.Point, radius, width float64) {
+	o := draw.MergeOptions(c, nil)
 	opt := fmt.Sprintf(
 		`stroke-width="%d" stroke="%s" style="opacity:%s" fill="none"`,
-		absint(width), c.hexRGBString(), c.opacityString(),
+		absint(width), hexRGBString(o), opacityString(o),
 	)
 	c.svg().Circle(int(center.X), int(center.Y), absint(radius), opt)
 }
 
 // DrawLine 绘制一条线
 func (c *Canvas) DrawLine(from, to draw.Point, width float64) {
-	opt := fmt.Sprintf(`style="stroke:%s;stroke-width:%d"`, c.rgbString(), absint(width))
+	o := draw.MergeOptions(c, nil)
+	opt := fmt.Sprintf(`style="stroke:%s;stroke-width:%d"`, rgbString(o), absint(width))
 	c.svg().Line(int(from.X), int(from.Y), int(to.X), int(to.Y), opt)
 }
 
 // DrawHollowRect 绘制一个空心矩形
 func (c *Canvas) DrawHollowRect(from, to draw.Point, width float64) {
+	o := draw.MergeOptions(c, nil)
 	opt := fmt.Sprintf(
 		`stroke-width="%d" stroke="%s" style="opacity:%s" fill="none"`,
-		absint(width), c.hexRGBString(), c.opacityString(),
+		absint(width), hexRGBString(o), opacityString(o),
 	)
 	c.svg().Rect(int(from.X), int(from.Y), int(to.X), int(to.Y), opt)
 }
 
 // DrawSolidRect 绘制一个实心矩形
 func (c *Canvas) DrawSolidRect(from, to draw.Point) {
-	opt := fmt.Sprintf(`stroke-width="0" style="fill:%s;opacity:%s"`, c.rgbString(), c.opacityString())
+	o := draw.MergeOptions(c, nil)
+	opt := fmt.Sprintf(`stroke-width="0" style="fill:%s;opacity:%s"`, rgbString(o), opacityString(o))
 	c.svg().Rect(int(from.X), int(from.Y), int(to.X), int(to.Y), opt)
 }
 
@@ -142,8 +153,26 @@ func (c *Canvas) Save(filepath string) error {
 	return nil
 }
 
-// SaveToImageFormat 保存到文件，无需关闭
-func (c *Canvas) SaveToImageFormat(filepath string, width, height int) error {
-	c.svg().Image(0, 0, height, width, filepath)
-	return nil
+// -------- svg 特有逻辑 --------
+
+func (c *Canvas) DrawText(origin draw.Point, text string, opts ...draw.Option) {
+	o := draw.MergeOptions(c, opts)
+
+	// 无需旋转
+	if o.Rotate() == 0 {
+		opt := fmt.Sprintf(
+			`fill="%s" style="opacity:%s" font-size="%d"`,
+			hexRGBString(o), opacityString(o), o.FontSize(),
+		)
+		c.svg().Text(int(origin.X), int(origin.Y), text, opt)
+		return
+	}
+
+	// 需要旋转
+	opt := fmt.Sprintf(
+		`fill="%s" style="opacity:%s" font-size="%d" transform="translate(%d,%d) rotate(%.0f)"`,
+		hexRGBString(o), opacityString(o), o.FontSize(),
+		int(origin.X), int(origin.Y), o.Rotate(),
+	)
+	c.svg().Text(0, 0, text, opt)
 }

@@ -28,7 +28,10 @@ func NewPoint[T1, T2 Number](x T1, y T2) Point {
 
 // Canvas 表示一个画板
 type Canvas interface {
+	Size() (width, height float64)
+
 	SetDrawColor(clr color.Color)
+	CurrentDrawColor() color.Color
 
 	DrawPoint(center Point, radius float64)
 	DrawHollowCircle(center Point, radius, width float64)
@@ -71,4 +74,15 @@ func DrawSolidRectXY[T Number](canvas Canvas, x1, y1, x2, y2 T) {
 	p1 := NewPoint(x1, y1)
 	p2 := NewPoint(x2, y2)
 	canvas.DrawSolidRect(p1, p2)
+}
+
+// TextCanvas 表示一个能绘图的画布
+type TextCanvas interface {
+	DrawText(origin Point, text string, opts ...Option)
+}
+
+// DrawTextXY 封装 DrawText, 但是提供具体的 XY 值而不是 Point
+func DrawTextXY[T Number](canvas TextCanvas, x, y T, text string, opts ...Option) {
+	p := NewPoint(x, y)
+	canvas.DrawText(p, text, opts...)
 }

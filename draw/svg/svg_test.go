@@ -2,6 +2,7 @@ package svg
 
 import (
 	"image/color"
+	"os"
 	"testing"
 
 	"github.com/Andrew-M-C/go.util/draw"
@@ -20,6 +21,9 @@ func TestSVG(t *testing.T) {
 }
 
 func testGeneral(t *testing.T) {
+	const filepath = "./svg_test.svg"
+	os.Remove(filepath)
+
 	c := NewCanvas(200, 100)
 
 	// 边缘镶一圈矩形
@@ -47,11 +51,11 @@ func testGeneral(t *testing.T) {
 	c.SetDrawColor(draw.Green)
 	c.DrawLine(draw.NewPoint(150, 150), draw.NewPoint(100, 50), 1)
 
-	// 保存 png
-	err := c.SaveToImageFormat("./svg_test.png", 200, 100)
-	so(err, isNil)
+	// 写一个文字
+	draw.DrawTextXY(c, 100, 50, "你好, 世界!", draw.OptColor(draw.Red), draw.OptFontSize(7))
+	draw.DrawTextXY(c, 10, 50, "Hello, world!", draw.OptColor(draw.Red), draw.OptRotate(30))
 
 	// 保存 svg
-	err = c.Save("./svg_test.svg")
+	err := c.Save(filepath)
 	so(err, isNil)
 }
