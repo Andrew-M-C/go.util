@@ -14,6 +14,9 @@ var (
 	so = convey.So
 
 	eq = convey.ShouldEqual
+
+	isTrue  = convey.ShouldBeTrue
+	isFalse = convey.ShouldBeFalse
 )
 
 func test(t *testing.T, scene string, f func(*testing.T)) {
@@ -26,8 +29,11 @@ func test(t *testing.T, scene string, f func(*testing.T)) {
 }
 
 func TestSlice(t *testing.T) {
+	internal.debugf = t.Logf
+
 	test(t, "CombineEvenly", testCombineEvenly)
 	test(t, "LCS", testLCS)
+	test(t, "binary search", testBinarySearch)
 }
 
 func testCombineEvenly(t *testing.T) {

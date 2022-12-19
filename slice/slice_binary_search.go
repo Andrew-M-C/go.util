@@ -1,0 +1,48 @@
+package slice
+
+import "golang.org/x/exp/constraints"
+
+// BinarySearch 二分法搜索一段已排序的数
+func BinarySearch[T constraints.Ordered](sli []T, target T) (from, to int, hit bool) {
+	from, to = 0, len(sli)
+	internal.debugf("input slice %v, length %d, target %v", sli, to, target)
+	if to == 0 {
+		return 0, 0, false
+	}
+	if target < sli[0] {
+		return 0, 0, false
+	}
+	if target > sli[to-1] {
+		return to, to, false
+	}
+
+	// 二分
+	for from < to-1 {
+		half := from + (to-from)/2
+		n := sli[half]
+		internal.debugf("from %d, to %d, half %d (%v)", from, to, half, n)
+		switch {
+		default:
+			internal.debugf("Hit index %d (%v)", half, n)
+			from, to = half, half+1 // causing break
+		case n < target:
+			from = half
+		case n > target:
+			to = half
+		}
+	}
+
+	if sli[from] != target {
+		return from, to, false
+	}
+
+	// 扩展命中的值域
+	for ; from > 0 && sli[from-1] == target; from-- {
+		// nothing
+	}
+	for ; to < len(sli) && sli[to] == target; to++ {
+		// nothing
+	}
+
+	return from, to, true
+}
