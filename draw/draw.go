@@ -78,6 +78,7 @@ func DrawSolidRectXY[T Number](canvas Canvas, x1, y1, x2, y2 T) {
 
 // TextCanvas 表示一个能绘图的画布
 type TextCanvas interface {
+	Canvas
 	DrawText(origin Point, text string, opts ...Option)
 }
 

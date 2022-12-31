@@ -10,7 +10,7 @@ require (
 	github.com/google/uuid v1.3.0
 	github.com/martinlindhe/base36 v1.1.0
 	github.com/petermattis/goid v0.0.0-20220526132513-07eaf5d0b9f4
-	github.com/smartystreets/goconvey v1.6.4
+	github.com/smartystreets/goconvey v1.7.2
 	go.uber.org/atomic v1.7.0
 	golang.org/x/exp v0.0.0-20221114191408-850992195362
 	gopkg.in/yaml.v3 v3.0.1
@@ -21,6 +21,6 @@ require (
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
-	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
+	github.com/smartystreets/assertions v1.2.0 // indirect
 	golang.org/x/sys v0.1.0 // indirect
 )
