@@ -53,10 +53,16 @@ func (t *typeDetail) SelfName() string {
 }
 
 func (t *typeDetail) TypeName() string {
-	if t.Kind == kindArray {
-		return t.Type.Name()
+	fullTypeName := t.Type.String()
+	if t.Kind == kindMap {
+		return fullTypeName
 	}
-	return t.Elem.Name()
+	if t.IsPointer {
+		fullTypeName = t.Elem.Name()
+	}
+	// return fullTypeName
+	parts := strings.Split(fullTypeName, ".")
+	return parts[len(parts)-1]
 }
 
 func (t *typeDetail) SetPackageName(n string) {
@@ -70,9 +76,9 @@ func (t *typeDetail) PackageName() string {
 		return t.overriddenPackageName
 	}
 
-	s := t.Elem.String()
-	if t.Kind == kindArray {
-		s = t.Type.String()
+	s := t.Type.String()
+	if t.IsPointer {
+		s = t.Elem.String()
 	}
 	if strings.Contains(s, ".") {
 		return strings.TrimSuffix(s, "."+t.TypeName())

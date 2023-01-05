@@ -62,8 +62,7 @@ func (d *DeepCopyBuilder) iterateEachTypes() error {
 			err = fmt.Errorf("%v is a basic type which does not need copying", detail.TypeReferenceName())
 
 		case kindStruct:
-			err = d.handleStructKind(detail)
-			// TODO:
+			err = d.handleStructKind(detail, true)
 
 		case kindSlice:
 			// TODO:
@@ -83,7 +82,7 @@ func (d *DeepCopyBuilder) iterateEachTypes() error {
 	return nil
 }
 
-func (d *DeepCopyBuilder) handleStructKind(detail *typeDetail) error {
+func (d *DeepCopyBuilder) handleStructKind(detail *typeDetail, exportable bool) error {
 	if detail.PackagePath() != "" {
 		n := d.addImportLine(detail.PackageName(), detail.PackagePath())
 		if n != detail.PackageName() {
@@ -91,7 +90,7 @@ func (d *DeepCopyBuilder) handleStructKind(detail *typeDetail) error {
 		}
 	}
 
-	funcName := detail.CopyFuncName(true)
+	funcName := detail.CopyFuncName(exportable)
 	d.addCodeLine("")
 	d.addCodeLine(`// %s %s`, funcName, detail.FunctionComment())
 	d.addCodeLine(
@@ -108,6 +107,11 @@ func (d *DeepCopyBuilder) handleStructKind(detail *typeDetail) error {
 
 	fields := d.readStructFields(detail)
 	for _, f := range fields {
+		d.debugf(
+			"处理字段 %s, 分类 %v, 包名 %v, 类型名 %v, 类型引用名 %v",
+			f.Field.Name, f.Kind, f.PackageName(), f.TypeName(), f.TypeReferenceName(),
+		)
+
 		switch f.Kind {
 		default:
 			d.logf("跳过不支持复制的字段 '%s' (%v)", f.Field.Name, f.Kind)
@@ -196,6 +200,44 @@ func (d *DeepCopyBuilder) handleStructKind(detail *typeDetail) error {
 			}
 
 		case kindMap:
+			elemDetail := d.analyzeType(f.Elem, true)
+			switch elemDetail.Kind {
+			default:
+				d.logf("跳过不支持的字段 '%s' (%v)", f.Field.Name, elemDetail.Kind)
+				continue
+
+			case kindBasic:
+				d.addCodeLine(
+					`	cpy.%s = make(%s, len(%s.%s))`,
+					f.Field.Name, f.TypeReferenceName(), detail.SelfName(), f.Field.Name,
+				)
+				d.addCodeLine(
+					`	for key, %s := range %s.%s {`,
+					elemDetail.SelfName(), detail.SelfName(), f.Field.Name,
+				)
+				d.addCodeLine(
+					`		cpy.%s[key] = %s`,
+					f.Field.Name, elemDetail.SelfName(),
+				)
+				d.addCodeLine(`	}`)
+
+			case kindStruct, kindSlice, kindArray, kindMap:
+				d.addCodeLine(
+					`	cpy.%s = make(%s, len(%s.%s))`,
+					f.Field.Name, f.TypeReferenceName(), detail.SelfName(), f.Field.Name,
+				)
+				d.addCodeLine(
+					`	for key, %s := range %s.%s {`,
+					elemDetail.SelfName(), detail.SelfName(), f.Field.Name,
+				)
+				subFuncName := elemDetail.CopyFuncName(false)
+				d.addCodeLine(
+					`		cpy.%s[key] = %s(%s)`,
+					f.Field.Name, subFuncName, elemDetail.SelfName(),
+				)
+				d.addCodeLine(`	}`)
+
+			}
 			// TODO:
 		}
 	}

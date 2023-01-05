@@ -16,3 +16,8 @@ type PointerSlice struct {
 type ID struct {
 	ObjectID primitive.ObjectID
 }
+
+type MapInStruct struct {
+	KVs map[string]string
+	IDs map[string]*ID
+}

@@ -1,9 +1,7 @@
 package deepcopy
 
 import (
-	"net/http"
 	"testing"
-	"time"
 
 	jsonvalue "github.com/Andrew-M-C/go.jsonvalue"
 	"github.com/Andrew-M-C/go.util/deepcopy/testcase"
@@ -23,12 +21,13 @@ func TestDeepCopy(t *testing.T) {
 
 func testDebug(t *testing.T) {
 	code, err := BuildDeepCopy(
-		http.Cookie{},
-		&http.Client{},
+		// http.Cookie{},
+		// &http.Client{},
 		(*jsonvalue.V)(nil),
-		time.Time{},
-		&testcase.PointerSlice{},
-		&testcase.ID{},
+		// time.Time{},
+		// &testcase.PointerSlice{},
+		// &testcase.ID{},
+		&testcase.MapInStruct{},
 	).EnableDebug().WithLogFunc(t.Logf).Do()
 
 	so(err, isNil)
