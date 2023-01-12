@@ -55,6 +55,13 @@ func testGeneral(t *testing.T) {
 	draw.DrawTextXY(c, 100, 50, "你好, 世界!", draw.OptColor(draw.Red), draw.OptFontSize(7))
 	draw.DrawTextXY(c, 10, 50, "Hello, world!", draw.OptColor(draw.Red), draw.OptRotate(30))
 
+	// 画一个空心平行四边形
+	c.DrawHollowPolygon(1, draw.P(100, 0), draw.P(125, 25), draw.P(150, 25), draw.P(125, 0))
+
+	// 画一个是心三角形
+	c.SetDrawColor(draw.Red)
+	c.DrawSolidPolygon(draw.P(200, 0), draw.P(200, 25), draw.P(175, 0))
+
 	// 保存 svg
 	err := c.Save(filepath)
 	so(err, isNil)

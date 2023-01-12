@@ -123,7 +123,41 @@ func (c *Canvas) DrawHollowRect(from, to draw.Point, width float64) {
 		`stroke-width="%d" stroke="%s" style="opacity:%s" fill="none"`,
 		absint(width), hexRGBString(o), opacityString(o),
 	)
-	c.svg().Rect(int(from.X), int(from.Y), int(to.X), int(to.Y), opt)
+	c.svg().Rect(round(from.X), round(from.Y), round(to.X), round(to.Y), opt)
+}
+
+// DrawHollowPolygon 绘制一个空心多边形
+func (c *Canvas) DrawHollowPolygon(width float64, endpoints ...draw.Point) {
+	if len(endpoints) == 0 {
+		return
+	}
+	o := draw.MergeOptions(c, nil)
+	opt := fmt.Sprintf(`style="fill:none;stroke:%s;stroke-width:%d"`, rgbString(o), absint(width))
+
+	x := make([]int, 0, len(endpoints))
+	y := make([]int, 0, len(endpoints))
+	for _, p := range endpoints {
+		x = append(x, round(p.X))
+		y = append(y, round(p.Y))
+	}
+	c.svg().Polygon(x, y, opt)
+}
+
+// DrawHollowPolygon 绘制一个空心多边形
+func (c *Canvas) DrawSolidPolygon(endpoints ...draw.Point) {
+	if len(endpoints) == 0 {
+		return
+	}
+	o := draw.MergeOptions(c, nil)
+	opt := fmt.Sprintf(`style="fill:%s;stroke:none;stroke-width:0"`, rgbString(o))
+
+	x := make([]int, 0, len(endpoints))
+	y := make([]int, 0, len(endpoints))
+	for _, p := range endpoints {
+		x = append(x, round(p.X))
+		y = append(y, round(p.Y))
+	}
+	c.svg().Polygon(x, y, opt)
 }
 
 // DrawSolidRect 绘制一个实心矩形
@@ -175,4 +209,8 @@ func (c *Canvas) DrawText(origin draw.Point, text string, opts ...draw.Option) {
 		int(origin.X), int(origin.Y), o.Rotate(),
 	)
 	c.svg().Text(0, 0, text, opt)
+}
+
+func round(f float64) int {
+	return int(f + 0.5)
 }

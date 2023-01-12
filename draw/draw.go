@@ -26,6 +26,11 @@ func NewPoint[T1, T2 Number](x T1, y T2) Point {
 	}
 }
 
+// P 等价于 NewPoint, 缩短调用方调用长度
+func P[T1, T2 Number](x T1, y T2) Point {
+	return NewPoint(x, y)
+}
+
 // Canvas 表示一个画板
 type Canvas interface {
 	Size() (width, height float64)
@@ -40,6 +45,9 @@ type Canvas interface {
 
 	DrawHollowRect(endpoint1, endpoint2 Point, width float64)
 	DrawSolidRect(endpoint1, endpoint2 Point)
+
+	DrawHollowPolygon(width float64, endpoints ...Point)
+	DrawSolidPolygon(endpoints ...Point)
 
 	Save(filepath string) error
 }
