@@ -4,7 +4,7 @@ import (
 	"runtime"
 	"testing"
 
-	_ "go.uber.org/automaxprocs"
+	"go.uber.org/automaxprocs/maxprocs"
 
 	"github.com/Andrew-M-C/go.util/runtime/cpu"
 	"github.com/smartystreets/goconvey/convey"
@@ -21,6 +21,8 @@ func TestCPU(t *testing.T) {
 }
 
 func testCoreNum(t *testing.T) {
+	maxprocs.Set(maxprocs.Logger(t.Logf))
+
 	// 首先设置一个正确的数值
 	correctNum := runtime.GOMAXPROCS(0)
 	t.Logf("Original GOMAXPROCS=%d", correctNum)
