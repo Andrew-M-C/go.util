@@ -12,6 +12,7 @@ require (
 	github.com/petermattis/goid v0.0.0-20220526132513-07eaf5d0b9f4
 	github.com/smartystreets/goconvey v1.6.4
 	go.uber.org/atomic v1.7.0
+	go.uber.org/automaxprocs v1.5.1
 	golang.org/x/exp v0.0.0-20221114191408-850992195362
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -19,6 +20,7 @@ require (
 require (
 	github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mattn/go-colorable v0.1.8 // indirect
 	github.com/mattn/go-isatty v0.0.12 // indirect
 	github.com/smartystreets/assertions v0.0.0-20180927180507-b2de0cb4f26d // indirect
