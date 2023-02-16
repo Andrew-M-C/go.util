@@ -38,11 +38,28 @@ func testLCS(t *testing.T) {
 			return buf.String()
 		}
 
+		bothDesc := func(r *Route) string {
+			buf := bytes.Buffer{}
+
+			it := r.ToIter(len(x), len(y))
+			for _, item := range it {
+				if item[0] == -1 {
+					buf.WriteString(color.GreenString(string(y[item[1]])))
+				} else if item[1] == -1 {
+					buf.WriteString(color.RedString(string(x[item[0]])))
+				} else {
+					buf.WriteRune(rune(x[item[0]]))
+				}
+			}
+			return buf.String()
+		}
+
 		t.Logf("XIndexes: %v", r.XIndexes)
 		t.Logf("YIndexes: %v", r.YIndexes)
 
 		t.Logf("X: %s", desc(r.XIndexes, x))
 		t.Logf("Y: %s", desc(r.YIndexes, y))
+		t.Logf("combine: %s", bothDesc(r))
 
 		printRes(t, res)
 

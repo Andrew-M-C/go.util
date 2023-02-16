@@ -93,6 +93,41 @@ type Route struct {
 	YIndexes []int
 }
 
+// RouteIter 组合起左右 LCS 的结果, 并且使用 [2]int 标记当前路径点属于那一边的值。
+// -1 表示不存在
+type RouteIter [][2]int
+
+// ToIter 转为 RouteIter 格式
+func (r *Route) ToIter(xLen, yLen int) RouteIter {
+	res := make(RouteIter, 0, len(r.XIndexes)+len(r.YIndexes))
+
+	xCurr, yCurr := 0, 0
+
+	for n, xIndex := range r.XIndexes {
+		for i := xCurr; i < xIndex; i++ {
+			res = append(res, [2]int{i, -1})
+		}
+
+		yIndex := r.YIndexes[n]
+		for j := yCurr; j < yIndex; j++ {
+			res = append(res, [2]int{-1, j})
+		}
+
+		res = append(res, [2]int{xIndex, yIndex})
+		xCurr, yCurr = xIndex+1, yIndex+1
+	}
+
+	for i := xCurr; i < xLen; i++ {
+		res = append(res, [2]int{i, -1})
+	}
+
+	for j := yCurr; j < yLen; j++ {
+		res = append(res, [2]int{-1, j})
+	}
+
+	return res
+}
+
 // GetARoute 方便地返回一个相同序列的路径。从 map 中的右下角，优先向上方搜索
 func (m *LCSMap) GetRoute() *Route {
 	if m.maxX == 0 || m.maxY == 0 {
