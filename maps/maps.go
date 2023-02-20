@@ -51,3 +51,33 @@ func Keys[K constraints.Ordered, V any](m map[K]V) (keys KeyList[K]) {
 	}
 	return keys
 }
+
+// Equal 判断两个 map 是否完全一致
+func Equal[K comparable, V comparable](a, b map[K]V) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k, va := range a {
+		vb, exist := b[k]
+		if !exist {
+			return false
+		}
+		if va != vb {
+			return false
+		}
+	}
+	return true
+}
+
+// KeysEqual 判断两个 map 是否拥有相同的 keys
+func KeysEqual[K comparable, V1, V2 any](a map[K]V1, b map[K]V2) bool {
+	if len(a) != len(b) {
+		return false
+	}
+	for k := range a {
+		if _, exist := b[k]; !exist {
+			return false
+		}
+	}
+	return true
+}

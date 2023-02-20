@@ -31,10 +31,36 @@ func test(t *testing.T, scene string, f func(*testing.T)) {
 func TestSlice(t *testing.T) {
 	internal.debugf = t.Logf
 
+	test(t, "slice.go", testSlice)
 	test(t, "CombineEvenly", testCombineEvenly)
 	test(t, "LCS", testLCS)
 	test(t, "binary search", testBinarySearch)
 	test(t, "List type", testList)
+}
+
+func testSlice(t *testing.T) {
+	cv("Equal", func() {
+		a := []int{1, 2, 3, 4}
+		b := []int{-1, 1, 2, 3}
+		so(Equal(a, b), eq, false)
+
+		b = append(b, 4)
+		so(Equal(a, b), eq, false)
+
+		b = b[1:]
+		so(Equal(a, b), eq, true)
+	})
+
+	cv("HaveEqualValues", func() {
+		a := []int{0, 1, 0}
+		b := []int{0, 1, 0, 1, -1}
+		so(HaveEqualValues(a, b), eq, false)
+		so(Equal(a, b), eq, false)
+
+		a = append(a, -1)
+		so(HaveEqualValues(a, b), eq, true)
+		so(Equal(a, b), eq, false)
+	})
 }
 
 func testCombineEvenly(t *testing.T) {

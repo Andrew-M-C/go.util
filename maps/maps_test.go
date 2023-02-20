@@ -2,9 +2,7 @@
 package maps
 
 import (
-	"math/rand"
 	"testing"
-	"time"
 
 	"github.com/smartystreets/goconvey/convey"
 )
@@ -15,14 +13,11 @@ var (
 	eq = convey.ShouldEqual
 )
 
-func init() {
-	rand.Seed(time.Now().UnixMicro())
-}
-
-func TestContext(t *testing.T) {
+func TestMaps(t *testing.T) {
 	cv("测试 StringKeys", t, func() { testStringKeys(t) })
 	cv("测试 IntKeys", t, func() { testIntKeys(t) })
 	cv("测试 UintKeys", t, func() { testUintKeys(t) })
+	cv("测试 Equal 和 KeysEqual", t, func() { testEqual(t) })
 }
 
 func testStringKeys(t *testing.T) {
@@ -90,5 +85,34 @@ func testUintKeys(t *testing.T) {
 			so(keys[0], eq, 1)
 			so(keys[1], eq, 10000)
 		}
+	})
+}
+
+func testEqual(t *testing.T) {
+	cv("Equal()", func() {
+		a := map[int]int{
+			1: -1,
+			2: -22,
+		}
+		b := map[int]int{
+			1: -1,
+			2: -2,
+		}
+		so(Equal(a, b), eq, false)
+
+		a[2] = -2
+		so(Equal(a, b), eq, true)
+	})
+
+	cv("KeysEqual", func() {
+		a := map[int]struct{}{
+			1: {},
+			2: {},
+		}
+		b := map[int]int{
+			1: 1,
+			2: 22,
+		}
+		so(KeysEqual(a, b), eq, true)
 	})
 }
