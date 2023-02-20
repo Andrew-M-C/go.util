@@ -12,8 +12,8 @@ import (
 var (
 	cv = convey.Convey
 	so = convey.So
-
 	eq = convey.ShouldEqual
+	le = convey.ShouldBeLessThanOrEqualTo
 
 	isTrue  = convey.ShouldBeTrue
 	isFalse = convey.ShouldBeFalse
@@ -34,6 +34,7 @@ func TestSlice(t *testing.T) {
 	test(t, "CombineEvenly", testCombineEvenly)
 	test(t, "LCS", testLCS)
 	test(t, "binary search", testBinarySearch)
+	test(t, "List type", testList)
 }
 
 func testCombineEvenly(t *testing.T) {

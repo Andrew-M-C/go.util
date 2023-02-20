@@ -36,3 +36,20 @@ func (s Set[K]) Del(key K) bool {
 	delete(s, key)
 	return true
 }
+
+// Equal 判断两个 set 是不是相等
+func (s Set[K]) Equal(another Set[K]) bool {
+	if len(s) != len(another) {
+		return false
+	}
+	for k, v := range s {
+		anotherV, exist := another[k]
+		if !exist {
+			return false
+		}
+		if v != anotherV {
+			return false
+		}
+	}
+	return true
+}
