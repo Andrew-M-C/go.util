@@ -8,13 +8,22 @@ import (
 	"golang.org/x/exp/constraints"
 )
 
-// StringKeys 返回所有的 key
+// Keys 返回所有的 key
 func Keys[K constraints.Ordered, V any](m map[K]V) (keys slice.List[K]) {
 	keys = make([]K, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
 	}
 	return keys
+}
+
+// Values 返回所有的 value
+func Values[K constraints.Ordered, V any](m map[K]V) (values []V) {
+	values = make([]V, 0, len(m))
+	for _, v := range m {
+		values = append(values, v)
+	}
+	return values
 }
 
 // Equal 判断两个 map 是否完全一致
