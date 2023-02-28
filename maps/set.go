@@ -1,6 +1,7 @@
 package maps
 
 import (
+	"github.com/Andrew-M-C/go.util/slice"
 	"golang.org/x/exp/constraints"
 )
 
@@ -10,6 +11,15 @@ type Set[K comparable] map[K]struct{}
 // NewSet 返回一个集合类型
 func NewSet[K comparable]() Set[K] {
 	return Set[K]{}
+}
+
+// NewSetFromSlice 从一个切片转为 Set 类型
+func NewSetFromSlice[T constraints.Ordered](sli slice.List[T]) Set[T] {
+	s := make(Set[T], len(sli))
+	for _, v := range sli {
+		s.Add(v)
+	}
+	return s
 }
 
 // NewSetWithCapacity 返回一个集合类型并初始化容量

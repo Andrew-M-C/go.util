@@ -2,49 +2,14 @@
 package maps
 
 import (
-	"sort"
+	"fmt"
 
+	"github.com/Andrew-M-C/go.util/slice"
 	"golang.org/x/exp/constraints"
 )
 
-type KeyList[K constraints.Ordered] []K
-
-// SortAsc 返回一个升序后的 key 列表
-func (l KeyList[K]) SortAsc() KeyList[K] {
-	res := make([]K, len(l))
-	copy(res, l)
-	sort.Slice(res, func(i, j int) bool {
-		return res[i] < res[j]
-	})
-	return res
-}
-
-// SortDesc 返回一个降序后的 key 列表
-func (l KeyList[K]) SortDesc() KeyList[K] {
-	res := make(KeyList[K], len(l))
-	copy(res, l)
-	sort.Slice(res, func(i, j int) bool {
-		return res[i] > res[j]
-	})
-	return res
-}
-
-// Deduplicate 去重
-func (l KeyList[K]) Deduplicate() KeyList[K] {
-	keys := make(KeyList[K], 0, len(l))
-	set := NewSetWithCapacity[K](len(l))
-	for _, k := range l {
-		if set.Has(k) {
-			continue
-		}
-		set.Add(k)
-		keys = append(keys, k)
-	}
-	return keys
-}
-
 // StringKeys 返回所有的 key
-func Keys[K constraints.Ordered, V any](m map[K]V) (keys KeyList[K]) {
+func Keys[K constraints.Ordered, V any](m map[K]V) (keys slice.List[K]) {
 	keys = make([]K, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)
@@ -80,4 +45,21 @@ func KeysEqual[K comparable, V1, V2 any](a map[K]V1, b map[K]V2) bool {
 		}
 	}
 	return true
+}
+
+// GetOrDefault 从 map 中获取数据, 如果不存在则返回 default value
+func GetOrDefault[K constraints.Ordered, V any](m map[K]V, key K, defaultValue V) V {
+	if v, exist := m[key]; exist {
+		return v
+	}
+	return defaultValue
+}
+
+// GetStringOrFormat 从 value 为 string 的 map 中获取数据, 如果不存在则使用 fmt.Sprintf(format, key)
+// 的测试返回 value
+func GetStringOrFormat[K constraints.Ordered, V ~string](m map[K]V, key K, format string) V {
+	if v, exist := m[key]; exist {
+		return v
+	}
+	return V(fmt.Sprintf(format, key))
 }

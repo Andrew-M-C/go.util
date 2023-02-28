@@ -3,7 +3,6 @@ package slice
 import (
 	"sort"
 
-	"github.com/Andrew-M-C/go.util/maps"
 	"golang.org/x/exp/constraints"
 )
 
@@ -13,15 +12,6 @@ type List[T constraints.Ordered] []T
 // ToList 转为 List 类型
 func ToList[T constraints.Ordered](cli []T) List[T] {
 	return List[T](cli)
-}
-
-// KeySet 转为 map 模式
-func (l List[T]) KeySet() maps.Set[T] {
-	res := make(maps.Set[T], len(l))
-	for _, item := range l {
-		res[item] = struct{}{}
-	}
-	return res
 }
 
 // SortAsc 按照升序 (<=) 排序
@@ -78,5 +68,21 @@ func (l List[T]) Shuffle() {
 func (l List[T]) Copy() List[T] {
 	res := make(List[T], len(l))
 	copy(res, l)
+	return res
+}
+
+// Deduplicate 创建一个副本并去重
+func (l List[T]) Deduplicate() List[T] {
+	res := make(List[T], 0, len(l))
+	set := make(map[T]struct{}, len(l))
+
+	for _, v := range l {
+		if _, exist := set[v]; exist {
+			continue
+		}
+		res = append(res, v)
+		set[v] = struct{}{}
+	}
+
 	return res
 }
