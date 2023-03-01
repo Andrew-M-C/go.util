@@ -61,6 +61,30 @@ func testSlice(t *testing.T) {
 		so(HaveEqualValues(a, b), eq, true)
 		so(Equal(a, b), eq, false)
 	})
+
+	cv("Element", func() {
+		a := []int{10, 20, 30}
+
+		n, ok := Element(a, 1)
+		so(ok, eq, true)
+		so(n, eq, a[1])
+
+		n, ok = Element(a, -1)
+		so(ok, eq, true)
+		so(n, eq, a[2])
+
+		n, ok = Element(a, 3)
+		so(ok, eq, false)
+		so(n, eq, 0)
+
+		n, ok = Element(a, -3)
+		so(ok, eq, true)
+		so(n, eq, a[0])
+
+		n, ok = Element(a, -4)
+		so(ok, eq, false)
+		so(n, eq, 0)
+	})
 }
 
 func testCombineEvenly(t *testing.T) {
