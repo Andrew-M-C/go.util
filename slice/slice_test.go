@@ -85,6 +85,28 @@ func testSlice(t *testing.T) {
 		so(ok, eq, false)
 		so(n, eq, 0)
 	})
+
+	cv("SetElement", func() {
+		a := []int{10, 20, 30}
+
+		ok := SetElement(a, 1, 200)
+		so(ok, eq, true)
+		so(a[1], eq, 200)
+
+		ok = SetElement(a, -1, -300)
+		so(ok, eq, true)
+		so(a[2], eq, -300)
+
+		ok = SetElement(a, 3, 333)
+		so(ok, eq, false)
+
+		ok = SetElement(a, -3, -333)
+		so(ok, eq, true)
+		so(a[0], eq, -333)
+
+		ok = SetElement(a, -4, -444)
+		so(ok, eq, false)
+	})
 }
 
 func testCombineEvenly(t *testing.T) {

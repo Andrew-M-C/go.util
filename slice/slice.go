@@ -49,3 +49,23 @@ func Element[T any, I constraints.Signed](sli []T, signedIndex I) (value T, inRa
 	}
 	return sli[index], true
 }
+
+// SetElement 往一个切片中设置值, 如果是负数, 表示设置在最后一个 (-1) 位置。不论是正数还是负数,
+// 如果超出范围, 均无法设置, 并且 inRange 返回 false。
+func SetElement[T any, I constraints.Signed](sli []T, signedIndex I, value T) (inRange bool) {
+	if signedIndex >= 0 {
+		if int(signedIndex) >= len(sli) {
+			return false
+		}
+		sli[signedIndex] = value
+		return true
+	}
+
+	// 从最后算起
+	index := len(sli) + int(signedIndex)
+	if index < 0 {
+		return false
+	}
+	sli[index] = value
+	return true
+}
