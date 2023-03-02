@@ -14,5 +14,6 @@ var (
 )
 
 func TestMath(t *testing.T) {
-	cv("test int_sqrt", t, func() { testIntSqrt(t) })
+	cv("test math_int_sqrt", t, func() { testIntSqrt(t) })
+	cv("test math_linear", t, func() { testLinear(t) })
 }
