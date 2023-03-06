@@ -14,20 +14,23 @@ func ToList[T constraints.Ordered](cli []T) List[T] {
 	return List[T](cli)
 }
 
-// SortAsc 按照升序 (<=) 排序
-func (l List[T]) SortAsc() {
+// SortAsc 按照升序 (<=) 排序。为了便于链式调用, 返回自己
+func (l List[T]) SortAsc() List[T] {
 	sort.Slice(l, func(i, j int) bool {
 		return l[i] <= l[j]
 	})
+	return l
 }
 
-// SortDesc 按照降序 (>=) 排序
-func (l List[T]) SortDesc() {
+// SortDesc 按照降序 (>=) 排序。为了便于链式调用, 返回自己
+func (l List[T]) SortDesc() List[T] {
 	sort.Slice(l, func(i, j int) bool {
 		return l[i] >= l[j]
 	})
+	return l
 }
 
+// Equal 判断两个 list 各位置上的成员是否相等
 func (l List[T]) Equal(another List[T]) bool {
 	if len(l) != len(another) {
 		return false
