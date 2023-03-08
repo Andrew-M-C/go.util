@@ -1,9 +1,11 @@
 package log_test
 
 import (
+	"context"
 	"testing"
 
 	"github.com/Andrew-M-C/go.util/log"
+	"github.com/Andrew-M-C/go.util/log/trace"
 	"github.com/smartystreets/goconvey/convey"
 )
 
@@ -20,6 +22,12 @@ func testDebugging(t *testing.T) {
 	log.Debugf("Hello,", "debug")
 	log.Warnf("Hello, %s!", "warning")
 	log.Error("Hello", "error")
+
+	ctx := context.Background()
+	log.InfoContextf(ctx, "Hello, %s context", "info")
+
+	ctx = trace.EnsureTraceID(ctx)
+	log.InfoContextf(ctx, "Hello, %s trace context", "info")
 
 	log.Infof("以下应该没有日志")
 	log.SetLevel(log.NoLog, log.NoLog)
