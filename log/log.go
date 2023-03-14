@@ -80,7 +80,10 @@ func getNonCtxLoggers(level Level) (loggers []nonCtxLogger) {
 		loggers = append(loggers, consoleLog(level))
 	}
 
-	// TODO: file logger
+	// file logger
+	if level >= internal.level.file {
+		loggers = append(loggers, fileLog(level))
+	}
 
 	return
 }
@@ -175,7 +178,10 @@ func getCtxLoggers(level Level) (loggers []ctxLogger) {
 		loggers = append(loggers, consoleLog(level))
 	}
 
-	// TODO: file logger
+	// file logger
+	if level >= internal.level.file {
+		loggers = append(loggers, fileLog(level))
+	}
 
 	return
 }
