@@ -1,30 +1,23 @@
 package log
 
-import "context"
+import (
+	"context"
+	"os"
+)
 
 // Logger 表示一个日志器
-// type Logger interface {
-// 	Debugf(f string, a ...any)
-// 	Debug(a ...any)
-// 	Infof(f string, a ...any)
-// 	Info(a ...any)
-// 	Warnf(f string, a ...any)
-// 	Warn(a ...any)
-// 	Errorf(f string, a ...any)
-// 	Error(a ...any)
-// 	Fatalf(f string, a ...any)
-// 	Fatal(a ...any)
-// 	DebugContextf(ctx context.Context, f string, a ...any)
-// 	DebugContext(ctx context.Context, a ...any)
-// 	InfoContextf(ctx context.Context, f string, a ...any)
-// 	InfoContext(ctx context.Context, a ...any)
-// 	WarnContextf(ctx context.Context, f string, a ...any)
-// 	WarnContext(ctx context.Context, a ...any)
-// 	ErrorContextf(ctx context.Context, f string, a ...any)
-// 	ErrorContext(ctx context.Context, a ...any)
-// 	FatalContextf(ctx context.Context, f string, a ...any)
-// 	FatalContext(ctx context.Context, a ...any)
-// }
+type Logger interface {
+	Debugf(f string, a ...any)
+	Debug(a ...any)
+	Infof(f string, a ...any)
+	Info(a ...any)
+	Warnf(f string, a ...any)
+	Warn(a ...any)
+	Errorf(f string, a ...any)
+	Error(a ...any)
+	Fatalf(f string, a ...any)
+	Fatal(a ...any)
+}
 
 type nonCtxLogger interface {
 	logf(f string, a ...any)
@@ -34,4 +27,146 @@ type nonCtxLogger interface {
 type ctxLogger interface {
 	logCtxf(ctx context.Context, f string, a ...any)
 	logCtx(ctx context.Context, a ...any)
+}
+
+// NewLogger 返回一个日志器
+func NewLogger(ctx ...context.Context) Logger {
+	if len(ctx) == 0 || ctx[0] == nil {
+		return loggerImplWithoutCtx{}
+	}
+	return &loggerImplWithCtx{ctx: ctx[0]}
+}
+
+// -------- logger without context --------
+
+type loggerImplWithoutCtx struct{}
+
+// Debugf 调试日志
+func (loggerImplWithoutCtx) Debugf(f string, a ...any) {
+	l := getNonCtxLoggers(DebugLevel)
+	doNonCtxLogf(l, f, a...)
+}
+
+// Debug 调试日志
+func (loggerImplWithoutCtx) Debug(a ...any) {
+	l := getNonCtxLoggers(DebugLevel)
+	doNonCtxLog(l, a...)
+}
+
+// Infof 信息日志
+func (loggerImplWithoutCtx) Infof(f string, a ...any) {
+	l := getNonCtxLoggers(InfoLevel)
+	doNonCtxLogf(l, f, a...)
+}
+
+// Info 信息日志
+func (loggerImplWithoutCtx) Info(a ...any) {
+	l := getNonCtxLoggers(InfoLevel)
+	doNonCtxLog(l, a...)
+}
+
+// Warnf 警告日志
+func (loggerImplWithoutCtx) Warnf(f string, a ...any) {
+	l := getNonCtxLoggers(WarnLevel)
+	doNonCtxLogf(l, f, a...)
+}
+
+// Warn 警告日志
+func (loggerImplWithoutCtx) Warn(a ...any) {
+	l := getNonCtxLoggers(WarnLevel)
+	doNonCtxLog(l, a...)
+}
+
+// Errorf 错误日志
+func (loggerImplWithoutCtx) Errorf(f string, a ...any) {
+	l := getNonCtxLoggers(ErrorLevel)
+	doNonCtxLogf(l, f, a...)
+}
+
+// Error 错误日志
+func (loggerImplWithoutCtx) Error(a ...any) {
+	l := getNonCtxLoggers(ErrorLevel)
+	doNonCtxLog(l, a...)
+}
+
+// Fatalf 崩溃日志
+func (loggerImplWithoutCtx) Fatalf(f string, a ...any) {
+	l := getNonCtxLoggers(FatalLevel)
+	doNonCtxLogf(l, f, a...)
+	os.Exit(-1)
+}
+
+// Fatal 崩溃日志
+func (loggerImplWithoutCtx) Fatal(a ...any) {
+	l := getNonCtxLoggers(FatalLevel)
+	doNonCtxLog(l, a...)
+	os.Exit(-1)
+}
+
+// -------- logger without context --------
+
+type loggerImplWithCtx struct {
+	ctx context.Context
+}
+
+// Debugf 调试日志
+func (c *loggerImplWithCtx) Debugf(f string, a ...any) {
+	l := getCtxLoggers(DebugLevel)
+	doCtxLogf(c.ctx, l, f, a...)
+}
+
+// Debug 调试日志
+func (c *loggerImplWithCtx) Debug(a ...any) {
+	l := getCtxLoggers(DebugLevel)
+	doCtxLog(c.ctx, l, a...)
+}
+
+// Infof 信息日志
+func (c *loggerImplWithCtx) Infof(f string, a ...any) {
+	l := getCtxLoggers(InfoLevel)
+	doCtxLogf(c.ctx, l, f, a...)
+}
+
+// Info 信息日志
+func (c *loggerImplWithCtx) Info(a ...any) {
+	l := getCtxLoggers(InfoLevel)
+	doCtxLog(c.ctx, l, a...)
+}
+
+// Warnf 警告日志
+func (c *loggerImplWithCtx) Warnf(f string, a ...any) {
+	l := getCtxLoggers(WarnLevel)
+	doCtxLogf(c.ctx, l, f, a...)
+}
+
+// WarnContext 警告日志
+func (c *loggerImplWithCtx) Warn(a ...any) {
+	l := getCtxLoggers(WarnLevel)
+	doCtxLog(c.ctx, l, a...)
+}
+
+// Errorf 错误日志
+func (c *loggerImplWithCtx) Errorf(f string, a ...any) {
+	l := getCtxLoggers(ErrorLevel)
+	doCtxLogf(c.ctx, l, f, a...)
+}
+
+// Error 错误日志
+func (c *loggerImplWithCtx) Error(a ...any) {
+	l := getCtxLoggers(ErrorLevel)
+	doCtxLog(c.ctx, l, a...)
+}
+
+// Fatalf 崩溃日志
+func (c *loggerImplWithCtx) Fatalf(f string, a ...any) {
+	l := getCtxLoggers(FatalLevel)
+	doCtxLogf(c.ctx, l, f, a...)
+	os.Exit(-1)
+}
+
+// Fatal 崩溃日志
+func (c *loggerImplWithCtx) Fatal(a ...any) {
+	l := getCtxLoggers(FatalLevel)
+	doCtxLog(c.ctx, l, a...)
+	os.Exit(-1)
 }

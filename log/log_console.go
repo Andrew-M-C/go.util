@@ -38,9 +38,9 @@ func (l consoleLog) log(a ...any) {
 	fu := l.getLogger()
 	ca := caller.GetCaller(callerSkip)
 	f := fmt.Sprintf("%s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca))
-	s := fmt.Sprint(a...)
+	s := fmt.Sprintln(a...)
 	s = fu("%s - %s", f, s)
-	fmt.Println(s)
+	fmt.Print(s)
 }
 
 func (l consoleLog) logCtxf(ctx context.Context, f string, a ...any) {
@@ -63,12 +63,15 @@ func (l consoleLog) logCtx(ctx context.Context, a ...any) {
 	fu := l.getLogger()
 	ca := caller.GetCaller(callerSkip)
 	f := fmt.Sprintf("%s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca))
-	s := fmt.Sprint(a...)
-	s = fu("%s - %s", f, s)
 
 	if id == "" {
+		s := fmt.Sprint(a...)
+		s = fu("%s - %s", f, s)
 		fmt.Println(s)
 	} else {
-		fmt.Println(s, fmt.Sprintf("- %s", id))
+		a = append([]any{f, "-"}, a...)
+		a = append(a, "-", id)
+		s := fmt.Sprintln(a)
+		fmt.Print(s)
 	}
 }

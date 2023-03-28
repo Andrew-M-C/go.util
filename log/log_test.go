@@ -28,6 +28,11 @@ func testDebugging(t *testing.T) {
 	Warnf("Hello, %s!", "warning")
 	Error("Hello", "error")
 
+	l := NewLogger()
+	l.Debug("Hello,", "debug", "logger")
+	l.Warnf("Hello, %s logger!", "warning")
+	l.Error("Hello", "error", "logger")
+
 	ctx := context.Background()
 	InfoContextf(ctx, "Hello, %s context", "info")
 
@@ -42,7 +47,7 @@ func testDebugging(t *testing.T) {
 
 	logMany := func() {
 		for i := 0; i < 100000; i++ {
-			Warnf("填充日志, 第 %d 条", i+1)
+			Warn("填充日志, 第", i+1, "条")
 		}
 	}
 	logMany()
