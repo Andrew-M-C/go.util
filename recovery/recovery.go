@@ -49,6 +49,6 @@ func CatchPanic(opts ...Option) {
 	}
 
 	if o.callback != nil {
-		o.callback(stack)
+		o.callback(e, stack)
 	}
 }

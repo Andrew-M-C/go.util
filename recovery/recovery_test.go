@@ -2,6 +2,7 @@ package recovery_test
 
 import (
 	"context"
+	"fmt"
 	"testing"
 
 	"github.com/Andrew-M-C/go.util/recovery"
@@ -12,6 +13,7 @@ import (
 var (
 	cv = convey.Convey
 	so = convey.So
+	eq = convey.ShouldEqual
 
 	notPanic = convey.ShouldNotPanic
 )
@@ -48,16 +50,17 @@ func testRecovery(t *testing.T) {
 	})
 
 	cv("打日志 No 2", func() {
-		f := func() {
+		f := func() (info string) {
 			defer recovery.CatchPanic(
-				recovery.WithCallback(func(stack []caller.Caller) {
+				recovery.WithCallback(func(e any, stack []caller.Caller) {
 					t.Logf("Got panic position: %v", stack[0])
+					info = fmt.Sprint(e)
 				}),
 			)
 
 			panic("主动触发")
 		}
 
-		so(f, notPanic)
+		so(f(), eq, "主动触发")
 	})
 }

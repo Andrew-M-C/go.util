@@ -13,7 +13,7 @@ type option struct {
 }
 
 // PanicCallback 发生 panic 时的回调函数
-type PanicCallback func(stack []caller.Caller)
+type PanicCallback func(info any, stack []caller.Caller)
 
 func mergeOptions(opts []Option) *option {
 	o := &option{}
