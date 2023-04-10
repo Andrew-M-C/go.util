@@ -21,6 +21,7 @@ func TestMaps(t *testing.T) {
 	cv("测试 UintKeys", t, func() { testUintKeys(t) })
 	cv("测试 Equal 和 KeysEqual", t, func() { testEqual(t) })
 	cv("测试 GetOrDefault 和 GetStringOrFormat", t, func() { testGetFunctions(t) })
+	cv("测试 maps_kv_pair.go", t, func() { testKVPairs(t) })
 }
 
 func testStringKeys(t *testing.T) {
