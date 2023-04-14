@@ -9,8 +9,8 @@ func (e E) Error() string {
 }
 
 const (
-	// ErrTimerIsNotRunning indecates that timer is not running
+	// ErrTimerIsNotRunning indicates that timer is not running
 	ErrTimerIsNotRunning = E("timer is not running")
-	// ErrTimerIsNotRunning indecates that timer is already running
+	// ErrTimerIsAlreadyRunning indicates that timer is already running
 	ErrTimerIsAlreadyRunning = E("timer is already running")
 )

@@ -21,7 +21,7 @@ func TestTime(t *testing.T) {
 	cv("测试 SleepToNextSecondsN", t, func() { testSleepToNextSecondsN((t)) })
 	cv("测试 Wait", t, func() { testWait((t)) })
 	cv("测试 Timer", t, func() { testTimer(t) })
-	cv("测试 Timer.Stop", t, func() { testTimer_Stop(t) })
+	cv("测试 Timer.Stop", t, func() { testTimerStop(t) })
 }
 
 func expectElapsed(t *testing.T, start time.Time, ela time.Duration) {
@@ -89,7 +89,7 @@ func testTimer(t *testing.T) {
 	t.Logf("callback invoked")
 }
 
-func testTimer_Stop(t *testing.T) {
+func testTimerStop(t *testing.T) {
 	secs := 5
 	duration := time.Duration(secs) * time.Second
 	gotCb := atomic.NewBool(false)

@@ -7,6 +7,7 @@ import (
 
 // reference: [GO语言提前取消定时器](https://blog.csdn.net/u012265809/article/details/114939168)
 
+// TimeoutCallback 表示超时时的回调函数
 type TimeoutCallback func()
 
 // Timer is re-packaged time.Timer object, but have different methods.
