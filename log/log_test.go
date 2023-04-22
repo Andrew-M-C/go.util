@@ -3,6 +3,7 @@ package log
 import (
 	"context"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -17,7 +18,13 @@ var (
 )
 
 func TestLog(t *testing.T) {
+	testInit(t)
 	cv("调试", t, func() { testDebugging(t) })
+	cv("测试自动删除", t, func() { testAutoRemove(t) })
+}
+
+func testInit(t *testing.T) {
+	internal.debugf = t.Logf
 }
 
 func testDebugging(t *testing.T) {
@@ -65,4 +72,30 @@ func testDebugging(t *testing.T) {
 	Infof("以下应该没有日志")
 	SetLevel(NoLog, NoLog)
 	Error("Hello", "no error")
+}
+
+func testAutoRemove(t *testing.T) {
+	logMany := func() {
+		for i := 0; i < 1000000; i++ {
+			Warn("再次填充日志, 第", i+1, "条")
+		}
+	}
+
+	SetLevel(DebugLevel, NoLog)
+	start := time.Now()
+
+	for i := 0; i < 15; i++ {
+		logMany()
+		time.Sleep(500 * time.Millisecond)
+
+		files, _ := os.ReadDir(".")
+		cnt := 0
+		for _, f := range files {
+			if strings.HasSuffix(f.Name(), ".log") {
+				cnt++
+				t.Log(f.Name())
+			}
+		}
+		t.Logf("%v - 共有 %d 个日志文件", time.Since(start), cnt)
+	}
 }

@@ -4,11 +4,17 @@ package log
 type Level uint8
 
 const (
+	// DebugLevel 调试级别日志
 	DebugLevel Level = iota
+	// InfoLevel 信息级别日志
 	InfoLevel
+	// WarnLevel 警告级别日志
 	WarnLevel
+	// ErrorLevel 错误级别日志
 	ErrorLevel
+	// FatalLevel 崩溃日志
 	FatalLevel
+	// NoLog 不输出任何日志
 	NoLog
 )
 

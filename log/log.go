@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/Andrew-M-C/go.util/runtime/caller"
+	timeutil "github.com/Andrew-M-C/go.util/time"
 )
 
 // -------- log without context --------
@@ -105,7 +106,7 @@ func callerDesc(ca caller.Caller) string {
 }
 
 func timeDesc() string {
-	return time.Now().In(internal.Beijing).Format("2006-01-02 15:04:05.000")
+	return time.Now().In(timeutil.Beijing).Format("2006-01-02 15:04:05.000")
 }
 
 // -------- log with context --------

@@ -3,13 +3,17 @@ package log
 import (
 	"context"
 	"fmt"
+	"io/fs"
 	"os"
 	"path/filepath"
+	"regexp"
+	"sort"
 	"strings"
 	"time"
 
 	"github.com/Andrew-M-C/go.util/log/trace"
 	"github.com/Andrew-M-C/go.util/runtime/caller"
+	timeutil "github.com/Andrew-M-C/go.util/time"
 )
 
 // SetFileName 设置文件名
@@ -102,6 +106,14 @@ func fileLogRoutine() {
 	prevBuffer := make([]string, 0, 1000)
 
 	iterate := func() {
+		// 如果没有日志请求, 那么啥都不用做
+		internal.file.lock.Lock()
+		if len(internal.file.logs) == 0 {
+			internal.file.lock.Unlock()
+			return
+		}
+		internal.file.lock.Unlock()
+
 		fd, name, err = renewFileHandle(name, fd)
 		if err != nil {
 			func() { consoleLog(ErrorLevel).logf("renew file log error: %v", err) }()
@@ -145,6 +157,7 @@ func renewFileHandle(prevName string, prevFd *os.File) (fd *os.File, name string
 	// 检查一下文件大小是不是已经满了?
 	st, err := os.Stat(prevName)
 	if err != nil {
+		internal.debugf("日志文件未满 %s", prevName)
 		// 那就不用重命名了
 		return prevFd, name, nil
 	}
@@ -156,7 +169,7 @@ func renewFileHandle(prevName string, prevFd *os.File) (fd *os.File, name string
 	prevFd.Close()
 
 	newFileName := func() string {
-		now := time.Now().In(internal.Beijing).Format("2006-01-02-15:04:05")
+		now := time.Now().In(timeutil.Beijing).Format("2006-01-02-15:04:05")
 		ext := filepath.Ext(name)
 		if ext == "" {
 			return fmt.Sprintf("%s_%s", name, now)
@@ -170,5 +183,80 @@ func renewFileHandle(prevName string, prevFd *os.File) (fd *os.File, name string
 	if err != nil {
 		return prevFd, name, fmt.Errorf("open new file '%s' error: %w", name, err)
 	}
+
+	if err = clearOldLogFiles(name); err != nil {
+		return f, name, fmt.Errorf("rename older files error: %w", err)
+	}
 	return f, name, err
+}
+
+// 清除旧日志文件
+func clearOldLogFiles(name string) error {
+	const maxFileNum = 10
+	dir := filepath.Dir(name)
+
+	// 首先检查日志下面的所有文件
+	files, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	suffix := filepath.Ext(name)
+	prefix := strings.TrimSuffix(filepath.Base(name), suffix)
+
+	// 把文件名掐头去尾, 剩下的部分就理应是日期格式
+	r := regexp.MustCompile(`_20\d\d-[01]\d-\d\d-[012]\d:\d\d:\d\d`)
+	filesToHandle := make([]fs.DirEntry, 0, len(files))
+	fileInfos := make(map[string]os.FileInfo, len(files))
+
+	for _, f := range files {
+		if f.IsDir() {
+			internal.debugf("忽略目录 %s", f.Name())
+			continue
+		}
+		base := strings.TrimPrefix(f.Name(), prefix)
+		base = strings.TrimSuffix(base, suffix)
+
+		// 剩余部分如果 match 的话, 那么就是需要处理的文件
+		if !r.MatchString(base) {
+			internal.debugf("忽略文件 %s (base: %v)", f.Name(), base)
+			continue
+		}
+
+		s, err := os.Stat(f.Name())
+		if err != nil {
+			internal.debugf("stat file %v error:%v", f.Name(), err)
+			continue
+		}
+		filesToHandle = append(filesToHandle, f)
+		fileInfos[f.Name()] = s
+	}
+
+	total := len(filesToHandle)
+	if total < maxFileNum {
+		internal.debugf("no need to delete log file, cnt %d", total)
+		return nil
+	}
+
+	// 排序, 从旧到新
+	sort.Slice(filesToHandle, func(i, j int) bool {
+		fi, fj := filesToHandle[i], filesToHandle[j]
+		modTimeI := fileInfos[fi.Name()].ModTime()
+		modTimeJ := fileInfos[fj.Name()].ModTime()
+		return modTimeI.Before(modTimeJ)
+	})
+
+	remains := total
+	for _, f := range filesToHandle {
+		if err := os.Remove(f.Name()); err != nil {
+			internal.debugf("removed file %v error: %v", f.Name(), err)
+			continue
+		}
+		internal.debugf("removed log file %v", f.Name())
+		if remains < maxFileNum {
+			break
+		}
+	}
+
+	return nil
 }

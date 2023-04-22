@@ -2,7 +2,6 @@ package log
 
 import (
 	"sync"
-	"time"
 )
 
 const callerSkip = 3
@@ -21,8 +20,7 @@ var internal = struct {
 	}
 
 	levelToString []string
-
-	Beijing *time.Location
+	debugf        func(f string, a ...any)
 }{}
 
 func init() {
@@ -38,10 +36,10 @@ func init() {
 		"",
 	}
 
-	internal.Beijing = time.FixedZone("Asia/Beijing", 8*60*60)
-
 	log := "./log.log"
 	internal.file.size = 500 * 1000 * 1000 // 500 MB
 	internal.file.name = &log
 	go fileLogRoutine()
+
+	internal.debugf = func(string, ...any) {}
 }
