@@ -60,7 +60,7 @@ func (l fileLog) logCtxf(ctx context.Context, f string, a ...any) {
 		f = fmt.Sprintf("%s - %s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca), f)
 	} else {
 		f = fmt.Sprintf(
-			"%s - %s - %s - %s (trace ID: %s)",
+			"%s - %s - %s - %s {\"trace_id\":\"%s\")",
 			timeDesc(), Level(l).String(), callerDesc(ca), f, id,
 		)
 	}
@@ -79,7 +79,7 @@ func (l fileLog) logCtx(ctx context.Context, a ...any) {
 	if id == "" {
 		l.add(s)
 	} else {
-		l.add(fmt.Sprint(s, fmt.Sprintf("- %s", id)))
+		l.add(fmt.Sprint(s, fmt.Sprintf(`{"trace_id":"%s"}`, id)))
 	}
 }
 

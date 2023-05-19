@@ -54,7 +54,7 @@ func (l consoleLog) logCtxf(ctx context.Context, f string, a ...any) {
 	if id == "" {
 		fmt.Println(s)
 	} else {
-		fmt.Println(s, fmt.Sprintf("(trace ID: %s)", id))
+		fmt.Println(s, fmt.Sprintf(`{"trace_id":"%s")`, id))
 	}
 }
 
@@ -70,7 +70,7 @@ func (l consoleLog) logCtx(ctx context.Context, a ...any) {
 		fmt.Println(s)
 	} else {
 		a = append([]any{f, "-"}, a...)
-		a = append(a, "-", id)
+		a = append(a, fmt.Sprintf(`{"trace_id":"%s")`, id))
 		s := fmt.Sprintln(a)
 		fmt.Print(s)
 	}
