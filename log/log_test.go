@@ -21,6 +21,7 @@ func TestLog(t *testing.T) {
 	testInit(t)
 	cv("调试", t, func() { testDebugging(t) })
 	cv("测试自动删除", t, func() { testAutoRemove(t) })
+	cv("测试 SetSkipCaller", t, func() { testSetSkipCaller(t) })
 }
 
 func testInit(t *testing.T) {
@@ -41,10 +42,12 @@ func testDebugging(t *testing.T) {
 	l.Error("Hello", "error", "logger")
 
 	ctx := context.Background()
-	InfoContextf(ctx, "Hello, %s context", "info")
+	InfoContext(ctx, "Hello, info context")
+	InfoContextf(ctx, "Hello, %s context", "infof")
 
 	ctx = trace.EnsureTraceID(ctx)
-	InfoContextf(ctx, "Hello, %s trace context", "info")
+	InfoContext(ctx, "Hello, info context")
+	InfoContextf(ctx, "Hello, %s trace context", "infof")
 
 	time.Sleep(1 * time.Second)
 
@@ -98,4 +101,16 @@ func testAutoRemove(t *testing.T) {
 		}
 		t.Logf("%v - 共有 %d 个日志文件", time.Since(start), cnt)
 	}
+}
+
+func testSetSkipCaller(t *testing.T) {
+	ctx := trace.SetTraceID(context.Background(), "testSetSkipCaller")
+
+	SetFileLevel(NoLog)
+	SetConsoleLevel(DebugLevel)
+	SetSkipCaller(1)
+
+	InfoContext(ctx, "这一个日志应该是包含了 TestLog() 函数的信息")
+
+	time.Sleep(time.Second)
 }

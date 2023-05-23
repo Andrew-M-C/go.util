@@ -4,8 +4,6 @@ import (
 	"sync"
 )
 
-const callerSkip = 3
-
 var internal = struct {
 	level struct {
 		file    Level
@@ -19,9 +17,17 @@ var internal = struct {
 		logs []string
 	}
 
+	caller struct {
+		skip int
+	}
+
 	levelToString []string
 	debugf        func(f string, a ...any)
 }{}
+
+func internalGetCallerSkip() int {
+	return internal.caller.skip + 3
+}
 
 func init() {
 	internal.level.file = InfoLevel

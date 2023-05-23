@@ -28,7 +28,7 @@ func (l consoleLog) getLogger() func(string, ...any) string {
 
 func (l consoleLog) logf(f string, a ...any) {
 	fu := l.getLogger()
-	ca := caller.GetCaller(callerSkip)
+	ca := caller.GetCaller(internalGetCallerSkip())
 	f = fmt.Sprintf("%s - %s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca), f)
 	s := fu(f, a...)
 	fmt.Println(s)
@@ -36,7 +36,7 @@ func (l consoleLog) logf(f string, a ...any) {
 
 func (l consoleLog) log(a ...any) {
 	fu := l.getLogger()
-	ca := caller.GetCaller(callerSkip)
+	ca := caller.GetCaller(internalGetCallerSkip())
 	f := fmt.Sprintf("%s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca))
 	s := fmt.Sprintln(a...)
 	s = fu("%s - %s", f, s)
@@ -45,33 +45,35 @@ func (l consoleLog) log(a ...any) {
 
 func (l consoleLog) logCtxf(ctx context.Context, f string, a ...any) {
 	id := trace.GetTraceID(ctx)
-	fu := l.getLogger()
-	ca := caller.GetCaller(callerSkip)
-
-	f = fmt.Sprintf("%s - %s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca), f)
-	s := fu(f, a...)
+	ca := caller.GetCaller(internalGetCallerSkip())
 
 	if id == "" {
-		fmt.Println(s)
+		f = fmt.Sprintf(
+			"%s - %s - %s - %s",
+			timeDesc(), Level(l).String(), callerDesc(ca), f,
+		)
 	} else {
-		fmt.Println(s, fmt.Sprintf(`{"trace_id":"%s")`, id))
+		f = fmt.Sprintf(
+			"%s - %s - %s - %s {\"trace_id\":\"%s\")",
+			timeDesc(), Level(l).String(), callerDesc(ca), f, id,
+		)
 	}
+
+	s := fmt.Sprintf(f, a...)
+	fmt.Println(s)
 }
 
 func (l consoleLog) logCtx(ctx context.Context, a ...any) {
 	id := trace.GetTraceID(ctx)
-	fu := l.getLogger()
-	ca := caller.GetCaller(callerSkip)
+	ca := caller.GetCaller(internalGetCallerSkip())
 	f := fmt.Sprintf("%s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca))
+	s := fmt.Sprint(a...)
+	s = fmt.Sprintf("%s - %s", f, s)
 
 	if id == "" {
-		s := fmt.Sprint(a...)
-		s = fu("%s - %s", f, s)
 		fmt.Println(s)
 	} else {
-		a = append([]any{f, "-"}, a...)
-		a = append(a, fmt.Sprintf(`{"trace_id":"%s")`, id))
-		s := fmt.Sprintln(a)
-		fmt.Print(s)
+		s = fmt.Sprint(s, fmt.Sprintf(` {"trace_id":"%s"}`, id))
+		fmt.Println(s)
 	}
 }

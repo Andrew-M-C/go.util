@@ -38,14 +38,14 @@ func SetFileSize(size int64) {
 type fileLog Level
 
 func (l fileLog) logf(f string, a ...any) {
-	ca := caller.GetCaller(callerSkip)
+	ca := caller.GetCaller(internalGetCallerSkip())
 	f = fmt.Sprintf("%s - %s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca), f)
 	s := fmt.Sprintf(f, a...)
 	l.add(s)
 }
 
 func (l fileLog) log(a ...any) {
-	ca := caller.GetCaller(callerSkip)
+	ca := caller.GetCaller(internalGetCallerSkip())
 	f := fmt.Sprintf("%s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca))
 	s := fmt.Sprint(a...)
 	s = fmt.Sprintf("%s - %s", f, s)
@@ -54,7 +54,7 @@ func (l fileLog) log(a ...any) {
 
 func (l fileLog) logCtxf(ctx context.Context, f string, a ...any) {
 	id := trace.GetTraceID(ctx)
-	ca := caller.GetCaller(callerSkip)
+	ca := caller.GetCaller(internalGetCallerSkip())
 
 	if id == "" {
 		f = fmt.Sprintf("%s - %s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca), f)
@@ -71,7 +71,7 @@ func (l fileLog) logCtxf(ctx context.Context, f string, a ...any) {
 
 func (l fileLog) logCtx(ctx context.Context, a ...any) {
 	id := trace.GetTraceID(ctx)
-	ca := caller.GetCaller(callerSkip)
+	ca := caller.GetCaller(internalGetCallerSkip())
 	f := fmt.Sprintf("%s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca))
 	s := fmt.Sprint(a...)
 	s = fmt.Sprintf("%s - %s", f, s)
@@ -126,10 +126,10 @@ func fileLogRoutine() {
 		internal.file.lock.Unlock()
 
 		for _, s := range prevBuffer {
-			fd.WriteString(s)
-			fd.Write(newLine)
+			_, _ = fd.WriteString(s)
+			_, _ = fd.Write(newLine)
 		}
-		fd.Sync()
+		_ = fd.Sync()
 		// func() { consoleLog(DebugLevel).logf("written %d lines to file %v", len(prevBuffer), name) }()
 		prevBuffer = prevBuffer[:0]
 	}
@@ -176,7 +176,7 @@ func renewFileHandle(prevName string, prevFd *os.File) (fd *os.File, name string
 		}
 		return fmt.Sprintf("%s_%s%s", strings.TrimSuffix(name, ext), now, ext)
 	}()
-	os.Rename(name, newFileName)
+	_ = os.Rename(name, newFileName)
 
 	// 新建一个文件返回
 	f, err := os.OpenFile(prevName, os.O_CREATE|os.O_RDWR|os.O_APPEND, 0644)
