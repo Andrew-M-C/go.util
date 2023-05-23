@@ -79,7 +79,7 @@ func (l fileLog) logCtx(ctx context.Context, a ...any) {
 	if id == "" {
 		l.add(s)
 	} else {
-		l.add(fmt.Sprint(s, fmt.Sprintf(`{"trace_id":"%s"}`, id)))
+		l.add(fmt.Sprint(s, fmt.Sprintf(` {"trace_id":"%s"}`, id)))
 	}
 }
 
