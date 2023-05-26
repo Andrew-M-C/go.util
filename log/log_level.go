@@ -33,20 +33,44 @@ func SetLevel(file, console Level) {
 	if console >= NoLog {
 		console = NoLog + 1
 	}
-	internal.level.file = file
-	internal.level.console = console
+	internal.level.normal.file = file
+	internal.level.normal.console = console
 }
 
 // SetFileLevel 设置日志文件级别
 func SetFileLevel(lv Level) {
-	console := internal.level.console
+	console := internal.level.normal.console
 	SetLevel(lv, console)
 }
 
 // SetConsoleLevel 设置 console 日志级别
 func SetConsoleLevel(lv Level) {
-	file := internal.level.file
+	file := internal.level.normal.file
 	SetLevel(file, lv)
+}
+
+// SetDyeingLevel 设置染色日志级别
+func SetDyeingLevel(file, console Level) {
+	if file >= NoLog {
+		file = NoLog + 1
+	}
+	if console >= NoLog {
+		console = NoLog + 1
+	}
+	internal.level.dyeing.file = file
+	internal.level.dyeing.console = console
+}
+
+// SetFileDyeingLevel 设置日志文件染色级别
+func SetFileDyeingLevel(lv Level) {
+	console := internal.level.dyeing.console
+	SetDyeingLevel(lv, console)
+}
+
+// SetConsoleDyeingLevel 设置 console 日志染色级别
+func SetConsoleDyeingLevel(lv Level) {
+	file := internal.level.dyeing.file
+	SetDyeingLevel(file, lv)
 }
 
 // SetSkipCaller 当外部封装本 logger 时, 可以设置该值, 那么 logger 在输出调用信息的时候

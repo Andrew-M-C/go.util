@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Andrew-M-C/go-bytesize"
 	"github.com/Andrew-M-C/go.util/log/trace"
 	"github.com/Andrew-M-C/go.util/runtime/caller"
 	timeutil "github.com/Andrew-M-C/go.util/time"
@@ -125,10 +126,13 @@ func fileLogRoutine() {
 		prevBuffer, internal.file.logs = internal.file.logs, prevBuffer
 		internal.file.lock.Unlock()
 
+		writtenBytes := 0
 		for _, s := range prevBuffer {
 			_, _ = fd.WriteString(s)
-			_, _ = fd.Write(newLine)
+			n, _ := fd.Write(newLine)
+			writtenBytes += n
 		}
+		internal.debugf("写入 %d 行日志, %v, 文件: %v", len(prevBuffer), bytesize.Base10(writtenBytes), name)
 		_ = fd.Sync()
 		// func() { consoleLog(DebugLevel).logf("written %d lines to file %v", len(prevBuffer), name) }()
 		prevBuffer = prevBuffer[:0]
@@ -253,6 +257,7 @@ func clearOldLogFiles(name string) error {
 			continue
 		}
 		internal.debugf("removed log file %v", f.Name())
+		remains--
 		if remains < maxFileNum {
 			break
 		}

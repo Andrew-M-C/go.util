@@ -6,8 +6,14 @@ import (
 
 var internal = struct {
 	level struct {
-		file    Level
-		console Level
+		normal struct {
+			file    Level
+			console Level
+		}
+		dyeing struct {
+			file    Level
+			console Level
+		}
 	}
 
 	file struct {
@@ -30,8 +36,10 @@ func internalGetCallerSkip() int {
 }
 
 func init() {
-	internal.level.file = InfoLevel
-	internal.level.console = ErrorLevel
+	internal.level.normal.file = InfoLevel
+	internal.level.normal.console = FatalLevel
+	internal.level.dyeing.file = DebugLevel
+	internal.level.dyeing.console = ErrorLevel
 
 	internal.levelToString = []string{
 		"DEBUG",

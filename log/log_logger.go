@@ -111,62 +111,62 @@ type loggerImplWithCtx struct {
 
 // Debugf 调试日志
 func (c *loggerImplWithCtx) Debugf(f string, a ...any) {
-	l := getCtxLoggers(DebugLevel)
+	l := getCtxLoggers(c.ctx, DebugLevel)
 	doCtxLogf(c.ctx, l, f, a...)
 }
 
 // Debug 调试日志
 func (c *loggerImplWithCtx) Debug(a ...any) {
-	l := getCtxLoggers(DebugLevel)
+	l := getCtxLoggers(c.ctx, DebugLevel)
 	doCtxLog(c.ctx, l, a...)
 }
 
 // Infof 信息日志
 func (c *loggerImplWithCtx) Infof(f string, a ...any) {
-	l := getCtxLoggers(InfoLevel)
+	l := getCtxLoggers(c.ctx, InfoLevel)
 	doCtxLogf(c.ctx, l, f, a...)
 }
 
 // Info 信息日志
 func (c *loggerImplWithCtx) Info(a ...any) {
-	l := getCtxLoggers(InfoLevel)
+	l := getCtxLoggers(c.ctx, InfoLevel)
 	doCtxLog(c.ctx, l, a...)
 }
 
 // Warnf 警告日志
 func (c *loggerImplWithCtx) Warnf(f string, a ...any) {
-	l := getCtxLoggers(WarnLevel)
+	l := getCtxLoggers(c.ctx, WarnLevel)
 	doCtxLogf(c.ctx, l, f, a...)
 }
 
 // WarnContext 警告日志
 func (c *loggerImplWithCtx) Warn(a ...any) {
-	l := getCtxLoggers(WarnLevel)
+	l := getCtxLoggers(c.ctx, WarnLevel)
 	doCtxLog(c.ctx, l, a...)
 }
 
 // Errorf 错误日志
 func (c *loggerImplWithCtx) Errorf(f string, a ...any) {
-	l := getCtxLoggers(ErrorLevel)
+	l := getCtxLoggers(c.ctx, ErrorLevel)
 	doCtxLogf(c.ctx, l, f, a...)
 }
 
 // Error 错误日志
 func (c *loggerImplWithCtx) Error(a ...any) {
-	l := getCtxLoggers(ErrorLevel)
+	l := getCtxLoggers(c.ctx, ErrorLevel)
 	doCtxLog(c.ctx, l, a...)
 }
 
 // Fatalf 崩溃日志
 func (c *loggerImplWithCtx) Fatalf(f string, a ...any) {
-	l := getCtxLoggers(FatalLevel)
+	l := getCtxLoggers(c.ctx, FatalLevel)
 	doCtxLogf(c.ctx, l, f, a...)
 	os.Exit(-1)
 }
 
 // Fatal 崩溃日志
 func (c *loggerImplWithCtx) Fatal(a ...any) {
-	l := getCtxLoggers(FatalLevel)
+	l := getCtxLoggers(c.ctx, FatalLevel)
 	doCtxLog(c.ctx, l, a...)
 	os.Exit(-1)
 }

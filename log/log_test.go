@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Andrew-M-C/go.util/log/dyeing"
 	"github.com/Andrew-M-C/go.util/log/trace"
 	"github.com/smartystreets/goconvey/convey"
 )
@@ -22,6 +23,10 @@ func TestLog(t *testing.T) {
 	cv("调试", t, func() { testDebugging(t) })
 	cv("测试自动删除", t, func() { testAutoRemove(t) })
 	cv("测试 SetSkipCaller", t, func() { testSetSkipCaller(t) })
+	cv("测试染色日志", t, func() { testDyeing(t) })
+
+	t.Logf("等待文件写入")
+	time.Sleep(4 * time.Second)
 }
 
 func testInit(t *testing.T) {
@@ -53,7 +58,7 @@ func testDebugging(t *testing.T) {
 
 	// 更新文件大小并快速创建多个日志
 	SetLevel(DebugLevel, NoLog)
-	SetFileSize(10 * 1000)
+	SetFileSize(1000) // 1MB
 
 	logMany := func() {
 		for i := 0; i < 100000; i++ {
@@ -79,7 +84,7 @@ func testDebugging(t *testing.T) {
 
 func testAutoRemove(t *testing.T) {
 	logMany := func() {
-		for i := 0; i < 1000000; i++ {
+		for i := 0; i < 100000; i++ {
 			Warn("再次填充日志, 第", i+1, "条")
 		}
 	}
@@ -113,4 +118,20 @@ func testSetSkipCaller(t *testing.T) {
 	InfoContext(ctx, "这一个日志应该是包含了 TestLog() 函数的信息")
 
 	time.Sleep(time.Second)
+}
+
+func testDyeing(t *testing.T) {
+	SetSkipCaller(0)
+	SetLevel(ErrorLevel, NoLog)            // 暂时关闭日志
+	SetDyeingLevel(DebugLevel, DebugLevel) // 文件和日志都给调试级别的染色日志
+
+	ctx := context.Background()
+	ctx = trace.SetTraceID(ctx, "dyeing-test")
+	ErrorContext(ctx, "这句日志不应该出现在命令行")
+
+	ctx = dyeing.WithDyeing(ctx, true)
+	DebugContext(ctx, "这句日志因为染色了, 应该出现在文件和命令行")
+
+	ctx = dyeing.WithDyeing(ctx, false)
+	ErrorContext(ctx, "这句日志取消染色了, 不应该出现在命令行")
 }

@@ -7,6 +7,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/Andrew-M-C/go.util/log/dyeing"
 	"github.com/Andrew-M-C/go.util/runtime/caller"
 	timeutil "github.com/Andrew-M-C/go.util/time"
 )
@@ -77,12 +78,12 @@ func Fatal(a ...any) {
 
 func getNonCtxLoggers(level Level) (loggers []nonCtxLogger) {
 	// console
-	if level >= internal.level.console {
+	if level >= internal.level.normal.console {
 		loggers = append(loggers, consoleLog(level))
 	}
 
 	// file logger
-	if level >= internal.level.file {
+	if level >= internal.level.normal.file {
 		loggers = append(loggers, fileLog(level))
 	}
 
@@ -113,74 +114,80 @@ func timeDesc() string {
 
 // DebugContextf 调试日志
 func DebugContextf(ctx context.Context, f string, a ...any) {
-	l := getCtxLoggers(DebugLevel)
+	l := getCtxLoggers(ctx, DebugLevel)
 	doCtxLogf(ctx, l, f, a...)
 }
 
 // DebugContext 调试日志
 func DebugContext(ctx context.Context, a ...any) {
-	l := getCtxLoggers(DebugLevel)
+	l := getCtxLoggers(ctx, DebugLevel)
 	doCtxLog(ctx, l, a...)
 }
 
 // InfoContextf 信息日志
 func InfoContextf(ctx context.Context, f string, a ...any) {
-	l := getCtxLoggers(InfoLevel)
+	l := getCtxLoggers(ctx, InfoLevel)
 	doCtxLogf(ctx, l, f, a...)
 }
 
 // InfoContext 信息日志
 func InfoContext(ctx context.Context, a ...any) {
-	l := getCtxLoggers(InfoLevel)
+	l := getCtxLoggers(ctx, InfoLevel)
 	doCtxLog(ctx, l, a...)
 }
 
 // WarnContextf 警告日志
 func WarnContextf(ctx context.Context, f string, a ...any) {
-	l := getCtxLoggers(WarnLevel)
+	l := getCtxLoggers(ctx, WarnLevel)
 	doCtxLogf(ctx, l, f, a...)
 }
 
 // WarnContext 警告日志
 func WarnContext(ctx context.Context, a ...any) {
-	l := getCtxLoggers(WarnLevel)
+	l := getCtxLoggers(ctx, WarnLevel)
 	doCtxLog(ctx, l, a...)
 }
 
 // ErrorContextf 错误日志
 func ErrorContextf(ctx context.Context, f string, a ...any) {
-	l := getCtxLoggers(ErrorLevel)
+	l := getCtxLoggers(ctx, ErrorLevel)
 	doCtxLogf(ctx, l, f, a...)
 }
 
 // ErrorContext 错误日志
 func ErrorContext(ctx context.Context, a ...any) {
-	l := getCtxLoggers(ErrorLevel)
+	l := getCtxLoggers(ctx, ErrorLevel)
 	doCtxLog(ctx, l, a...)
 }
 
 // FatalContextf 崩溃日志
 func FatalContextf(ctx context.Context, f string, a ...any) {
-	l := getCtxLoggers(FatalLevel)
+	l := getCtxLoggers(ctx, FatalLevel)
 	doCtxLogf(ctx, l, f, a...)
 	os.Exit(-1)
 }
 
 // FatalContext 崩溃日志
 func FatalContext(ctx context.Context, a ...any) {
-	l := getCtxLoggers(FatalLevel)
+	l := getCtxLoggers(ctx, FatalLevel)
 	doCtxLog(ctx, l, a...)
 	os.Exit(-1)
 }
 
-func getCtxLoggers(level Level) (loggers []ctxLogger) {
+func getCtxLoggers(ctx context.Context, level Level) (loggers []ctxLogger) {
+	dyeing := dyeing.Dyeing(ctx)
+
 	// console
-	if level >= internal.level.console {
+	if level >= internal.level.normal.console {
+		loggers = append(loggers, consoleLog(level))
+	} else if dyeing && level >= internal.level.dyeing.console {
 		loggers = append(loggers, consoleLog(level))
 	}
 
 	// file logger
-	if level >= internal.level.file {
+	if level >= internal.level.normal.file {
+		loggers = append(loggers, fileLog(level))
+	} else if dyeing && level >= internal.level.dyeing.file {
 		loggers = append(loggers, fileLog(level))
 	}
 

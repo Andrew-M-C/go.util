@@ -4,7 +4,7 @@ package trace
 import (
 	"context"
 
-	"github.com/google/uuid"
+	objectid "github.com/Andrew-M-C/go.objectid"
 )
 
 type traceIDKey struct{}
@@ -32,7 +32,7 @@ func SetTraceID(ctx context.Context, traceID ...string) context.Context {
 	if len(traceID) > 0 && traceID[0] != "" {
 		id = traceID[0]
 	} else {
-		id = uuid.NewString()
+		id = objectid.New16().String()
 	}
 	return context.WithValue(ctx, traceIDKey{}, id)
 }
