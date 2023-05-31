@@ -22,6 +22,8 @@ func (l consoleLog) getLogger() func(string, ...any) string {
 		fu = color.RedString
 	case WarnLevel:
 		fu = color.YellowString
+	case DebugLevel:
+		fu = color.BlueString
 	}
 	return fu
 }
@@ -38,12 +40,13 @@ func (l consoleLog) log(a ...any) {
 	fu := l.getLogger()
 	ca := caller.GetCaller(internalGetCallerSkip())
 	f := fmt.Sprintf("%s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca))
-	s := fmt.Sprintln(a...)
+	s := fmt.Sprint(a...)
 	s = fu("%s - %s", f, s)
-	fmt.Print(s)
+	fmt.Println(s)
 }
 
 func (l consoleLog) logCtxf(ctx context.Context, f string, a ...any) {
+	fu := l.getLogger()
 	id := trace.GetTraceID(ctx)
 	ca := caller.GetCaller(internalGetCallerSkip())
 
@@ -59,11 +62,12 @@ func (l consoleLog) logCtxf(ctx context.Context, f string, a ...any) {
 		)
 	}
 
-	s := fmt.Sprintf(f, a...)
+	s := fu(f, a...)
 	fmt.Println(s)
 }
 
 func (l consoleLog) logCtx(ctx context.Context, a ...any) {
+	fu := l.getLogger()
 	id := trace.GetTraceID(ctx)
 	ca := caller.GetCaller(internalGetCallerSkip())
 	f := fmt.Sprintf("%s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca))
@@ -71,9 +75,10 @@ func (l consoleLog) logCtx(ctx context.Context, a ...any) {
 	s = fmt.Sprintf("%s - %s", f, s)
 
 	if id == "" {
+		s = fu("%s", s)
 		fmt.Println(s)
 	} else {
-		s = fmt.Sprint(s, fmt.Sprintf(` {"trace_id":"%s"}`, id))
+		s = fu("%s {\"trace_id\":\"%s\"}", s, id)
 		fmt.Println(s)
 	}
 }
