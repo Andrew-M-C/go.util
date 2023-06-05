@@ -23,7 +23,15 @@ func GetCaller(skip int) Caller {
 	pcs := make([]uintptr, 128)
 	depth := runtime.Callers(skip+2, pcs)
 	ca := runtime.CallersFrames(pcs[:depth])
-	fr, _ := ca.Next()
+	fr, more := ca.Next()
+	if !more {
+		return Caller{
+			File: "",
+			Func: "",
+			Line: -1,
+		}
+	}
+
 	return Caller{
 		File: File(fr.File),
 		Func: Function(fr.Function),
@@ -33,7 +41,7 @@ func GetCaller(skip int) Caller {
 
 // GetAllCallers get all caller infos
 func GetAllCallers() (callers []Caller) {
-	pcs := make([]uintptr, 128)
+	pcs := make([]uintptr, 256)
 	depth := runtime.Callers(1, pcs)
 
 	ca := runtime.CallersFrames(pcs[:depth])
