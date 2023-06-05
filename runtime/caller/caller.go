@@ -20,18 +20,10 @@ func (c Caller) String() string {
 
 // GetCaller get last caller. If skip is set to 0, will get yourself.
 func GetCaller(skip int) Caller {
-	pc, _, _, ok := runtime.Caller(skip + 1)
-	if !ok {
-		return Caller{
-			Func: "(unknown)",
-			File: "(unknown)",
-			Line: 0,
-		}
-	}
-
-	ca := runtime.CallersFrames([]uintptr{pc})
+	pcs := make([]uintptr, 128)
+	depth := runtime.Callers(skip+2, pcs)
+	ca := runtime.CallersFrames(pcs[:depth])
 	fr, _ := ca.Next()
-
 	return Caller{
 		File: File(fr.File),
 		Func: Function(fr.Function),
