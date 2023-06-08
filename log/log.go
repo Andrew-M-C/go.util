@@ -127,6 +127,18 @@ func timeDesc() string {
 
 // -------- log with context --------
 
+// TraceContextf 底层跟踪日志
+func TraceContextf(ctx context.Context, f string, a ...any) {
+	l := getCtxLoggers(ctx, TraceLevel)
+	doCtxLogf(ctx, l, f, a...)
+}
+
+// TraceContext 底层跟踪日志
+func TraceContext(ctx context.Context, a ...any) {
+	l := getCtxLoggers(ctx, TraceLevel)
+	doCtxLog(ctx, l, a...)
+}
+
 // DebugContextf 调试日志
 func DebugContextf(ctx context.Context, f string, a ...any) {
 	l := getCtxLoggers(ctx, DebugLevel)
