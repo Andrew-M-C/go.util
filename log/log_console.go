@@ -24,6 +24,8 @@ func (l consoleLog) getLogger() func(string, ...any) string {
 		fu = color.YellowString
 	case DebugLevel:
 		fu = color.BlueString
+	case TraceLevel:
+		fu = color.CyanString
 	}
 	return fu
 }
