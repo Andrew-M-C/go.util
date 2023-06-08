@@ -7,6 +7,8 @@ import (
 
 // Logger 表示一个日志器
 type Logger interface {
+	Tracef(f string, a ...any)
+	Trace(a ...any)
 	Debugf(f string, a ...any)
 	Debug(a ...any)
 	Infof(f string, a ...any)
@@ -40,6 +42,18 @@ func NewLogger(ctx ...context.Context) Logger {
 // -------- logger without context --------
 
 type loggerImplWithoutCtx struct{}
+
+// Tracef 调试日志
+func (loggerImplWithoutCtx) Tracef(f string, a ...any) {
+	l := getNonCtxLoggers(TraceLevel)
+	doNonCtxLogf(l, f, a...)
+}
+
+// Trace 调试日志
+func (loggerImplWithoutCtx) Trace(a ...any) {
+	l := getNonCtxLoggers(TraceLevel)
+	doNonCtxLog(l, a...)
+}
 
 // Debugf 调试日志
 func (loggerImplWithoutCtx) Debugf(f string, a ...any) {
@@ -107,6 +121,18 @@ func (loggerImplWithoutCtx) Fatal(a ...any) {
 
 type loggerImplWithCtx struct {
 	ctx context.Context
+}
+
+// Tracef 底层跟踪日志
+func (c *loggerImplWithCtx) Tracef(f string, a ...any) {
+	l := getCtxLoggers(c.ctx, TraceLevel)
+	doCtxLogf(c.ctx, l, f, a...)
+}
+
+// Trace 底层跟踪日志
+func (c *loggerImplWithCtx) Trace(a ...any) {
+	l := getCtxLoggers(c.ctx, TraceLevel)
+	doCtxLog(c.ctx, l, a...)
 }
 
 // Debugf 调试日志

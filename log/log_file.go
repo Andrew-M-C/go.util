@@ -1,7 +1,9 @@
 package log
 
 import (
+	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io/fs"
 	"os"
@@ -16,6 +18,41 @@ import (
 	"github.com/Andrew-M-C/go.util/runtime/caller"
 	timeutil "github.com/Andrew-M-C/go.util/time"
 )
+
+type logItem struct {
+	Time     string
+	Location string
+	Level    Level
+	Content  string
+	TraceID  string
+}
+
+func (l *logItem) marshalJSONWithBuffer(by []byte) ([]byte, error) {
+	buff := bytes.NewBuffer(by[:0])
+	buff.WriteByte('{')
+	buff.WriteString(`"time":"`)
+	buff.WriteString(l.Time)
+
+	buff.WriteString(`","level":"`)
+	buff.WriteString(l.Level.String())
+
+	buff.WriteString(`","location":`)
+	b, _ := json.Marshal(l.Location)
+	buff.Write(b)
+
+	buff.WriteString(`,"content":`)
+	b, _ = json.Marshal(l.Content)
+	buff.Write(b)
+
+	if l.TraceID != "" {
+		buff.WriteString(`,"trace_id":`)
+		b, _ := json.Marshal(l.TraceID)
+		buff.Write(b)
+	}
+
+	buff.WriteByte('}')
+	return buff.Bytes(), nil
+}
 
 // SetFileName 设置文件名
 func SetFileName(name string) {
@@ -40,55 +77,58 @@ type fileLog Level
 
 func (l fileLog) logf(f string, a ...any) {
 	ca := caller.GetCaller(internalGetCallerSkip())
-	f = fmt.Sprintf("%s - %s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca), f)
-	s := fmt.Sprintf(f, a...)
-	l.add(s)
+	item := &logItem{
+		Time:     timeDesc(),
+		Level:    Level(l),
+		Location: callerDesc(ca),
+		Content:  fmt.Sprintf(f, a...),
+	}
+
+	l.add(item)
 }
 
 func (l fileLog) log(a ...any) {
 	ca := caller.GetCaller(internalGetCallerSkip())
-	f := fmt.Sprintf("%s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca))
-	s := fmt.Sprint(a...)
-	s = fmt.Sprintf("%s - %s", f, s)
-	l.add(s)
+	item := &logItem{
+		Time:     timeDesc(),
+		Level:    Level(l),
+		Location: callerDesc(ca),
+		Content:  fmt.Sprint(a...),
+	}
+	l.add(item)
 }
 
 func (l fileLog) logCtxf(ctx context.Context, f string, a ...any) {
 	id := trace.GetTraceID(ctx)
 	ca := caller.GetCaller(internalGetCallerSkip())
-
-	if id == "" {
-		f = fmt.Sprintf("%s - %s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca), f)
-	} else {
-		f = fmt.Sprintf(
-			"%s - %s - %s - %s {\"trace_id\":\"%s\")",
-			timeDesc(), Level(l).String(), callerDesc(ca), f, id,
-		)
+	item := &logItem{
+		Time:     timeDesc(),
+		Level:    Level(l),
+		Location: callerDesc(ca),
+		Content:  fmt.Sprintf(f, a...),
+		TraceID:  id,
 	}
-
-	s := fmt.Sprintf(f, a...)
-	l.add(s)
+	l.add(item)
 }
 
 func (l fileLog) logCtx(ctx context.Context, a ...any) {
 	id := trace.GetTraceID(ctx)
 	ca := caller.GetCaller(internalGetCallerSkip())
-	f := fmt.Sprintf("%s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca))
-	s := fmt.Sprint(a...)
-	s = fmt.Sprintf("%s - %s", f, s)
-
-	if id == "" {
-		l.add(s)
-	} else {
-		l.add(fmt.Sprint(s, fmt.Sprintf(` {"trace_id":"%s"}`, id)))
+	item := &logItem{
+		Time:     timeDesc(),
+		Level:    Level(l),
+		Location: callerDesc(ca),
+		Content:  fmt.Sprint(a...),
+		TraceID:  id,
 	}
+	l.add(item)
 }
 
-func (l fileLog) add(s string) {
+func (l fileLog) add(item *logItem) {
 	internal.file.lock.Lock()
 	defer internal.file.lock.Unlock()
 
-	internal.file.logs = append(internal.file.logs, s)
+	internal.file.logs = append(internal.file.logs, item)
 }
 
 func fileLogRoutine() {
@@ -104,7 +144,7 @@ func fileLogRoutine() {
 	var err error
 
 	newLine := []byte{'\n'}
-	prevBuffer := make([]string, 0, 1000)
+	prevBuffer := make([]*logItem, 0, 1000)
 
 	iterate := func() {
 		// 如果没有日志请求, 那么啥都不用做
@@ -127,9 +167,12 @@ func fileLogRoutine() {
 		internal.file.lock.Unlock()
 
 		writtenBytes := 0
-		for _, s := range prevBuffer {
-			_, _ = fd.WriteString(s)
-			n, _ := fd.Write(newLine)
+		buff := make([]byte, 4096)
+		for _, item := range prevBuffer {
+			b, _ := item.marshalJSONWithBuffer(buff)
+			n, _ := fd.Write(b)
+			writtenBytes += n
+			n, _ = fd.Write(newLine)
 			writtenBytes += n
 		}
 		internal.debugf("写入 %d 行日志, %v, 文件: %v", len(prevBuffer), bytesize.Base10(writtenBytes), name)

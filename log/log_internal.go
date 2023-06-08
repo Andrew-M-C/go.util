@@ -20,7 +20,7 @@ var internal = struct {
 		name *string
 		size int64
 		lock sync.Mutex // TODO: 以后再用更高性能的方案代替, 暂时先实现功能
-		logs []string
+		logs []*logItem
 	}
 
 	caller struct {
@@ -42,9 +42,10 @@ func init() {
 	internal.level.dyeing.console = ErrorLevel
 
 	internal.levelToString = []string{
+		"TRACE",
 		"DEBUG",
-		"INFO ",
-		"WARN ",
+		"INFO",
+		"WARN",
 		"ERROR",
 		"FATAL",
 		"",

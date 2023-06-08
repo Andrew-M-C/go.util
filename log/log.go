@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/Andrew-M-C/go.util/log/dyeing"
@@ -13,6 +14,18 @@ import (
 )
 
 // -------- log without context --------
+
+// Tracef 底层跟踪日志
+func Tracef(f string, a ...any) {
+	l := getNonCtxLoggers(TraceLevel)
+	doNonCtxLogf(l, f, a...)
+}
+
+// Trace 底层跟踪日志
+func Trace(a ...any) {
+	l := getNonCtxLoggers(TraceLevel)
+	doNonCtxLog(l, a...)
+}
 
 // Debugf 调试日志
 func Debugf(f string, a ...any) {
@@ -103,7 +116,9 @@ func doNonCtxLog(loggers []nonCtxLogger, a ...any) {
 }
 
 func callerDesc(ca caller.Caller) string {
-	return fmt.Sprintf("%s, Line %d", ca.Func, ca.Line)
+	funcBase := ca.Func.Base()
+	prefix := strings.TrimRight(string(ca.Func), funcBase)
+	return fmt.Sprintf("%s%s, Line %d, %s()", prefix, ca.File.Base(), ca.Line, funcBase)
 }
 
 func timeDesc() string {
@@ -181,6 +196,7 @@ func getCtxLoggers(ctx context.Context, level Level) (loggers []ctxLogger) {
 	if level >= internal.level.normal.console {
 		loggers = append(loggers, consoleLog(level))
 	} else if dyeing && level >= internal.level.dyeing.console {
+		internal.debugf("dyeing with console")
 		loggers = append(loggers, consoleLog(level))
 	}
 
@@ -188,6 +204,7 @@ func getCtxLoggers(ctx context.Context, level Level) (loggers []ctxLogger) {
 	if level >= internal.level.normal.file {
 		loggers = append(loggers, fileLog(level))
 	} else if dyeing && level >= internal.level.dyeing.file {
+		internal.debugf("dyeing with file")
 		loggers = append(loggers, fileLog(level))
 	}
 

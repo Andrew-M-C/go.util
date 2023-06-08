@@ -30,13 +30,15 @@ func TestLog(t *testing.T) {
 }
 
 func testInit(t *testing.T) {
+	// 打开调试信息
 	internal.debugf = t.Logf
 }
 
 func testDebugging(t *testing.T) {
 	SetFileName("./test.log")
-	SetLevel(DebugLevel, InfoLevel)
+	SetLevel(TraceLevel, InfoLevel)
 
+	Trace("Hello,", "trace")
 	Debug("Hello,", "debug")
 	Warnf("Hello, %s!", "warning")
 	Error("Hello", "error")
@@ -83,9 +85,11 @@ func testDebugging(t *testing.T) {
 }
 
 func testAutoRemove(t *testing.T) {
+	ctx := trace.SetTraceID(context.Background(), "refill_test")
+
 	logMany := func() {
 		for i := 0; i < 100000; i++ {
-			Warn("再次填充日志, 第", i+1, "条")
+			WarnContext(ctx, "再次填充日志, 第", i+1, "条")
 		}
 	}
 
