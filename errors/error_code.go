@@ -3,10 +3,8 @@ package errors
 import (
 	"crypto/md5"
 	"encoding/binary"
-	"fmt"
+	"strconv"
 	"strings"
-
-	"github.com/martinlindhe/base36"
 )
 
 var (
@@ -53,7 +51,8 @@ func hash(s string) uint64 {
 }
 
 func encode(code uint64) string {
-	s := fmt.Sprintf("%4s", base36.Encode(code))
+	s := strconv.FormatUint(code, 36)
+	s = strings.ToUpper(s)
 	return replace.Replace(s)
 }
 
@@ -64,6 +63,6 @@ func decode(s string) (uint64, bool) {
 	s = strings.Replace(s, "l", "1", -1)
 	s = strings.ToUpper(s)
 	s = replace.Replace(s)
-	code := base36.Decode(s)
+	code, _ := strconv.ParseUint(s, 36, 64)
 	return code, code > 0
 }

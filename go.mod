@@ -10,7 +10,6 @@ require (
 	github.com/emirpasic/gods v1.18.1
 	github.com/fatih/color v1.15.0
 	github.com/google/uuid v1.3.0
-	github.com/martinlindhe/base36 v1.1.1
 	github.com/petermattis/goid v0.0.0-20220526132513-07eaf5d0b9f4
 	github.com/smartystreets/goconvey v1.7.2
 	go.uber.org/atomic v1.11.0

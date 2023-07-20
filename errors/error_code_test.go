@@ -2,10 +2,10 @@ package errors
 
 import (
 	"errors"
+	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/martinlindhe/base36"
 	"github.com/smartystreets/goconvey/convey"
 )
 
@@ -21,6 +21,7 @@ var (
 	isFalse = convey.ShouldBeFalse
 
 	isEmpty = convey.ShouldBeEmpty
+	isNil   = convey.ShouldBeNil
 )
 
 func TestErrors(t *testing.T) {
@@ -50,8 +51,10 @@ func testErrorCode(t *testing.T) {
 			for r := from; r <= to; r++ {
 				e := errors.New(string(r))
 				c := ErrorToCode(e)
+				// t.Logf("code '%s', error '%v'", c, e)
 				so(strings.ContainsAny(c, "Il O"), isFalse)
-				i := base36.Decode(c)
+				i, err := strconv.ParseUint(c, 36, 64)
+				so(err, isNil)
 				so(i, le, 0xFFFFF)
 				so(i, ge, 0)
 
