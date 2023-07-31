@@ -22,6 +22,7 @@ func TestTime(t *testing.T) {
 	cv("测试 Wait", t, func() { testWait((t)) })
 	cv("测试 Timer", t, func() { testTimer(t) })
 	cv("测试 Timer.Stop", t, func() { testTimerStop(t) })
+	cv("测试 Tick", t, func() { testTick(t) })
 }
 
 func expectElapsed(t *testing.T, start time.Time, ela time.Duration) {
@@ -62,7 +63,7 @@ func testTimer(t *testing.T) {
 
 	expectDuration(t, tm.Elapsed(), 0)
 
-	tm.Run()
+	_ = tm.Run()
 	start = time.Now()
 
 	for i := 0; i < 5; i++ {
@@ -85,7 +86,7 @@ func testTimer(t *testing.T) {
 		return
 	}
 
-	// succ
+	// success
 	t.Logf("callback invoked")
 }
 
@@ -104,14 +105,16 @@ func testTimerStop(t *testing.T) {
 
 	SleepToNextSecond()
 	SleepToNextSecond()
-	tm.Run()
+	err := tm.Run()
+	so(err, eq, nil)
 
 	SleepToNextSecond()
 	SleepToNextSecond()
 
 	expectDuration(t, tm.Elapsed(), 2*time.Second)
 
-	tm.Stop()
+	err = tm.Stop()
+	so(err, eq, nil)
 
 	t.Logf("Timer stopped, now let us sleep for %v", duration)
 	time.Sleep(duration)
@@ -122,7 +125,8 @@ func testTimerStop(t *testing.T) {
 	t.Logf("callback is not invoked, this is expected")
 
 	// try re-start timer
-	tm.Run()
+	err = tm.Run()
+	so(err, eq, nil)
 	start = time.Now()
 
 	for i := 0; i < 5; i++ {
@@ -145,6 +149,6 @@ func testTimerStop(t *testing.T) {
 		return
 	}
 
-	// succ
+	// success
 	t.Logf("callback invoked")
 }
