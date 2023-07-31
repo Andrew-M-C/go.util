@@ -69,10 +69,10 @@ func (t *tickForMilliSeconds) Stop() {
 }
 
 func (t *tickForMilliSeconds) doRun() {
-	next := nextExpectedTime(time.Now(), t.interval)
+	next := UpTime()
 
 	for {
-		time.Sleep(time.Until(next))
+
 		if !t.shouldRun {
 			t.running.Store(false)
 			return
@@ -83,14 +83,10 @@ func (t *tickForMilliSeconds) doRun() {
 			go callback(TickCallbackParam{})
 		}
 
-		next = nextExpectedTime(next, t.interval)
+		next += t.interval
+		for next-UpTime() < 0 {
+			next += t.interval
+		}
+		time.Sleep(next - UpTime())
 	}
-}
-
-func nextExpectedTime(last time.Time, interval time.Duration) time.Time {
-	next := last.Add(interval)
-	if time.Until(next) < 0 {
-		next = next.Add(interval)
-	}
-	return next
 }

@@ -9,8 +9,9 @@ func testTick(t *testing.T) {
 	last := time.Now()
 	start := last
 	callCount := 0
+	interval := 2 * time.Millisecond
 
-	ti, err := NewTickBeta(5*time.Millisecond, func(TickCallbackParam) {
+	ti, err := NewTickBeta(interval, func(TickCallbackParam) {
 		callCount++
 		now := time.Now()
 		t.Logf("间隔 %v", now.Sub(last))
@@ -19,7 +20,7 @@ func testTick(t *testing.T) {
 	so(err, eq, nil)
 
 	ti.Run()
-	time.Sleep(30 * time.Second)
+	time.Sleep(20*time.Second + interval)
 	ti.Stop()
 
 	total := last.Sub(start)
