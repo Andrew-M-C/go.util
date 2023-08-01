@@ -14,7 +14,11 @@ func testTick(t *testing.T) {
 	ti, err := NewTickBeta(interval, func(TickCallbackParam) {
 		callCount++
 		now := time.Now()
-		t.Logf("间隔 %v", now.Sub(last))
+
+		if callCount%123 == 0 {
+			t.Logf("%v - 间隔 %v", time.Now(), now.Sub(last))
+		}
+
 		last = now
 	})
 	so(err, eq, nil)

@@ -6,6 +6,7 @@ import (
 
 	"github.com/smartystreets/goconvey/convey"
 	"go.uber.org/atomic"
+	"golang.org/x/exp/constraints"
 )
 
 var (
@@ -14,6 +15,7 @@ var (
 
 	eq = convey.ShouldEqual
 	le = convey.ShouldBeLessThanOrEqualTo
+	ge = convey.ShouldBeGreaterThanOrEqualTo
 )
 
 func TestTime(t *testing.T) {
@@ -23,7 +25,16 @@ func TestTime(t *testing.T) {
 	cv("测试 Wait", t, func() { testWait((t)) })
 	cv("测试 Timer", t, func() { testTimer(t) })
 	cv("测试 Timer.Stop", t, func() { testTimerStop(t) })
+	cv("测试 PeriodicSleeper", t, func() { testPeriodicSleeper(t) })
 	cv("测试 Tick", t, func() { testTick(t) })
+}
+
+type number interface {
+	constraints.Integer | constraints.Float
+}
+
+func percentage[V number, P constraints.Float](v V, percent P) V {
+	return V(P(v) * percent)
 }
 
 func expectElapsed(t *testing.T, start time.Time, ela time.Duration) {
