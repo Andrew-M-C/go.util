@@ -1,4 +1,3 @@
-// Package sync 提供一些额外的、非常规的 sync 功能
 package maps
 
 import (
@@ -13,6 +12,7 @@ var (
 	so = convey.So
 	eq = convey.ShouldEqual
 	ne = convey.ShouldNotEqual
+	gt = convey.ShouldBeGreaterThan
 )
 
 func TestMaps(t *testing.T) {
@@ -22,6 +22,7 @@ func TestMaps(t *testing.T) {
 	cv("测试 Equal 和 KeysEqual", t, func() { testEqual(t) })
 	cv("测试 GetOrDefault 和 GetStringOrFormat", t, func() { testGetFunctions(t) })
 	cv("测试 maps_kv_pair.go", t, func() { testKVPairs(t) })
+	cv("测试 rw_map.go", t, func() { testRWSafeMap(t) })
 }
 
 func testStringKeys(t *testing.T) {
