@@ -2,6 +2,11 @@ package slice
 
 import "golang.org/x/exp/constraints"
 
+// Number 表示所有的实数类型
+type Number interface {
+	constraints.Float | constraints.Integer
+}
+
 // Equal 逐个比较两个切片里的值是否相等
 func Equal[T comparable](a, b []T) bool {
 	if len(a) != len(b) {
@@ -68,4 +73,49 @@ func SetElement[T any, I constraints.Signed](sli []T, signedIndex I, value T) (i
 	}
 	sli[index] = value
 	return true
+}
+
+// Sum 求和
+func Sum[T Number](numbers []T) T {
+	var res T
+	for _, n := range numbers {
+		res += n
+	}
+	return res
+}
+
+// AverageFloat 求平均值, 返回值是浮点数
+func AverageFloat[T Number](numbers []T) float64 {
+	sum := Sum(numbers)
+	return float64(sum) / float64(len(numbers))
+}
+
+// Minimum 找最小值
+func Minimum[T Number](numbers []T) T {
+	if len(numbers) == 0 {
+		return 0
+	}
+	min := numbers[0]
+	le := len(numbers)
+	for i := 1; i < le; i++ {
+		if n := numbers[i]; n < min {
+			min = n
+		}
+	}
+	return min
+}
+
+// Maximum 找最小值
+func Maximum[T Number](numbers []T) T {
+	if len(numbers) == 0 {
+		return 0
+	}
+	max := numbers[0]
+	le := len(numbers)
+	for i := 1; i < le; i++ {
+		if n := numbers[i]; n > max {
+			max = n
+		}
+	}
+	return max
 }
