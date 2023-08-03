@@ -119,3 +119,10 @@ func Maximum[T Number](numbers []T) T {
 	}
 	return max
 }
+
+// Reverse a slice
+func Reverse[T any](sli []T) {
+	for i, j := 0, len(sli)-1; i < j; i, j = i+1, j-1 {
+		sli[i], sli[j] = sli[j], sli[i]
+	}
+}
