@@ -36,10 +36,10 @@ func internalGetCallerSkip() int {
 }
 
 func init() {
-	internal.level.normal.file = InfoLevel
-	internal.level.normal.console = FatalLevel
-	internal.level.dyeing.file = DebugLevel
-	internal.level.dyeing.console = ErrorLevel
+	internal.level.normal.file = NoLog
+	internal.level.normal.console = InfoLevel
+	internal.level.dyeing.file = NoLog
+	internal.level.dyeing.console = InfoLevel
 
 	internal.levelToString = []string{
 		"TRACE",
