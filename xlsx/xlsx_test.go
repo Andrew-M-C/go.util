@@ -23,4 +23,10 @@ func testCellName(t *testing.T) {
 
 	n = xlsx.CellName(3, 1)
 	so(n, eq, "B4")
+
+	n = xlsx.CellName(0, 26)
+	so(n, eq, "AA1")
+
+	n = xlsx.CellName(0, 52)
+	so(n, eq, "BA1")
 }

@@ -83,14 +83,18 @@ func CellName(row, col int) string {
 }
 
 func formatCol(c int) string {
+	if c < 26 {
+		return string('A' + byte(c))
+	}
+
 	res := []byte{}
-	for c > 26 {
+	for c >= 26 {
 		remain := c % 26
 		res = append(res, 'A'+byte(remain))
 		c /= 26
 	}
 
-	res = append(res, 'A'+byte(c))
+	res = append(res, 'A'+byte(c)-1)
 	slice.Reverse(res)
 
 	return unsafe.BtoS(res)
