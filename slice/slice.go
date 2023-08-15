@@ -126,3 +126,13 @@ func Reverse[T any](sli []T) {
 		sli[i], sli[j] = sli[j], sli[i]
 	}
 }
+
+// Copy makes a copy
+func Copy[T any](sli []T) []T {
+	if sli == nil {
+		return nil
+	}
+	res := make([]T, len(sli))
+	copy(res, sli)
+	return res
+}
