@@ -2,6 +2,7 @@ package log
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"strings"
 	"testing"
@@ -21,6 +22,7 @@ var (
 func TestLog(t *testing.T) {
 	testInit(t)
 	cv("调试", t, func() { testDebugging(t) })
+	cv("测试 stringer 逻辑", t, func() { testStringer(t) })
 	cv("测试自动删除", t, func() { testAutoRemove(t) })
 	cv("测试 SetSkipCaller", t, func() { testSetSkipCaller(t) })
 	cv("测试染色日志", t, func() { testDyeing(t) })
@@ -138,4 +140,23 @@ func testDyeing(t *testing.T) {
 
 	ctx = dyeing.WithDyeing(ctx, false)
 	ErrorContext(ctx, "这句日志取消染色了, 不应该出现在命令行")
+}
+
+func testStringer(t *testing.T) {
+	cv("JSON", func() {
+		type testType struct {
+			String string `json:"string"`
+		}
+		data := testType{
+			String: `"logger"`,
+		}
+		s := fmt.Sprint(ToJSON(data))
+		so(s, eq, `{"string":"\"logger\""}`)
+	})
+
+	cv("hex", func() {
+		b := []byte{0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0xcd, 0xef}
+		s := fmt.Sprint(ToHex(b))
+		so(s, eq, "0123456789ABCDEF")
+	})
 }
