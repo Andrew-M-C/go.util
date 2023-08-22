@@ -2,6 +2,7 @@ package errors
 
 import (
 	"errors"
+	"fmt"
 	"strconv"
 	"strings"
 	"testing"
@@ -14,6 +15,7 @@ var (
 	so = convey.So
 
 	eq = convey.ShouldEqual
+	ne = convey.ShouldNotEqual
 	le = convey.ShouldBeLessThanOrEqualTo
 	ge = convey.ShouldBeGreaterThanOrEqualTo
 
@@ -22,10 +24,12 @@ var (
 
 	isEmpty = convey.ShouldBeEmpty
 	isNil   = convey.ShouldBeNil
+	notNil  = convey.ShouldNotBeNil
 )
 
 func TestErrors(t *testing.T) {
 	cv("测试 error_code 逻辑", t, func() { testErrorCode(t) })
+	cv("测试 Unwrap", t, func() { testUnwrap(t) })
 }
 
 func testErrorCode(t *testing.T) {
@@ -74,4 +78,88 @@ func testErrorCode(t *testing.T) {
 		so(iterCount, eq, len(values))
 		t.Logf("zero count: %d, all value count: %d, iter count: %d", zeroCount, len(values), iterCount)
 	})
+}
+
+func testUnwrap(t *testing.T) {
+	cv("没有 wrapping", func() {
+		err := errors.New("some error")
+		e := errors.Unwrap(err)
+		so(e, isNil)
+		ea, ok := Unwrap[errTypeA](err)
+		so(ok, isFalse)
+		so(ea.Error(), eq, "")
+	})
+
+	cv("类型本身", func() {
+		var err error = errTypeA("A")
+
+		e := errors.Unwrap(err)
+		so(e, isNil)
+
+		ea, ok := Unwrap[errTypeA](err)
+		so(ok, isTrue)
+		so(ea.Error(), eq, err.Error())
+
+		eb, ok := Unwrap[errTypeB](err)
+		so(ok, isFalse)
+		so(eb.Error(), eq, "")
+	})
+
+	cv("一层 wrapping, 被 wrapped", func() {
+		var a error = errTypeA("A")
+		err := fmt.Errorf("一层: %w", a)
+
+		e := errors.Unwrap(err)
+		so(e, notNil)
+		so(e.Error(), eq, a.Error())
+
+		ea, ok := Unwrap[errTypeA](err)
+		so(string(ea), ne, "")
+		so(ok, isTrue)
+		so(ea.Error(), eq, a.Error())
+
+		eb, ok := Unwrap[errTypeB](err)
+		so(ok, isFalse)
+		so(string(eb), eq, "")
+	})
+
+	cv("两层 wrapping", func() {
+		var a error = errTypeA("A")
+		var errWithA error = fmt.Errorf("E -> %w", a)
+		var errWithErrWithA error = fmt.Errorf("E -> %w", errWithA)
+
+		var b error = errTypeB("B")
+		var bWithErrWithErrWithA error = fmt.Errorf("%w -> %v", b, errWithErrWithA)
+
+		e := errors.Unwrap(errWithA)
+		so(e, notNil)
+		so(e.Error(), eq, a.Error())
+
+		e = errors.Unwrap(errWithErrWithA)
+		so(e, notNil)
+		so(e.Error(), eq, errWithA.Error())
+
+		ea, ok := Unwrap[errTypeA](errWithErrWithA)
+		so(ok, isTrue)
+		so(ea.Error(), eq, a.Error())
+
+		_, ok = Unwrap[errTypeA](bWithErrWithErrWithA)
+		so(ok, isFalse)
+
+		eb, ok := Unwrap[errTypeB](bWithErrWithErrWithA)
+		so(ok, isTrue)
+		so(eb.Error(), eq, b.Error())
+	})
+}
+
+type errTypeA string
+
+func (e errTypeA) Error() string {
+	return string(e)
+}
+
+type errTypeB string
+
+func (e errTypeB) Error() string {
+	return string(e)
 }
