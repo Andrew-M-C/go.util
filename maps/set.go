@@ -9,8 +9,12 @@ import (
 type Set[K comparable] map[K]struct{}
 
 // NewSet 返回一个集合类型
-func NewSet[K comparable]() Set[K] {
-	return Set[K]{}
+func NewSet[K comparable](vals ...K) Set[K] {
+	res := make(Set[K], len(vals))
+	for _, v := range vals {
+		res.Add(v)
+	}
+	return res
 }
 
 // NewSetFromSlice 从一个切片转为 Set 类型

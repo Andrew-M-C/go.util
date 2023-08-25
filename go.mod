@@ -4,12 +4,14 @@ go 1.19
 
 require (
 	github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3
-	github.com/Andrew-M-C/go.emoji v1.0.1
+	github.com/Andrew-M-C/go.emoji v1.0.2-0.20230216032205-8db5e377f3fa
 	github.com/Andrew-M-C/go.objectid v1.0.2
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b
 	github.com/emirpasic/gods v1.18.1
 	github.com/fatih/color v1.15.0
 	github.com/google/uuid v1.3.1
+	github.com/huichen/sego v0.0.0-20210824061530-c87651ea5c76
+	github.com/mtso/syllables v0.1.0
 	github.com/petermattis/goid v0.0.0-20230808133559-b036b712a89b
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/xuri/excelize/v2 v2.7.1
@@ -20,6 +22,7 @@ require (
 )
 
 require (
+	github.com/adamzy/cedar-go v0.0.0-20170805034717-80a9c64b256d // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kr/text v0.2.0 // indirect
