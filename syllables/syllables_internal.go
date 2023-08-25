@@ -5,8 +5,10 @@ import (
 	_ "embed"
 	"fmt"
 	"os"
+	"runtime"
+	"strings"
+	"time"
 
-	objectid "github.com/Andrew-M-C/go.objectid"
 	"github.com/Andrew-M-C/go.util/maps"
 	"github.com/huichen/sego"
 	"github.com/mtso/syllables"
@@ -34,12 +36,27 @@ func init() {
 	}
 
 	// sego init
-	tmpDictFile := fmt.Sprintf("./tmp_dict_%s.txt", objectid.New16().String())
+	initSego()
+}
+
+func initSego() {
+
+	var tmpDictFile string
+	switch strings.ToLower(runtime.GOOS) {
+	case "windows":
+		tmpDictFile = fmt.Sprintf("./tmp_dict_%d.txt", time.Now().UnixMilli())
+	case "linux", "darwin", "freebsd":
+		tmpDictFile = fmt.Sprintf("/tmp/tmp_dict_%d.txt", time.Now().UnixMilli())
+	default: // 未知类型, 尝试当前文件
+		tmpDictFile = fmt.Sprintf("./tmp_dict_%d.txt", time.Now().UnixMilli())
+	}
+
 	_ = os.WriteFile(tmpDictFile, dictionary, 0644)
 	defer os.Remove(tmpDictFile)
 
-	internal.sego = &sego.Segmenter{}
-	internal.sego.LoadDictionary(tmpDictFile)
+	s := &sego.Segmenter{}
+	s.LoadDictionary(tmpDictFile)
+	internal.sego = s
 }
 
 func isEnglishChar(r rune) bool {
@@ -50,6 +67,10 @@ func isEnglishChar(r rune) bool {
 		return true
 	}
 	return false
+}
+
+func isNumericChar(r rune) bool {
+	return r >= '0' && r <= '9'
 }
 
 // 计算英语单词音节数

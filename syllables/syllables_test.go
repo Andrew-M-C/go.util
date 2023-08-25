@@ -19,6 +19,7 @@ func TestSyllables(t *testing.T) {
 	cv("英文", t, func() { testEnglish(t) })
 	cv("英文 + 数字", t, func() { testEnglishAndNumbers(t) })
 	cv("中文", t, func() { testChinese(t) })
+	cv("一些奇怪的 case", t, func() { testStrangeCases(t) })
 }
 
 func testEnglish(t *testing.T) {
@@ -29,6 +30,7 @@ func testEnglish(t *testing.T) {
 	}(time.Now())
 
 	total, w := syllables.SplitAndCount(in)
+	t.Log(in)
 	t.Log(log.ToJSON(w))
 	so(total, eq, 7)
 	so(len(w), eq, 11)
@@ -75,15 +77,46 @@ func testEnglishAndNumbers(t *testing.T) {
 	}(time.Now())
 
 	total, w := syllables.SplitAndCount(in)
+	t.Log(in)
 	t.Log(log.ToJSON(w))
-	so(total, eq, 15) // anymore 三个音节
-	so(len(w), eq, 15)
+	so(total, eq, 15) // anymore 三个音节, 每个阿拉伯数字视为一个字节
+	so(len(w), eq, 21)
 }
 
 func testChinese(t *testing.T) {
 	const in = `各位观众晚上好，欢迎收看新闻联播`
 
 	total, w := syllables.SplitAndCount(in)
+	t.Log(in)
 	t.Log(log.ToJSON(w))
 	so(total, eq, 15)
+}
+
+func testStrangeCases(t *testing.T) {
+	cv("急急急急……", func() {
+		const in = `急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急`
+
+		total, w := syllables.SplitAndCount(in)
+		t.Log(in)
+		t.Log(log.ToJSON(w))
+		so(total, eq, utf8Len(in))
+		so(len(w), eq, (utf8Len(in)+1)/2) // "急急" 表示一个词
+	})
+
+	cv("圆周率 - 阿拉伯数字", func() {
+		const in = `3.1415926535897935384626`
+
+		total, w := syllables.SplitAndCount(in)
+		t.Log(in)
+		t.Log(log.ToJSON(w))
+		so(total, eq, len(in)-1)
+		so(len(w), eq, len(in))
+	})
+}
+
+func utf8Len(s string) (length int) {
+	for range s {
+		length++
+	}
+	return
 }

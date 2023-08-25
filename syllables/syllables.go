@@ -83,6 +83,17 @@ func extractEnglishWords(word Word) (res []Word) {
 				unEnglishChars.Reset()
 			}
 			englishChars.WriteRune(r)
+		} else if isNumericChar(r) {
+			if unEnglishChars.Len() > 0 {
+				add(unEnglishChars.String(), -1)
+				unEnglishChars.Reset()
+			}
+			if englishChars.Len() > 0 {
+				s := englishChars.String()
+				add(s, estimateEnglishSyllables(s))
+				englishChars.Reset()
+			}
+			add(string(r), 1)
 		} else {
 			if englishChars.Len() > 0 {
 				s := englishChars.String()
