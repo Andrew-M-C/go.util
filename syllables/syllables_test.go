@@ -19,6 +19,8 @@ func TestSyllables(t *testing.T) {
 	cv("英文", t, func() { testEnglish(t) })
 	cv("英文 + 数字", t, func() { testEnglishAndNumbers(t) })
 	cv("中文", t, func() { testChinese(t) })
+	cv("emoji", t, func() { testEmoji(t) })
+	cv("未知语种", t, func() { testUnknownLanguage(t) })
 	cv("一些奇怪的 case", t, func() { testStrangeCases(t) })
 }
 
@@ -92,6 +94,41 @@ func testChinese(t *testing.T) {
 	so(total, eq, 15)
 }
 
+func testEmoji(t *testing.T) {
+	const in = `😊😭😠😂`
+
+	total, w := syllables.SplitAndCount(in)
+	t.Log(in)
+	t.Log(log.ToJSON(w))
+	so(total, eq, 0)
+	so(len(w), eq, 4)
+}
+
+func testUnknownLanguage(t *testing.T) {
+	cv("西欧语言", func() {
+		const in = `Groussherzogtum Lëtzebuerg` // 卢森堡大公国
+
+		total, w := syllables.SplitAndCount(in)
+		t.Log(in)
+		t.Log("total", total)
+		t.Log(log.ToJSON(w))
+
+		// 对这种情况的支持不好
+	})
+
+	cv("阿拉伯语", func() {
+		const in = `جمهوری اسلامی ایران` // 伊朗伊斯兰共和国
+
+		total, w := syllables.SplitAndCount(in)
+		t.Log(in)
+		t.Log("total", total)
+		t.Log(log.ToJSON(w))
+		so(len(w), eq, 5)
+
+		// 对这种情况的支持一般
+	})
+}
+
 func testStrangeCases(t *testing.T) {
 	cv("急急急急……", func() {
 		const in = `急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急急`
@@ -111,6 +148,16 @@ func testStrangeCases(t *testing.T) {
 		t.Log(log.ToJSON(w))
 		so(total, eq, len(in)-1)
 		so(len(w), eq, len(in))
+	})
+
+	cv("超长的英文单词", func() {
+		const in = `The longest word in English is pneumonultramicroscopesilicovolcanoconiosis`
+
+		_, w := syllables.SplitAndCount(in)
+		t.Log(in)
+		t.Log(log.ToJSON(w))
+		so(w[len(w)-1].SyllableCount, eq, 18)
+		so(len(w), eq, 13)
 	})
 }
 
