@@ -1,6 +1,10 @@
 package slice
 
-import "golang.org/x/exp/constraints"
+import (
+	"math/rand"
+
+	"golang.org/x/exp/constraints"
+)
 
 // Number 表示所有的实数类型
 type Number interface {
@@ -135,4 +139,11 @@ func Copy[T any](sli []T) []T {
 	res := make([]T, len(sli))
 	copy(res, sli)
 	return res
+}
+
+// Shuffle shuffles a slice
+func Shuffle[T any](tgt []T) {
+	rand.Shuffle(len(tgt), func(i, j int) {
+		tgt[i], tgt[j] = tgt[j], tgt[i]
+	})
 }
