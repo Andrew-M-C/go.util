@@ -14,6 +14,8 @@ var (
 	cv = convey.Convey
 	so = convey.So
 	eq = convey.ShouldEqual
+
+	isNil = convey.ShouldBeNil
 )
 
 func TestRedBlackTree(t *testing.T) {
@@ -106,17 +108,17 @@ func testTree_Set_Put_Get(t *testing.T) {
 func testTree_Floor_Ceiling(t *testing.T) {
 	tree := rbt.New[string, int]()
 	n := tree.Floor("0")
-	so(n, eq, nil)
+	so(n, isNil)
 	n = tree.Ceiling("9")
-	so(n, eq, nil)
+	so(n, isNil)
 
 	tree.Set("1", 1)
 	tree.Set("8", 8)
 
 	n = tree.Floor("0")
-	so(n, eq, nil)
+	so(n, isNil)
 	n = tree.Ceiling("9")
-	so(n, eq, nil)
+	so(n, isNil)
 
 	n = tree.Floor("1")
 	so(n.K, eq, "1")
@@ -138,9 +140,9 @@ func testTree_Floor_Ceiling(t *testing.T) {
 func testTree_Left_Right(t *testing.T) {
 	tree := rbt.New[int, int]()
 	n := tree.Left()
-	so(n, eq, nil)
+	so(n, isNil)
 	n = tree.Right()
-	so(n, eq, nil)
+	so(n, isNil)
 
 	tree.Set(1, 1)
 	tree.Set(10, 10)
@@ -152,9 +154,9 @@ func testTree_Left_Right(t *testing.T) {
 
 	tree.Clear()
 	n = tree.Left()
-	so(n, eq, nil)
+	so(n, isNil)
 	n = tree.Right()
-	so(n, eq, nil)
+	so(n, isNil)
 }
 
 func testTree_Iterate(t *testing.T) {
