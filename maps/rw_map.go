@@ -1,12 +1,16 @@
 package maps
 
 import (
+	"encoding/json"
 	"sync"
 )
 
 // RWSafeMap 即 Read-Write-Locked Safe Map, 表示这是一个使用读写锁锁住的安全的 map 类型。
 // 适用于读多写少的情况。
 type RWSafeMap[K comparable, V any] interface {
+	json.Marshaler
+	json.Unmarshaler
+
 	Store(k K, v V)
 	Load(k K) (V, bool)
 	Delete(k K)
@@ -16,6 +20,7 @@ type RWSafeMap[K comparable, V any] interface {
 	LoadOrNew(k K, newFunc func() V) (actual V, loaded bool)
 
 	Swap(k K, v V) (previous V, loaded bool)
+	Range(f func(key K, value V) bool)
 
 	Size() int
 }
@@ -119,4 +124,35 @@ func (m *rwSafeMapImpl[K, V]) Size() (size int) {
 		size = len(m.ma)
 	})
 	return
+}
+
+func (m *rwSafeMapImpl[K, V]) MarshalJSON() (b []byte, err error) {
+	m.doReading(func() {
+		b, err = json.Marshal(m.ma)
+	})
+	return
+}
+
+func (m *rwSafeMapImpl[K, V]) UnmarshalJSON(b []byte) error {
+	var newMap map[K]V
+	if err := json.Unmarshal(b, &newMap); err != nil {
+		return err
+	}
+	m.doWriting(func() {
+		m.ma = newMap
+	})
+	return nil
+}
+
+func (m *rwSafeMapImpl[K, V]) Range(f func(key K, value V) bool) {
+	var kvList []KVPair[K, V]
+	m.doReading(func() {
+		kvList = KeyValues(m.ma)
+	})
+
+	for _, kv := range kvList {
+		if !f(kv.K, kv.V) {
+			return
+		}
+	}
 }

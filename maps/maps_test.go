@@ -13,6 +13,8 @@ var (
 	eq = convey.ShouldEqual
 	ne = convey.ShouldNotEqual
 	gt = convey.ShouldBeGreaterThan
+
+	isNil = convey.ShouldBeNil
 )
 
 func TestMaps(t *testing.T) {

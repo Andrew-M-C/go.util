@@ -1,6 +1,7 @@
 package maps
 
 import (
+	"encoding/json"
 	"fmt"
 	"math/rand"
 	"strings"
@@ -74,5 +75,20 @@ func testRWSafeMap(t *testing.T) {
 		wg.Wait()
 
 		t.Logf("safe map size: %d, written times: %d", m.Size(), iterateCount)
+	})
+
+	cv("JSON 序列化和反序列化", func() {
+		raw := `{"aaaa":1111,"bbbb":2222}`
+		m := NewRWSafeMap[string, int]()
+		err := json.Unmarshal([]byte(raw), &m)
+		so(err, isNil)
+
+		got, exist := m.Load("aaaa")
+		so(exist, eq, true)
+		so(got, eq, 1111)
+
+		got, exist = m.Load("bbbb")
+		so(exist, eq, true)
+		so(got, eq, 2222)
 	})
 }
