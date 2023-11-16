@@ -2,6 +2,8 @@ github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3 h1:EEOMYQYk
 github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3/go.mod h1:YJAeUx9w5bqEQJcJXHmm66CU57vK4oNli5skYzl9LXk=
 github.com/Andrew-M-C/go.emoji v1.1.0 h1:U79motZ5gdVNRGJ9LGX1KB6+uuAf9ukj3awYD7dmzvc=
 github.com/Andrew-M-C/go.emoji v1.1.0/go.mod h1:JUSgUL5phc2A5dovHXreSzWKYI3J9BKhI0c3IeGSq50=
+github.com/Andrew-M-C/go.jsonvalue v1.3.6 h1:mGrUAxm7evTlUnou2Kj6LF5iNa4VM3ERf5HsR9/+OJM=
+github.com/Andrew-M-C/go.jsonvalue v1.3.6/go.mod h1:IwnJ6++SYu/lYAvrJCGGCd9WaT0zTcsD6Li1X9IHcSU=
 github.com/Andrew-M-C/go.objectid v1.0.2 h1:F/Eh/VPI4VI4JoXRIkRtJdZD+sDdlp1Tp8HWP1BCmtM=
 github.com/Andrew-M-C/go.objectid v1.0.2/go.mod h1:5xSbrbtY7t5m8WGcyIsV3mk9zL92bxvVaROPZD9YbUM=
 github.com/BurntSushi/toml v0.3.1/go.mod h1:xHWCNGjB5oqiDr8zfno3MHue2Ht5sIBksp03qcyfWMU=
@@ -56,6 +58,8 @@ github.com/richardlehane/mscfb v1.0.4/go.mod h1:YzVpcZg9czvAuhk9T+a3avCpcFPMUWm7
 github.com/richardlehane/msoleps v1.0.1/go.mod h1:BWev5JBpU9Ko2WAgmZEuiz4/u3ZYTKbjLycmwiWUfWg=
 github.com/richardlehane/msoleps v1.0.3 h1:aznSZzrwYRl3rLKRT3gUk9am7T/mLNSnJINvN0AQoVM=
 github.com/richardlehane/msoleps v1.0.3/go.mod h1:BWev5JBpU9Ko2WAgmZEuiz4/u3ZYTKbjLycmwiWUfWg=
+github.com/shopspring/decimal v1.3.1 h1:2Usl1nmF/WZucqkFZhnfFYxxxu8LG21F6nPQBE5gKV8=
+github.com/shopspring/decimal v1.3.1/go.mod h1:DKyhrW/HYNuLGql+MJL6WCR6knT2jwCFRcu2hWCYk4o=
 github.com/smarty/assertions v1.15.0 h1:cR//PqUBUiQRakZWqBiFFQ9wb8emQGDb0HeGdqGByCY=
 github.com/smarty/assertions v1.15.0/go.mod h1:yABtdzeQs6l1brC900WlRNwj6ZR55d7B+E8C6HtKdec=
 github.com/smartystreets/assertions v1.2.0/go.mod h1:tcbTF8ujkAEcZ8TElKY+i30BzYlVhC/LOxJk7iOWnoo=

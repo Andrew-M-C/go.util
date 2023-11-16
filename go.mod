@@ -5,6 +5,7 @@ go 1.19
 require (
 	github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3
 	github.com/Andrew-M-C/go.emoji v1.1.0
+	github.com/Andrew-M-C/go.jsonvalue v1.3.6
 	github.com/Andrew-M-C/go.objectid v1.0.2
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b
 	github.com/emirpasic/gods v1.18.1
@@ -32,6 +33,7 @@ require (
 	github.com/mongodb/mongo-go-driver v1.1.1 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.3 // indirect
+	github.com/shopspring/decimal v1.3.1 // indirect
 	github.com/smarty/assertions v1.15.0 // indirect
 	github.com/valyala/fastrand v1.0.0 // indirect
 	github.com/xuri/efp v0.0.0-20230802181842-ad255f2331ca // indirect
