@@ -185,7 +185,9 @@ func GetNICs() (nicList []NIC) {
 		if intf.Flags&net.FlagLoopback > 0 {
 			n.IsLoopback = true
 		}
-		nicList = append(nicList, n)
+		if len(n.Addrs) > 0 {
+			nicList = append(nicList, n)
+		}
 	}
 	return
 }
