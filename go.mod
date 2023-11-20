@@ -8,6 +8,7 @@ require (
 	github.com/Andrew-M-C/go.jsonvalue v1.3.6
 	github.com/Andrew-M-C/go.objectid v1.0.2
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b
+	github.com/bwmarrin/snowflake v0.3.0
 	github.com/emirpasic/gods v1.18.1
 	github.com/fatih/color v1.16.0
 	github.com/google/uuid v1.4.0

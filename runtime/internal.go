@@ -15,7 +15,10 @@ func initParseLanCIDRs() {
 		"10.0.0.0/8",
 		"172.16.0.0/12",
 		"192.168.0.0/16",
+		"169.254.0.0/16",
 		"fd00::/8",
+		"fe80::/10",
+		"fc00::/9",
 	}
 	for _, block := range privateIPBlocks {
 		_, subnet, _ := net.ParseCIDR(block)
