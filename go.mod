@@ -14,12 +14,12 @@ require (
 	github.com/google/uuid v1.4.0
 	github.com/huichen/sego v0.0.0-20210824061530-c87651ea5c76
 	github.com/mtso/syllables v0.1.0
-	github.com/petermattis/goid v0.0.0-20230904192822-1876fd5063bc
+	github.com/petermattis/goid v0.0.0-20231207134359-e60b3f734c67
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/xuri/excelize/v2 v2.8.0
 	go.uber.org/atomic v1.11.0
 	go.uber.org/automaxprocs v1.5.3
-	golang.org/x/exp v0.0.0-20231108232855-2478ac86f678
+	golang.org/x/exp v0.0.0-20231206192017-f3f8817b8deb
 	gopkg.in/yaml.v3 v3.0.1
 )
 
