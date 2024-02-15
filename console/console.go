@@ -1,5 +1,7 @@
 // Package console 提供了一些命令行工具的简单封装
 //
+// Deprecated: 请使用 log 包替代 (github.com/Andrew-M-C/go.util/log)
+//
 // Reference:
 //   - [How can I print to Stderr in Go without using log](https://stackoverflow.com/questions/29721449/how-can-i-print-to-stderr-in-go-without-using-log)
 package console

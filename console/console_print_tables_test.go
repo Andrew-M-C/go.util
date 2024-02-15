@@ -15,12 +15,12 @@ func testPrintTables(t *testing.T) {
 
 	cv("不带按列对齐", func() {
 		t.Log("")
-		PrintTables(tab, WithSeparator(" / "))
+		_ = PrintTables(tab, WithSeparator(" / "))
 	})
 
 	cv("按列对齐", func() {
 		t.Log("")
-		PrintTables(
+		_ = PrintTables(
 			tab, WithSeparator("--"),
 			WithAlignByCols(unicode.AlignRight, unicode.AlignLeft),
 			WithUnifyAlign(unicode.AlignCenter),
