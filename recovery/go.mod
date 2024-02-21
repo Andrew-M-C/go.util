@@ -2,14 +2,9 @@ module github.com/Andrew-M-C/go.util/recovery
 
 go 1.19
 
-replace (
-	github.com/Andrew-M-C/go.util/log => ../log
-	github.com/Andrew-M-C/go.util/runtime => ../runtime
-)
-
 require (
-	github.com/Andrew-M-C/go.util/log v0.0.0-00010101000000-000000000000
-	github.com/Andrew-M-C/go.util/runtime v0.0.0-00010101000000-000000000000
+	github.com/Andrew-M-C/go.util/log v0.0.0-20240221042117-031961c2f12c
+	github.com/Andrew-M-C/go.util/runtime v0.0.0-20240221042117-031961c2f12c
 	github.com/smartystreets/goconvey v1.8.1
 )
 

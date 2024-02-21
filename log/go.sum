@@ -2,9 +2,11 @@ github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3 h1:EEOMYQYk
 github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3/go.mod h1:YJAeUx9w5bqEQJcJXHmm66CU57vK4oNli5skYzl9LXk=
 github.com/Andrew-M-C/go.objectid v1.0.2 h1:F/Eh/VPI4VI4JoXRIkRtJdZD+sDdlp1Tp8HWP1BCmtM=
 github.com/Andrew-M-C/go.objectid v1.0.2/go.mod h1:5xSbrbtY7t5m8WGcyIsV3mk9zL92bxvVaROPZD9YbUM=
+github.com/Andrew-M-C/go.util/runtime v0.0.0-20240221042117-031961c2f12c h1:qIA9t+mvwmWv5mFWDn+mWTvcjrmjOwmxOjRCKpmIcGY=
+github.com/Andrew-M-C/go.util/runtime v0.0.0-20240221042117-031961c2f12c/go.mod h1:+SEGQ3pJzwCyVvNnzKrat1XWuPueG6uIrL8Kk7+IUWk=
 github.com/Andrew-M-C/go.util/slice v0.0.0-20240221035607-b8b572fd3e45 h1:BwtwSyZ7gbZZRZi5Aue9irlzLlquZTbNg7XpVsx8gq8=
-github.com/Andrew-M-C/go.util/time v0.0.0-20240221041441-f40098fe5ae4 h1:7YlDW1zqm9VQqqyWwyeKeG5k2SjMqgieSScGIw+S5/M=
-github.com/Andrew-M-C/go.util/time v0.0.0-20240221041441-f40098fe5ae4/go.mod h1:mCEgKd3ntspEY1SF2UiiCQ3QXP/1U2a7Uu00/TALQLc=
+github.com/Andrew-M-C/go.util/time v0.0.0-20240221042117-031961c2f12c h1:CI/qzgw0wWu757R+oA2VCynYSSSzptpDEl/JC8Vwfzo=
+github.com/Andrew-M-C/go.util/time v0.0.0-20240221042117-031961c2f12c/go.mod h1:mCEgKd3ntspEY1SF2UiiCQ3QXP/1U2a7Uu00/TALQLc=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

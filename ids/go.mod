@@ -2,10 +2,8 @@ module github.com/Andrew-M-C/go.util/ids
 
 go 1.19
 
-replace github.com/Andrew-M-C/go.util/runtime => ../runtime
-
 require (
-	github.com/Andrew-M-C/go.util/runtime v0.0.0-00010101000000-000000000000
+	github.com/Andrew-M-C/go.util/runtime v0.0.0-20240221042117-031961c2f12c
 	github.com/Andrew-M-C/go.util/slice v0.0.0-20240221035607-b8b572fd3e45
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/smartystreets/goconvey v1.8.1

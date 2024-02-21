@@ -2,12 +2,12 @@ module github.com/Andrew-M-C/go.util/syllables
 
 go 1.19
 
-replace github.com/Andrew-M-C/go.util/runtime => ../runtime
+replace github.com/Andrew-M-C/go.util/runtime => github.com/Andrew-M-C/go.util/runtime v0.0.0-20240221042117-031961c2f12c
 
 require (
 	github.com/Andrew-M-C/go.emoji v1.1.1
-	github.com/Andrew-M-C/go.util/log v0.0.0-20240221041441-f40098fe5ae4
-	github.com/Andrew-M-C/go.util/maps v0.0.0-20240221041441-f40098fe5ae4
+	github.com/Andrew-M-C/go.util/log v0.0.0-20240221042117-031961c2f12c
+	github.com/Andrew-M-C/go.util/maps v0.0.0-20240221042117-031961c2f12c
 	github.com/huichen/sego v0.0.0-20210824061530-c87651ea5c76
 	github.com/mtso/syllables v0.1.0
 	github.com/smartystreets/goconvey v1.8.1
