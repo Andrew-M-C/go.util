@@ -4,8 +4,8 @@ go 1.19
 
 require (
 	github.com/Andrew-M-C/go.jsonvalue v1.3.6
-	github.com/Andrew-M-C/go.util/channel v0.0.0-20240221035607-b8b572fd3e45
-	github.com/Andrew-M-C/go.util/govet v0.0.0-20240221035607-b8b572fd3e45
+	github.com/Andrew-M-C/go.util/channel v0.0.0-20240221044053-8b90aa4683c0
+	github.com/Andrew-M-C/go.util/govet v0.0.0-20240221044053-8b90aa4683c0
 	github.com/smartystreets/goconvey v1.8.1
 	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
 )

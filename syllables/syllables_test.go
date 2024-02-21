@@ -1,10 +1,11 @@
 package syllables_test
 
 import (
+	"encoding/json"
+	"fmt"
 	"testing"
 	"time"
 
-	"github.com/Andrew-M-C/go.util/log"
 	"github.com/Andrew-M-C/go.util/syllables"
 	"github.com/smartystreets/goconvey/convey"
 )
@@ -14,6 +15,21 @@ var (
 	so = convey.So
 	eq = convey.ShouldEqual
 )
+
+type jsonWrapper struct {
+	v any
+}
+
+func (j jsonWrapper) String() string {
+	b, _ := json.Marshal(j.v)
+	return string(b)
+}
+
+func toJSON(v any) fmt.Stringer {
+	return jsonWrapper{
+		v: v,
+	}
+}
 
 func TestSyllables(t *testing.T) {
 	cv("英文", t, func() { testEnglish(t) })
@@ -33,7 +49,7 @@ func testEnglish(t *testing.T) {
 
 	total, w := syllables.SplitAndCount(in)
 	t.Log(in)
-	t.Log(log.ToJSON(w))
+	t.Log(toJSON(w))
 	so(total, eq, 7)
 	so(len(w), eq, 11)
 
@@ -80,7 +96,7 @@ func testEnglishAndNumbers(t *testing.T) {
 
 	total, w := syllables.SplitAndCount(in)
 	t.Log(in)
-	t.Log(log.ToJSON(w))
+	t.Log(toJSON(w))
 	so(total, eq, 7) // anymore 三个音节, 每个阿拉伯数字视为一个字节, 阿拉伯数字不再视为音节了
 	so(len(w), eq, 21)
 }
@@ -90,7 +106,7 @@ func testChinese(t *testing.T) {
 
 	total, w := syllables.SplitAndCount(in)
 	t.Log(in)
-	t.Log(log.ToJSON(w))
+	t.Log(toJSON(w))
 	so(total, eq, 15)
 }
 
@@ -99,7 +115,7 @@ func testEmoji(t *testing.T) {
 
 	total, w := syllables.SplitAndCount(in)
 	t.Log(in)
-	t.Log(log.ToJSON(w))
+	t.Log(toJSON(w))
 	so(total, eq, 0)
 	so(len(w), eq, 4)
 }
@@ -111,7 +127,7 @@ func testUnknownLanguage(t *testing.T) {
 		total, w := syllables.SplitAndCount(in)
 		t.Log(in)
 		t.Log("total", total)
-		t.Log(log.ToJSON(w))
+		t.Log(toJSON(w))
 
 		// 对这种情况的支持不好
 	})
@@ -122,7 +138,7 @@ func testUnknownLanguage(t *testing.T) {
 		total, w := syllables.SplitAndCount(in)
 		t.Log(in)
 		t.Log("total", total)
-		t.Log(log.ToJSON(w))
+		t.Log(toJSON(w))
 		so(len(w), eq, 5)
 
 		// 对这种情况的支持一般
@@ -135,7 +151,7 @@ func testStrangeCases(t *testing.T) {
 
 		total, w := syllables.SplitAndCount(in)
 		t.Log(in)
-		t.Log(log.ToJSON(w))
+		t.Log(toJSON(w))
 		so(total, eq, utf8Len(in))
 		so(len(w), eq, (utf8Len(in)+1)/2) // "急急" 表示一个词
 	})
@@ -145,7 +161,7 @@ func testStrangeCases(t *testing.T) {
 
 		_, w := syllables.SplitAndCount(in)
 		t.Log(in)
-		t.Log(log.ToJSON(w))
+		t.Log(toJSON(w))
 		so(len(w), eq, len(in))
 	})
 
@@ -154,7 +170,7 @@ func testStrangeCases(t *testing.T) {
 
 		_, w := syllables.SplitAndCount(in)
 		t.Log(in)
-		t.Log(log.ToJSON(w))
+		t.Log(toJSON(w))
 		so(w[len(w)-1].SyllableCount, eq, 18)
 		so(len(w), eq, 13)
 	})
