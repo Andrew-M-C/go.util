@@ -1,0 +1,35 @@
+go 1.19
+
+use (
+	./algorithm
+	./beta
+	./bits
+	./bytes
+	./channel
+	./console
+	./context
+	./datastructure
+	./draw
+	./encoding
+	./errors
+	./gotest
+	./govet
+	./holiday
+	./ids
+	./log
+	./maps
+	./math
+	./mysql
+	./net
+	./recovery
+	./reflect
+	./runtime
+	./slice
+	./syllables
+	./sync
+	./ternary
+	./time
+	./unicode
+	./unsafe
+	./xlsx
+)
