@@ -13,4 +13,4 @@ mod: $(SUB_GO_MOD_DIRS)
 
 .PHONY: $(SUB_GO_MOD_DIRS)
 $(SUB_GO_MOD_DIRS):
-	@cd $@ && go mod tidy && echo Done go mod tidy: $@
+	@cd $@ && echo go mod tidy $@ && go mod tidy

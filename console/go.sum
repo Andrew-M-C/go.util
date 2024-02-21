@@ -1,5 +1,7 @@
 github.com/Andrew-M-C/go.emoji v1.1.1 h1:XyUz+YQWJ53F22vIesCL/JRSUFzqDBy6hqHKqGk2egs=
 github.com/Andrew-M-C/go.emoji v1.1.1/go.mod h1:JUSgUL5phc2A5dovHXreSzWKYI3J9BKhI0c3IeGSq50=
+github.com/Andrew-M-C/go.util/unicode v0.0.0-20240221035607-b8b572fd3e45 h1:N5EqICF8NlrqYhg2luAS6470NoVgISB2xgymd/xCBtY=
+github.com/Andrew-M-C/go.util/unicode v0.0.0-20240221035607-b8b572fd3e45/go.mod h1:a5vNDXfkd9o+RgwQwNFzzUtxCCLL20/YdvfMzpn/npU=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=
 github.com/fatih/color v1.16.0/go.mod h1:fL2Sau1YI5c0pdGEVCbKQbLXB6edEj1ZgiY4NijnWvE=

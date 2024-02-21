@@ -1,5 +1,9 @@
 github.com/Andrew-M-C/go.jsonvalue v1.3.6 h1:mGrUAxm7evTlUnou2Kj6LF5iNa4VM3ERf5HsR9/+OJM=
 github.com/Andrew-M-C/go.jsonvalue v1.3.6/go.mod h1:IwnJ6++SYu/lYAvrJCGGCd9WaT0zTcsD6Li1X9IHcSU=
+github.com/Andrew-M-C/go.util/channel v0.0.0-20240221035607-b8b572fd3e45 h1:DGW1qtiym0jayec1LHo5Q0GLN9jsJcq7GT2i2s+KL78=
+github.com/Andrew-M-C/go.util/channel v0.0.0-20240221035607-b8b572fd3e45/go.mod h1:TSoSnqSU9XErQ0kuNKQBBPDfuyFvoSUyP1t7FCYRSyk=
+github.com/Andrew-M-C/go.util/govet v0.0.0-20240221035607-b8b572fd3e45 h1:CEUWU/9T2PxqhJXwLruxlprgRQDALVq0gRX0ctXh2R8=
+github.com/Andrew-M-C/go.util/govet v0.0.0-20240221035607-b8b572fd3e45/go.mod h1:7w+2BsgOUviWVMx2mr12DgRkgmqO9b6RarstRO1wFzU=
 github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORRmW1u3UXTncJ5qlYoELFm8eSnnEO6hX4iZ3EWY=
 github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25dO0g=
 github.com/gopherjs/gopherjs v1.17.2/go.mod h1:pRRIvn/QzFLrKfvEz3qUuEhtE/zLCWfreZ6J5gM2i+k=

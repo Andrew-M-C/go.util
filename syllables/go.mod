@@ -23,7 +23,7 @@ require (
 	github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3 // indirect
 	github.com/Andrew-M-C/go.objectid v1.0.2 // indirect
 	github.com/Andrew-M-C/go.util/runtime v0.0.0-00010101000000-000000000000 // indirect
-	github.com/Andrew-M-C/go.util/slice v0.0.0-00010101000000-000000000000 // indirect
+	github.com/Andrew-M-C/go.util/slice v0.0.0-20240221035607-b8b572fd3e45 // indirect
 	github.com/Andrew-M-C/go.util/time v0.0.0-00010101000000-000000000000 // indirect
 	github.com/adamzy/cedar-go v0.0.0-20170805034717-80a9c64b256d // indirect
 	github.com/fatih/color v1.16.0 // indirect

@@ -4,7 +4,6 @@ go 1.19
 
 replace (
 	github.com/Andrew-M-C/go.util/runtime => ../runtime
-	github.com/Andrew-M-C/go.util/slice => ../slice
 	github.com/Andrew-M-C/go.util/time => ../time
 )
 

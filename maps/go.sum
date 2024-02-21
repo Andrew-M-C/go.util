@@ -1,3 +1,5 @@
+github.com/Andrew-M-C/go.util/slice v0.0.0-20240221035607-b8b572fd3e45 h1:BwtwSyZ7gbZZRZi5Aue9irlzLlquZTbNg7XpVsx8gq8=
+github.com/Andrew-M-C/go.util/slice v0.0.0-20240221035607-b8b572fd3e45/go.mod h1:wIie5mijWcGESDf64bIZZmQLdmccBqh9cPTBOXmvKoU=
 github.com/fatih/color v1.16.0 h1:zmkK9Ngbjj+K0yRhTVONQh1p/HknKYSlNT+vZCzyokM=
 github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25dO0g=
 github.com/gopherjs/gopherjs v1.17.2/go.mod h1:pRRIvn/QzFLrKfvEz3qUuEhtE/zLCWfreZ6J5gM2i+k=

@@ -2,10 +2,8 @@ module github.com/Andrew-M-C/go.util/console
 
 go 1.19
 
-replace github.com/Andrew-M-C/go.util/unicode => ../unicode
-
 require (
-	github.com/Andrew-M-C/go.util/unicode v0.0.0-00010101000000-000000000000
+	github.com/Andrew-M-C/go.util/unicode v0.0.0-20240221035607-b8b572fd3e45
 	github.com/fatih/color v1.16.0
 	github.com/smartystreets/goconvey v1.8.1
 )
