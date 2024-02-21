@@ -2,11 +2,7 @@ module github.com/Andrew-M-C/go.util/ids
 
 go 1.19
 
-replace (
-	github.com/Andrew-M-C/go.util/runtime => ../runtime
-	github.com/Andrew-M-C/go.util/slice => ../slice
-	github.com/Andrew-M-C/go.util/time => ../time
-)
+replace github.com/Andrew-M-C/go.util/runtime => ../runtime
 
 require (
 	github.com/Andrew-M-C/go.util/runtime v0.0.0-00010101000000-000000000000
@@ -17,7 +13,7 @@ require (
 
 require (
 	github.com/Andrew-M-C/go.jsonvalue v1.3.6 // indirect
-	github.com/Andrew-M-C/go.util/time v0.0.0-00010101000000-000000000000 // indirect
+	github.com/Andrew-M-C/go.util/time v0.0.0-20240221041441-f40098fe5ae4 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
