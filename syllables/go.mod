@@ -2,11 +2,9 @@ module github.com/Andrew-M-C/go.util/syllables
 
 go 1.19
 
-replace github.com/Andrew-M-C/go.util/runtime => github.com/Andrew-M-C/go.util/runtime v0.0.0-20240221042117-031961c2f12c
-
 require (
 	github.com/Andrew-M-C/go.emoji v1.1.1
-	github.com/Andrew-M-C/go.util/log v0.0.0-20240221042117-031961c2f12c
+	github.com/Andrew-M-C/go.util/log v0.0.0-20240221042505-4d14b07c5551
 	github.com/Andrew-M-C/go.util/maps v0.0.0-20240221042117-031961c2f12c
 	github.com/huichen/sego v0.0.0-20210824061530-c87651ea5c76
 	github.com/mtso/syllables v0.1.0
@@ -16,9 +14,9 @@ require (
 require (
 	github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3 // indirect
 	github.com/Andrew-M-C/go.objectid v1.0.2 // indirect
-	github.com/Andrew-M-C/go.util/runtime v0.0.0-00010101000000-000000000000 // indirect
+	github.com/Andrew-M-C/go.util/runtime v0.0.0-20240221042117-031961c2f12c // indirect
 	github.com/Andrew-M-C/go.util/slice v0.0.0-20240221035607-b8b572fd3e45 // indirect
-	github.com/Andrew-M-C/go.util/time v0.0.0-20240221041441-f40098fe5ae4 // indirect
+	github.com/Andrew-M-C/go.util/time v0.0.0-20240221042117-031961c2f12c // indirect
 	github.com/adamzy/cedar-go v0.0.0-20170805034717-80a9c64b256d // indirect
 	github.com/fatih/color v1.16.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect

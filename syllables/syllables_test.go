@@ -81,7 +81,7 @@ func testEnglishAndNumbers(t *testing.T) {
 	total, w := syllables.SplitAndCount(in)
 	t.Log(in)
 	t.Log(log.ToJSON(w))
-	so(total, eq, 15) // anymore 三个音节, 每个阿拉伯数字视为一个字节
+	so(total, eq, 7) // anymore 三个音节, 每个阿拉伯数字视为一个字节, 阿拉伯数字不再视为音节了
 	so(len(w), eq, 21)
 }
 
@@ -143,10 +143,9 @@ func testStrangeCases(t *testing.T) {
 	cv("圆周率 - 阿拉伯数字", func() {
 		const in = `3.1415926535897935384626`
 
-		total, w := syllables.SplitAndCount(in)
+		_, w := syllables.SplitAndCount(in)
 		t.Log(in)
 		t.Log(log.ToJSON(w))
-		so(total, eq, len(in)-1)
 		so(len(w), eq, len(in))
 	})
 
