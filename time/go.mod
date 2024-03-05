@@ -6,7 +6,7 @@ require (
 	github.com/Andrew-M-C/go.util/slice v0.0.0-20240221044053-8b90aa4683c0
 	github.com/smartystreets/goconvey v1.8.1
 	go.uber.org/atomic v1.11.0
-	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 )
 
 require (

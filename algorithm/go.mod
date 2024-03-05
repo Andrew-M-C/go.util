@@ -4,7 +4,7 @@ go 1.19
 
 require (
 	github.com/smartystreets/goconvey v1.8.1
-	golang.org/x/exp v0.0.0-20240213143201-ec583247a57a
+	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 )
 
 require (
