@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/fatih/color"
 	. "github.com/smartystreets/goconvey/convey"
 )
 
@@ -24,42 +23,42 @@ func testLCS(t *testing.T) {
 		res := LCS(len(x), len(y), equal)
 		r := res.GetRoute()
 
-		desc := func(indexes []int, str []byte) string {
-			m := posSliceToMap(indexes)
-			buf := bytes.Buffer{}
+		// desc := func(indexes []int, str []byte) string {
+		// 	m := posSliceToMap(indexes)
+		// 	buf := bytes.Buffer{}
 
-			for i, b := range str {
-				if _, exist := m[i]; exist {
-					buf.WriteString(color.GreenString("%c", b))
-				} else {
-					buf.WriteString(color.RedString("%c", b))
-				}
-			}
-			return buf.String()
-		}
+		// 	for i, b := range str {
+		// 		if _, exist := m[i]; exist {
+		// 			buf.WriteString(color.GreenString("%c", b))
+		// 		} else {
+		// 			buf.WriteString(color.RedString("%c", b))
+		// 		}
+		// 	}
+		// 	return buf.String()
+		// }
 
-		bothDesc := func(r *Route) string {
-			buf := bytes.Buffer{}
+		// bothDesc := func(r *Route) string {
+		// 	buf := bytes.Buffer{}
 
-			it := r.ToIter(len(x), len(y))
-			for _, item := range it {
-				if item[0] == -1 {
-					buf.WriteString(color.GreenString(string(y[item[1]])))
-				} else if item[1] == -1 {
-					buf.WriteString(color.RedString(string(x[item[0]])))
-				} else {
-					buf.WriteRune(rune(x[item[0]]))
-				}
-			}
-			return buf.String()
-		}
+		// 	it := r.ToIter(len(x), len(y))
+		// 	for _, item := range it {
+		// 		if item[0] == -1 {
+		// 			buf.WriteString(color.GreenString(string(y[item[1]])))
+		// 		} else if item[1] == -1 {
+		// 			buf.WriteString(color.RedString(string(x[item[0]])))
+		// 		} else {
+		// 			buf.WriteRune(rune(x[item[0]]))
+		// 		}
+		// 	}
+		// 	return buf.String()
+		// }
 
 		t.Logf("XIndexes: %v", r.XIndexes)
 		t.Logf("YIndexes: %v", r.YIndexes)
 
-		t.Logf("X: %s", desc(r.XIndexes, x))
-		t.Logf("Y: %s", desc(r.YIndexes, y))
-		t.Logf("combine: %s", bothDesc(r))
+		// t.Logf("X: %s", desc(r.XIndexes, x))
+		// t.Logf("Y: %s", desc(r.YIndexes, y))
+		// t.Logf("combine: %s", bothDesc(r))
 
 		printRes(t, res)
 
