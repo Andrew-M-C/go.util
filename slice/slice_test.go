@@ -2,6 +2,7 @@ package slice
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"strconv"
 	"testing"
@@ -36,6 +37,7 @@ func TestSlice(t *testing.T) {
 	test(t, "LCS", testLCS)
 	test(t, "binary search", testBinarySearch)
 	test(t, "List type", testList)
+	test(t, "CutIntoSectors", testCutIntoSectors)
 }
 
 func testSlice(t *testing.T) {
@@ -183,4 +185,54 @@ func printTestCombineEvenlyType(t *testing.T, slice []*testCombineEvenlyType) {
 	buf.WriteString(strconv.FormatInt(int64(len(slice)), 10))
 
 	t.Log(buf.String())
+}
+
+func testCutIntoSectors(t *testing.T) {
+	cv("太小而不分段", func() {
+		sli := []int{1, 2, 3, 4, 5, 6}
+		res := CutIntoSectors(sli, 10)
+		so(len(res), eq, 1)
+		so(len(res[0]), eq, len(sli))
+
+		b1, _ := json.Marshal(sli)
+		b2, _ := json.Marshal(res[0])
+		so(string(b1), eq, string(b2))
+	})
+
+	cv("空切片", func() {
+		sli := []int{}
+		res := CutIntoSectors(sli, 10)
+		so(len(res), eq, 0)
+	})
+
+	cv("正好切割成两段", func() {
+		sli := []int{1, 2, 3, 4, 5, 6}
+		res := CutIntoSectors(sli, 3)
+		so(len(res), eq, 2)
+		so(len(res[0]), eq, 3)
+		so(len(res[1]), eq, 3)
+
+		so(res[0][0], eq, 1)
+		so(res[0][1], eq, 2)
+		so(res[0][2], eq, 3)
+		so(res[1][0], eq, 4)
+		so(res[1][1], eq, 5)
+		so(res[1][2], eq, 6)
+	})
+
+	cv("切割后一部分不全", func() {
+		sli := []int{1, 2, 3, 4, 5, 6, 7}
+		res := CutIntoSectors(sli, 4)
+		so(len(res), eq, 2)
+		so(len(res[0]), eq, 4)
+		so(len(res[1]), eq, 3)
+
+		so(res[0][0], eq, 1)
+		so(res[0][1], eq, 2)
+		so(res[0][2], eq, 3)
+		so(res[0][3], eq, 4)
+		so(res[1][0], eq, 5)
+		so(res[1][1], eq, 6)
+		so(res[1][2], eq, 7)
+	})
 }

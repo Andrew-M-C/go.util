@@ -8,7 +8,7 @@ func testBinarySearch(t *testing.T) {
 	cv("测试空 slice", func() { testBinarySearchEmptySlice(t) })
 }
 
-func testBinarySearchBasicHit(t *testing.T) {
+func testBinarySearchBasicHit(_ *testing.T) {
 	cv("奇数长", func() {
 		sli := []int{-20, -10, 10, 20, 30}
 
@@ -65,7 +65,7 @@ func testBinarySearchBasicHit(t *testing.T) {
 	})
 }
 
-func testBinarySearchMultipleHit(t *testing.T) {
+func testBinarySearchMultipleHit(_ *testing.T) {
 	sli := []int{-1, -1, 0, 0, 1, 2, 5, 5, 5, 6, 8, 10, 25, 25, 100}
 
 	from, to, hit := BinarySearch(sli, 5)
@@ -101,7 +101,7 @@ func testBinarySearchMultipleHit(t *testing.T) {
 	so(len(sli[from:to]), eq, 0)
 }
 
-func testBinarySearchEmptySlice(t *testing.T) {
+func testBinarySearchEmptySlice(_ *testing.T) {
 	var sli []int32
 
 	from, to, hit := BinarySearch(sli, 100)

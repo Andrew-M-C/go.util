@@ -147,3 +147,19 @@ func Shuffle[T any](tgt []T) {
 		tgt[i], tgt[j] = tgt[j], tgt[i]
 	})
 }
+
+// CutIntoSectors 阿照 limit 分成一段一段的
+func CutIntoSectors[T any](sli []T, sectorLimit int) [][]T {
+	if sectorLimit <= 0 {
+		return [][]T{sli}
+	}
+	var res [][]T
+	for len(sli) > sectorLimit {
+		res = append(res, sli[:sectorLimit])
+		sli = sli[sectorLimit:]
+	}
+	if len(sli) > 0 {
+		res = append(res, sli)
+	}
+	return res
+}
