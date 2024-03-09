@@ -26,4 +26,5 @@ func init() {
 func TestContext(t *testing.T) {
 	cv("测试 spinlock", t, func() { testSpinLock(t) })
 	cv("测试可重入的锁", t, func() { testReentrantLock(t) })
+	cv("测试 Map", t, func() { testMap(t) })
 }
