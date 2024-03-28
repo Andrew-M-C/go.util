@@ -7,32 +7,40 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"maps"
 	"net/http"
+	"net/url"
 )
 
 // JSON 发起一个 JSON 请求
-func JSON[T any](
-	ctx context.Context, method, url string, req any, header http.Header,
-) (rsp T, err error) {
+func JSON[T any](ctx context.Context, targetURL string, opts ...RequestOption) (rsp T, err error) {
+	o := mergeOptions(opts)
+
 	var reqBody io.Reader
-	if req != nil {
-		b, _ := json.Marshal(req)
+	if o.body != nil {
+		b, e := json.Marshal(o.body)
+		if e != nil {
+			err = fmt.Errorf("Marshal request error (%w)", err)
+			return
+		}
 		reqBody = bytes.NewBuffer(b)
 	}
 
-	httpReq, err := http.NewRequestWithContext(ctx, method, url, reqBody)
+	u, err := url.Parse(targetURL)
+	if err != nil {
+		err = fmt.Errorf("illegal target URL (%w)", err)
+		return
+	}
+	o.mergeQuery(u.Query())
+	u.RawQuery = o.query.Encode()
+
+	httpReq, err := http.NewRequestWithContext(ctx, o.method, u.String(), reqBody)
 	if err != nil {
 		err = fmt.Errorf("http.NewRequest error (%w)", err)
 		return
 	}
 
-	header = maps.Clone(header)
-	if header == nil {
-		header = http.Header{}
-	}
-	header.Set("Content-Type", "application/json")
-	httpReq.Header = header
+	o.header.Set("Content-Type", "application/json")
+	httpReq.Header = o.header
 
 	cli := http.Client{
 		Transport: http.DefaultTransport,

@@ -36,13 +36,14 @@ func TestJSON(t *testing.T) {
 		}
 		var rsp *jsonvalue.V
 		rsp, err := http.JSON[*jsonvalue.V](
-			context.Background(), "POST", "https://echo.free.beeceptor.com",
-			req, nil,
+			context.Background(), "https://echo.free.beeceptor.com",
+			http.WithMethod("POST"), http.WithRequestBody(req),
 		)
 		so(err, isNil)
 		t.Log(rsp.MustMarshalString(jsonvalue.OptSetSequence()))
 
 		body, err := rsp.Get("parsedBody")
+		so(err, isNil)
 		so(jsonvalue.New(req).Equal(body), eq, true)
 	})
 }
