@@ -4,6 +4,7 @@ package xlsx
 import (
 	"fmt"
 	"os"
+	"reflect"
 
 	"github.com/Andrew-M-C/go.util/maps"
 	"github.com/Andrew-M-C/go.util/slice"
@@ -55,13 +56,20 @@ func (x *Xlsx) Set(sheet string, row, col int, content any) {
 		x.sheets.Add(sheet)
 	}
 
-	s, ok := content.(string)
-	if !ok {
-		s = fmt.Sprint(content)
-	}
-
 	cell := CellName(row, col)
-	_ = x.excel.SetCellStr(sheet, cell, s)
+
+	switch reflect.TypeOf(content).Kind() {
+	default:
+		_ = x.excel.SetCellStr(sheet, cell, fmt.Sprint(content))
+	case reflect.String:
+		_ = x.excel.SetCellStr(sheet, cell, reflect.ValueOf(content).String())
+	case reflect.Uint, reflect.Uint64, reflect.Uint32, reflect.Uint16, reflect.Uint8:
+		u := reflect.ValueOf(content).Uint()
+		_ = x.excel.SetCellInt(sheet, cell, int(u))
+	case reflect.Int, reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8:
+		i := reflect.ValueOf(content).Int()
+		_ = x.excel.SetCellInt(sheet, cell, int(i))
+	}
 }
 
 // Save 保存至文件
