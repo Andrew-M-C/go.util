@@ -1,3 +1,5 @@
+github.com/Andrew-M-C/go.util/unsafe v0.0.0-20240328080120-73db13babc7d h1:lL971GKPAzWNuFPoSET1HBdRMXIzoZ91lq+v0OhpauY=
+github.com/Andrew-M-C/go.util/unsafe v0.0.0-20240328080120-73db13babc7d/go.mod h1:cN+VilNtYInWPXfTf2YiBKndjbZ1oP1AMLRDNHgI7Vg=
 github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25dO0g=
 github.com/gopherjs/gopherjs v1.17.2/go.mod h1:pRRIvn/QzFLrKfvEz3qUuEhtE/zLCWfreZ6J5gM2i+k=
 github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7C0MuV77Wo=
