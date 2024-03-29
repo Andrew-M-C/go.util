@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"reflect"
+	"strconv"
+	"strings"
 
 	"github.com/Andrew-M-C/go.util/maps"
 	"github.com/Andrew-M-C/go.util/slice"
@@ -58,17 +60,27 @@ func (x *Xlsx) Set(sheet string, row, col int, content any) {
 
 	cell := CellName(row, col)
 
+	v := reflect.ValueOf(content)
+
 	switch reflect.TypeOf(content).Kind() {
 	default:
 		_ = x.excel.SetCellStr(sheet, cell, fmt.Sprint(content))
 	case reflect.String:
-		_ = x.excel.SetCellStr(sheet, cell, reflect.ValueOf(content).String())
+		_ = x.excel.SetCellStr(sheet, cell, v.String())
 	case reflect.Uint, reflect.Uint64, reflect.Uint32, reflect.Uint16, reflect.Uint8:
-		u := reflect.ValueOf(content).Uint()
+		u := v.Uint()
 		_ = x.excel.SetCellInt(sheet, cell, int(u))
 	case reflect.Int, reflect.Int64, reflect.Int32, reflect.Int16, reflect.Int8:
-		i := reflect.ValueOf(content).Int()
+		i := v.Int()
 		_ = x.excel.SetCellInt(sheet, cell, int(i))
+	case reflect.Float64, reflect.Float32:
+		f := v.Float()
+		parts := strings.Split(strconv.FormatFloat(f, 'f', -1, 64), ".")
+		if len(parts) > 2 {
+			_ = x.excel.SetCellFloat(sheet, cell, f, len(parts[1]), 64)
+		} else {
+			_ = x.excel.SetCellFloat(sheet, cell, f, 2, 64)
+		}
 	}
 }
 
