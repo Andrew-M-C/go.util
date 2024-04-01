@@ -2,6 +2,7 @@ package slice
 
 import (
 	"math/rand"
+	"sort"
 
 	"golang.org/x/exp/constraints"
 )
@@ -162,4 +163,11 @@ func CutIntoSectors[T any](sli []T, sectorLimit int) [][]T {
 		res = append(res, sli)
 	}
 	return res
+}
+
+// Sort 封装 sort.Slice
+func Sort[T any](sli []T, lessFunc func(i, j T) bool) {
+	sort.Slice(sli, func(i, j int) bool {
+		return lessFunc(sli[i], sli[j])
+	})
 }
