@@ -7,13 +7,13 @@ func CombineEvenly[T comparable](s1, s2 []T) []T {
 	if len(s1) == 0 {
 		return []T{}
 	}
-	if len(s1) == 1 {
-		out := make([]T, 1, 2)
-		out[0] = s1[0]
-		if len(s2) == 1 {
-			out = append(out, s2[0])
+	if len(s1) == len(s2) {
+		res := make([]T, 0, len(s1)*2)
+		for i := 0; i < len(s1); i++ {
+			res = append(res, s1[i])
+			res = append(res, s2[i])
 		}
-		return out
+		return res
 	}
 
 	total := len(s1) + len(s2)

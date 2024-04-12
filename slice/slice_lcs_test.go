@@ -82,13 +82,13 @@ func testLCS(t *testing.T) {
 	test(x, y, 28)
 }
 
-func posSliceToMap(sl []int) map[int]struct{} {
-	ret := map[int]struct{}{}
-	for _, i := range sl {
-		ret[i] = struct{}{}
-	}
-	return ret
-}
+// func posSliceToMap(sl []int) map[int]struct{} {
+// 	ret := map[int]struct{}{}
+// 	for _, i := range sl {
+// 		ret[i] = struct{}{}
+// 	}
+// 	return ret
+// }
 
 func printRes(t *testing.T, m *LCSMap) {
 	buf := bytes.Buffer{}
