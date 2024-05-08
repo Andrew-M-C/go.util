@@ -10,11 +10,11 @@ require (
 )
 
 require (
-	github.com/Andrew-M-C/go.jsonvalue v1.3.7 // indirect
+	github.com/Andrew-M-C/go.jsonvalue v1.3.8 // indirect
 	github.com/Andrew-M-C/go.util/time v0.0.0-20240221041441-f40098fe5ae4 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/shopspring/decimal v1.3.1 // indirect
+	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/smarty/assertions v1.15.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 )
