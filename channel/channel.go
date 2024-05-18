@@ -56,19 +56,25 @@ func WriteWithTimeout[T any](ch chan<- T, v T, timeout time.Duration) (full, clo
 
 // ReadNonBlocked 非阻塞地从一个 chan 中读出数据。当读取失败时返回
 func ReadNonBlocked[T any](ch <-chan T) (v T, empty, emptyAndClosed bool) {
+	v, _, empty, emptyAndClosed = readNonBlocked(ch)
+	return v, empty, emptyAndClosed
+}
+
+func readNonBlocked[T any](ch <-chan T) (v T, drained, empty, emptyAndClosed bool) {
 	chanOpened := true
 
 	select {
 	default:
 		empty = true
 	case v, chanOpened = <-ch:
+		drained = true
 		// OK
 	}
 
 	if !chanOpened {
-		return v, true, true
+		return v, drained, true, true
 	}
-	return v, empty, false
+	return v, drained, empty, false
 }
 
 // ReadWithTimeout 从一个 chan 中读出数据。当读取超时时返回
@@ -102,7 +108,82 @@ func ReadWithTimeout[T any](ch <-chan T, timeout time.Duration) (v T, emptyAndTi
 	}
 
 	if !chanOpened {
-		return v, true, true
+		emptyAndTimeout = true
+		emptyAndClosed = true
 	}
 	return v, emptyAndTimeout, false
+}
+
+// ReadManyInTime 从一个 chan 中尽可能读出数据, 当读取数据超时，或者达到 limit 值时返回。
+// 参数 limit <= 0 时表示无限制。参数 withIn <= 0 则表示将当前 channel 中已有的数据尽数读出
+// (limit 参数逻辑仍在), 不考虑超时。
+func ReadManyInTime[T any](
+	ch <-chan T, limit int, withIn time.Duration,
+) (res []T, emptyAndTimeout, emptyAndClosed bool) {
+	// 不带超时, 那就尽量读
+	if withIn <= 0 {
+		return readManyAtOnce(ch, limit)
+	}
+
+	// 检查是否已关闭
+	defer func() {
+		if e := recover(); e != nil {
+			emptyAndClosed = true
+		}
+	}()
+
+	t := time.NewTimer(withIn)
+	defer func() {
+		if !t.Stop() {
+			_, _, _ = ReadNonBlocked(t.C)
+		}
+	}()
+
+	// 读取
+	var v T
+	chanOpened := true
+
+	for {
+		shouldBreak := false
+		select {
+		case <-t.C:
+			emptyAndTimeout = true
+			shouldBreak = true
+
+		case v, chanOpened = <-ch:
+			res = append(res, v)
+			if !chanOpened {
+				emptyAndTimeout = true
+				emptyAndClosed = true
+				shouldBreak = true
+			} else if limit > 0 && len(res) >= limit {
+				shouldBreak = true
+			}
+		}
+
+		if shouldBreak {
+			break
+		}
+	}
+
+	if !chanOpened {
+		emptyAndTimeout = true
+		emptyAndClosed = true
+	}
+	return res, emptyAndTimeout, false
+}
+
+func readManyAtOnce[T any](ch <-chan T, limit int) (res []T, empty, emptyAndClosed bool) {
+	var v T
+	var drained bool
+	for {
+		v, drained, empty, emptyAndClosed = readNonBlocked(ch)
+		if !drained {
+			return
+		}
+		res = append(res, v)
+		if limit > 0 && len(res) >= limit {
+			return
+		}
+	}
 }

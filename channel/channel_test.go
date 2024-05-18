@@ -22,6 +22,7 @@ var (
 func TestChannel(t *testing.T) {
 	cv("测试 WriteNonBlocked 和 ReadNonBlocked", t, func() { testWriteNonBlockedReadNonBlocked(t) })
 	cv("测试 WriteWithTimeout 和 ReadWithTimeout", t, func() { testWriteWithTimeoutReadWithTimeout(t) })
+	cv("测试 ReadManyInTime", t, func() { testReadManyInTime(t) })
 }
 
 func testWriteNonBlockedReadNonBlocked(*testing.T) {
@@ -182,4 +183,53 @@ func readInMilli[T any](ch chan T, msec int, result ...*T) {
 			*result[0] = v
 		}
 	}()
+}
+
+func testReadManyInTime(t *testing.T) {
+	cv("带缓冲区的 chan", func() {
+		ch := make(chan int, 100)
+
+		repeat(50, func(i int) {
+			ch <- i + 1
+		})
+
+		t.Log("写入 50, 读取 50")
+		start := time.Now()
+		res, emptyAndTimeout, emptyAndClosed := channel.ReadManyInTime(ch, -1, ms(50))
+		so(time.Since(start), gt, ms(50))
+		so(time.Since(start), lt, ms(100))
+		so(emptyAndTimeout, eq, true)
+		so(emptyAndClosed, eq, false)
+		so(len(res), eq, 50)
+		repeat(50, func(i int) {
+			so(res[i], eq, i+1)
+		})
+
+		t.Log("写入 50, 读取 10")
+		repeat(50, func(i int) {
+			ch <- i * 10
+		})
+		res, emptyAndTimeout, emptyAndClosed = channel.ReadManyInTime(ch, 10, 0)
+		so(emptyAndTimeout, eq, false)
+		so(emptyAndClosed, eq, false)
+		so(len(res), eq, 10)
+		repeat(len(res), func(i int) {
+			so(res[i], eq, i*10)
+		})
+
+		t.Log("读取 40 (全部)")
+		res, emptyAndTimeout, emptyAndClosed = channel.ReadManyInTime(ch, 50, 0)
+		so(emptyAndTimeout, eq, true)
+		so(emptyAndClosed, eq, false)
+		so(len(res), eq, 40)
+		repeat(len(res), func(i int) {
+			so(res[i], eq, (i+10)*10)
+		})
+	})
+}
+
+func repeat(count int, fu func(i int)) {
+	for i := 0; i < count; i++ {
+		fu(i)
+	}
 }
