@@ -1,9 +1,11 @@
 module github.com/Andrew-M-C/go.util/datastructure
 
-go 1.19
+go 1.21
+
+toolchain go1.21.0
 
 require (
-	github.com/emirpasic/gods v1.18.1
+	github.com/emirpasic/gods/v2 v2.0.0-alpha
 	github.com/smartystreets/goconvey v1.8.1
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 )

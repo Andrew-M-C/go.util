@@ -2,7 +2,7 @@
 package redblacktree
 
 import (
-	rbt "github.com/emirpasic/gods/trees/redblacktree"
+	rbt "github.com/emirpasic/gods/v2/trees/redblacktree"
 	"golang.org/x/exp/constraints"
 )
 
@@ -29,7 +29,7 @@ var _ treeCapability[int, struct{}] = (*Tree[int, struct{}])(nil)
 
 // Tree 表示一个红黑树实现
 type Tree[K constraints.Ordered, V any] struct {
-	tree *rbt.Tree
+	tree *rbt.Tree[K, V]
 }
 
 // New 新建一个红黑树实现
@@ -41,20 +41,7 @@ func (t *Tree[K, V]) lazyInit() {
 	if t.tree != nil {
 		return
 	}
-	t.tree = rbt.NewWith(t.compare)
-}
-
-func (t *Tree[K, V]) compare(i, j any) int {
-	ii, _ := i.(K)
-	jj, _ := j.(K)
-	switch {
-	case ii < jj:
-		return -1
-	default:
-		return 0
-	case ii > jj:
-		return 1
-	}
+	t.tree = rbt.New[K, V]()
 }
 
 // Size 返回 KV 对的数量
@@ -77,13 +64,7 @@ func (t *Tree[K, V]) Values() []V {
 	if t.Size() == 0 {
 		return nil
 	}
-	vals := t.tree.Values()
-	res := make([]V, 0, len(vals))
-	for _, intf := range vals {
-		v, _ := intf.(V)
-		res = append(res, v)
-	}
-	return res
+	return t.tree.Values()
 }
 
 // Set 设置一个值
@@ -103,11 +84,7 @@ func (t *Tree[K, V]) Get(k K) (v V, exist bool) {
 		return
 	}
 	val, exist := t.tree.Get(k)
-	if !exist {
-		return
-	}
-	v, _ = val.(V)
-	return v, exist
+	return val, exist
 }
 
 // Floor 获取某个值左边的第一个值, 如果集合为空或者当前值是最小值, 则返回 nil
@@ -120,11 +97,9 @@ func (t *Tree[K, V]) Floor(k K) *Node[K, V] {
 		return nil
 	}
 
-	key, _ := node.Key.(K)
-	val, _ := node.Value.(V)
 	return &Node[K, V]{
-		K: key,
-		V: val,
+		K: node.Key,
+		V: node.Value,
 	}
 }
 
@@ -138,11 +113,9 @@ func (t *Tree[K, V]) Ceiling(k K) *Node[K, V] {
 		return nil
 	}
 
-	key, _ := node.Key.(K)
-	val, _ := node.Value.(V)
 	return &Node[K, V]{
-		K: key,
-		V: val,
+		K: node.Key,
+		V: node.Value,
 	}
 }
 
@@ -151,13 +124,7 @@ func (t *Tree[K, V]) Keys() (keys []K) {
 	if t.Size() == 0 {
 		return nil
 	}
-	intfKeys := t.tree.Keys()
-	keys = make([]K, 0, len(intfKeys))
-	for _, v := range intfKeys {
-		key, _ := v.(K)
-		keys = append(keys, key)
-	}
-	return keys
+	return t.tree.Keys()
 }
 
 // Left 返回整个集合的左值, 如果没有则返回 nil
@@ -165,15 +132,13 @@ func (t *Tree[K, V]) Left() *Node[K, V] {
 	if t.Size() == 0 {
 		return nil
 	}
-	intfNode := t.tree.Left()
-	if intfNode == nil {
+	n := t.tree.Left()
+	if n == nil {
 		return nil
 	}
-	k, _ := intfNode.Key.(K)
-	v, _ := intfNode.Key.(V)
 	return &Node[K, V]{
-		K: k,
-		V: v,
+		K: n.Key,
+		V: n.Value,
 	}
 }
 
@@ -182,15 +147,13 @@ func (t *Tree[K, V]) Right() *Node[K, V] {
 	if t.Size() == 0 {
 		return nil
 	}
-	intfNode := t.tree.Right()
-	if intfNode == nil {
+	n := t.tree.Right()
+	if n == nil {
 		return nil
 	}
-	k, _ := intfNode.Key.(K)
-	v, _ := intfNode.Key.(V)
 	return &Node[K, V]{
-		K: k,
-		V: v,
+		K: n.Key,
+		V: n.Value,
 	}
 }
 
@@ -200,9 +163,7 @@ func (t *Tree[K, V]) Iterate(f func(k K, v V) bool) {
 		return
 	}
 	for it := t.tree.Iterator(); it.Next(); {
-		intfK, intfV := it.Key(), it.Value()
-		k, _ := intfK.(K)
-		v, _ := intfV.(V)
+		k, v := it.Key(), it.Value()
 		goOn := f(k, v)
 		if !goOn {
 			break
