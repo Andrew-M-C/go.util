@@ -16,7 +16,6 @@ use (
 	./errors
 	./gotest
 	./govet
-	./holiday
 	./ids
 	./log
 	./maps

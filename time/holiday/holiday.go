@@ -13,7 +13,7 @@ func NextHoliday() (int, string) {
 	return NextHolidayForDate(today())
 }
 
-// NextWorkday 返回下一个工作日在几天后, 如果今天是假日, 则返回 1
+// NextWorkday 返回下一个工作日在几天后
 func NextWorkday() int {
 	return NextWorkdayForDate(today())
 }
@@ -41,6 +41,12 @@ func NextHolidayForDate(date time.Time) (int, string) {
 		}
 	}
 	return 365, "" // 不可能执行到这里
+}
+
+// IsWorkday 返回指定时间是否工作日
+func IsWorkday(tm time.Time) bool {
+	yesterday := tm.AddDate(0, 0, -1)
+	return NextWorkdayForDate(yesterday) == 1
 }
 
 // NextWorkdayForDate 返回指定日期的下一个工作日在几天后, 如果今天是假日, 则返回 1
