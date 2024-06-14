@@ -54,7 +54,7 @@ func test2022(t *testing.T) {
 	// })
 
 	cv("假日列表", func() {
-		firstDay := Day(2022, 1, 1)
+		firstDay := Day(2024, 1, 1)
 
 		for i := 0; i < 365+7; i++ {
 			day := firstDay.AddDate(0, 0, i)

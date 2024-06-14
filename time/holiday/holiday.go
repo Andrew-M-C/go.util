@@ -13,7 +13,7 @@ func NextHoliday() (int, string) {
 	return NextHolidayForDate(today())
 }
 
-// NextWorkday 返回下一个工作日在几天后
+// NextWorkday 返回下一个工作日在几天后, 如果当天就是工作日, 则返回 0
 func NextWorkday() int {
 	return NextWorkdayForDate(today())
 }
@@ -21,15 +21,15 @@ func NextWorkday() int {
 // NextHolidayForDate 返回指定日期的下一个假日在几天后, 以及假日的名称。如果当天是假日, 则返回 0
 func NextHolidayForDate(date time.Time) (int, string) {
 	year := date.Year()
-	yday := date.YearDay() - 1
-	lastday := Day(year, 12, 31).YearDay() - 1
+	yDay := date.YearDay() - 1
+	lastDay := Day(year, 12, 31).YearDay() - 1
 
 	// 当年假日
 	days := readYearData(year)
-	for i := yday; i <= lastday; i++ {
+	for i := yDay; i <= lastDay; i++ {
 		desc := days[i]
 		if !isWorkday(desc) {
-			return i - yday, desc
+			return i - yDay, desc
 		}
 	}
 
@@ -37,7 +37,7 @@ func NextHolidayForDate(date time.Time) (int, string) {
 	days = readYearData(year + 1)
 	for i, desc := range days {
 		if !isWorkday(desc) {
-			return lastday - yday + 1 + i, desc
+			return lastDay - yDay + 1 + i, desc
 		}
 	}
 	return 365, "" // 不可能执行到这里
@@ -45,22 +45,22 @@ func NextHolidayForDate(date time.Time) (int, string) {
 
 // IsWorkday 返回指定时间是否工作日
 func IsWorkday(tm time.Time) bool {
-	yesterday := tm.AddDate(0, 0, -1)
-	return NextWorkdayForDate(yesterday) == 1
+	i, _ := NextHolidayForDate(tm)
+	return i != 0
 }
 
 // NextWorkdayForDate 返回指定日期的下一个工作日在几天后, 如果今天是假日, 则返回 1
 func NextWorkdayForDate(date time.Time) int {
 	year := date.Year()
-	yday := date.YearDay() - 1
-	lastday := Day(year, 12, 31).YearDay() - 1
+	yDay := date.YearDay() - 1
+	lastDay := Day(year, 12, 31).YearDay() - 1
 
 	// 当年工作日
 	days := readYearData(year)
-	for i := yday; i <= lastday; i++ {
+	for i := yDay; i <= lastDay; i++ {
 		desc := days[i]
 		if isWorkday(desc) {
-			return i - yday
+			return i - yDay
 		}
 	}
 
@@ -68,7 +68,7 @@ func NextWorkdayForDate(date time.Time) int {
 	days = readYearData(year + 1)
 	for i, desc := range days {
 		if isWorkday(desc) {
-			return lastday - yday + 1 + i
+			return lastDay - yDay + 1 + i
 		}
 	}
 	return 365 // 不可能执行到这里
@@ -83,12 +83,12 @@ func Day(year, month, day int) time.Time {
 // 否则设置为对应名称的休息日
 func Override(day time.Time, holidayName string) {
 	days := readYearData(day.Year())
-	yday := day.YearDay() - 1
+	yDay := day.YearDay() - 1
 
 	if isWorkday(holidayName) {
-		days[yday] = ""
+		days[yDay] = ""
 	} else {
-		days[yday] = holidayName
+		days[yDay] = holidayName
 	}
 }
 
@@ -111,7 +111,7 @@ var configBytes []byte
 
 func init() {
 	var m map[string]map[string]string
-	yaml.Unmarshal(configBytes, &m)
+	_ = yaml.Unmarshal(configBytes, &m)
 
 	for k, v := range m {
 		year, _ := strconv.ParseInt(k, 10, 32)
