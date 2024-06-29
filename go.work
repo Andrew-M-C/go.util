@@ -17,6 +17,7 @@ use (
 	./gotest
 	./govet
 	./ids
+	./localcache
 	./log
 	./maps
 	./math
