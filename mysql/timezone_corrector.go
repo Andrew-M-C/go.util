@@ -36,7 +36,7 @@ func (tz tzCorrector) CorrectTimezoneFromDB(in time.Time) time.Time {
 	usec := in.UnixMicro()
 
 	// 这个时候直接转出来, 就是 DB 存储的 DATETIME 字面值, 但是我们还没计算数据库中的时区
-	fmt.Println("从 DB 中拿到的时间", in)
+	// fmt.Println("从 DB 中拿到的时间", in)
 	usec += int64(tz * 1000 * 1000)
 	return time.UnixMicro(usec).Local()
 }
