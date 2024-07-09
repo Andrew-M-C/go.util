@@ -12,7 +12,7 @@ import (
 )
 
 // BoolQuerier 表示简单的 bool 搜索器
-type BoolQuerier[T any] struct {
+type BoolQuerier struct {
 	Index string
 	errs  []error
 	debug func(string, ...any)
@@ -27,13 +27,13 @@ type BoolQuerier[T any] struct {
 }
 
 // NewBoolQuerier 新建 BoolQuerier 对象
-func NewBoolQuerier[T any](index string) *BoolQuerier[T] {
-	return &BoolQuerier[T]{
+func NewBoolQuerier(index string) *BoolQuerier {
+	return &BoolQuerier{
 		Index: index,
 	}
 }
 
-func (q *BoolQuerier[T]) lazyInit() {
+func (q *BoolQuerier) lazyInit() {
 	if q.debug == nil {
 		q.debug = func(string, ...any) {}
 	}
@@ -45,7 +45,7 @@ func (q *BoolQuerier[T]) lazyInit() {
 	}
 }
 
-func (q *BoolQuerier[T]) Debug(f func(string, ...any)) *BoolQuerier[T] {
+func (q *BoolQuerier) Debug(f func(string, ...any)) *BoolQuerier {
 	if f != nil {
 		q.debug = f
 	}
@@ -53,7 +53,7 @@ func (q *BoolQuerier[T]) Debug(f func(string, ...any)) *BoolQuerier[T] {
 }
 
 // EQ 表示相等条件。请注意, EQ 不适用于 text 类型字段
-func (q *BoolQuerier[T]) EQ(field string, value any) *BoolQuerier[T] {
+func (q *BoolQuerier) EQ(field string, value any) *BoolQuerier {
 	q.lazyInit()
 	q.filters = append(q.filters, es.NewTermQuery(field, value))
 	q.debug("es.NewTermQuery(%v, %v)", field, value)
@@ -61,7 +61,7 @@ func (q *BoolQuerier[T]) EQ(field string, value any) *BoolQuerier[T] {
 }
 
 // In 表示类似 SQL 的 IN 逻辑。其中 values 必须是一个 slice, 但可以是任意类型的 slice
-func (q *BoolQuerier[T]) In(field string, values any) *BoolQuerier[T] {
+func (q *BoolQuerier) In(field string, values any) *BoolQuerier {
 	q.lazyInit()
 	if sli, ok := values.([]any); ok {
 		q.filters = append(q.filters, es.NewTermsQuery(field, sli...))
@@ -86,7 +86,7 @@ func (q *BoolQuerier[T]) In(field string, values any) *BoolQuerier[T] {
 }
 
 // Contains 表示搜索包含某个关键字, 适合 text 类型
-func (q *BoolQuerier[T]) Contains(field string, keyword any) *BoolQuerier[T] {
+func (q *BoolQuerier) Contains(field string, keyword any) *BoolQuerier {
 	q.lazyInit()
 	q.musts = append(q.musts, es.NewMatchPhraseQuery(field, keyword))
 	q.debug("es.NewMatchPhraseQuery(%v, %v)", field, keyword)
@@ -94,7 +94,7 @@ func (q *BoolQuerier[T]) Contains(field string, keyword any) *BoolQuerier[T] {
 }
 
 // Contains 表示模糊搜索某个关键字, 适合 text 类型
-func (q *BoolQuerier[T]) Fuzzy(field string, keyword any) *BoolQuerier[T] {
+func (q *BoolQuerier) Fuzzy(field string, keyword any) *BoolQuerier {
 	q.lazyInit()
 	q.musts = append(q.musts, es.NewMatchQuery(field, keyword))
 	q.debug("es.NewMatchQuery(%v, %v)", field, keyword)
@@ -102,33 +102,33 @@ func (q *BoolQuerier[T]) Fuzzy(field string, keyword any) *BoolQuerier[T] {
 }
 
 // SortAsc 升序
-func (q *BoolQuerier[T]) SortAsc(field string) *BoolQuerier[T] {
+func (q *BoolQuerier) SortAsc(field string) *BoolQuerier {
 	q.lazyInit()
 	q.sorts[field] = true
 	return q
 }
 
 // SortDesc 降序
-func (q *BoolQuerier[T]) SortDesc(field string) *BoolQuerier[T] {
+func (q *BoolQuerier) SortDesc(field string) *BoolQuerier {
 	q.lazyInit()
 	q.sorts[field] = false
 	return q
 }
 
 // From 开始偏移
-func (q *BoolQuerier[T]) From(from int) *BoolQuerier[T] {
+func (q *BoolQuerier) From(from int) *BoolQuerier {
 	q.from = &from
 	return q
 }
 
 // Limit 限制个数
-func (q *BoolQuerier[T]) Limit(limit int) *BoolQuerier[T] {
+func (q *BoolQuerier) Limit(limit int) *BoolQuerier {
 	q.size = &limit
 	return q
 }
 
 // Compare 非等比较
-func (q *BoolQuerier[T]) Compare(field string, op RangeOperator, target any) *BoolQuerier[T] {
+func (q *BoolQuerier) Compare(field string, op RangeOperator, target any) *BoolQuerier {
 	q.lazyInit()
 	q.ranges[field] = append(q.ranges[field], rangeOp{
 		op: op,
@@ -152,78 +152,7 @@ type rangeOp struct {
 	v  any
 }
 
-// ESHit 包含 ES 命中之后的外层参数
-type ESHit[T any] struct {
-	Index  string
-	Type   string
-	ID     string // doc ID
-	Score  float64
-	Source T
-}
-
-// Do 执行搜索
-func (q *BoolQuerier[T]) Do(ctx context.Context, cli *es.Client) ([]T, error) {
-	esRes, err := q.packAndDo(ctx, cli)
-	if err != nil {
-		return nil, err
-	}
-
-	if f := q.debug; f != nil {
-		f("Elastic response: '%s'", toJSON(esRes))
-	}
-	if esRes == nil || esRes.Hits == nil {
-		return nil, errors.New("es hits nil")
-	}
-
-	res := make([]T, 0, len(esRes.Hits.Hits))
-	for _, hit := range esRes.Hits.Hits {
-		if hit == nil {
-			continue
-		}
-		var item T
-		if err := json.Unmarshal(hit.Source, &item); err != nil {
-			continue
-		}
-		res = append(res, item)
-	}
-	return res, nil
-}
-
-// DoWrapped 执行搜索, 同时返回每一个 hit 外层的参数
-func (q *BoolQuerier[T]) DoWrapped(ctx context.Context, cli *es.Client) ([]ESHit[T], error) {
-	esRes, err := q.packAndDo(ctx, cli)
-	if err != nil {
-		return nil, err
-	}
-
-	if f := q.debug; f != nil {
-		f("Elastic response: '%s'", toJSON(esRes))
-	}
-	if esRes == nil || esRes.Hits == nil {
-		return nil, errors.New("es hits nil")
-	}
-
-	res := make([]ESHit[T], 0, len(esRes.Hits.Hits))
-	for _, hit := range esRes.Hits.Hits {
-		if hit == nil {
-			continue
-		}
-		var item ESHit[T]
-		if err := json.Unmarshal(hit.Source, &item.Source); err != nil {
-			continue
-		}
-		item.Index = hit.Index
-		item.Type = hit.Type
-		item.ID = hit.Id
-		if hit.Score != nil {
-			item.Score = *hit.Score
-		}
-		res = append(res, item)
-	}
-	return res, nil
-}
-
-func (q *BoolQuerier[T]) packAndDo(ctx context.Context, cli *es.Client) (*es.SearchResult, error) {
+func (q *BoolQuerier) Do(ctx context.Context, cli *es.Client) (*es.SearchResult, error) {
 	q.lazyInit()
 	if len(q.errs) > 0 {
 		return nil, errors.Join(q.errs...)

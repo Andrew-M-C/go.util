@@ -134,65 +134,73 @@ curl -X GET "localhost:9200/test_index/_search?pretty=true" -H 'Content-Type: ap
 */
 
 func TestBoolQuerier(t *testing.T) {
-	cv("Do", t, func() {
+	cv("ParseSearchResult", t, func() {
 		ctx := context.Background()
 		cli := globalCli
 
 		// EQ 不适合 text 类型字段
-		q := esutil.NewBoolQuerier[PaperDocument](testIndex)
-		res, err := q.Debug(t.Logf).EQ("title", "示例文章02").Do(ctx, cli)
+		q := esutil.NewBoolQuerier(testIndex)
+		esRes, err := q.Debug(t.Logf).EQ("title", "示例文章02").Do(ctx, cli)
+		res := esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
 		so(len(res), eq, 0)
 
 		// EQ 适合 keyword 或者是其他精确字段
-		q = esutil.NewBoolQuerier[PaperDocument](testIndex)
-		res, err = q.EQ("create_ts_msec", 1720190934000).Do(ctx, cli)
+		q = esutil.NewBoolQuerier(testIndex)
+		esRes, err = q.EQ("create_ts_msec", 1720190934000).Do(ctx, cli)
+		res = esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
 		so(len(res), eq, 1)
 		t.Log(res)
 
 		// 范围搜索
-		q = esutil.NewBoolQuerier[PaperDocument](testIndex)
-		res, err = q.Compare("create_ts_msec", ">", 1633087521000).Do(ctx, cli)
+		q = esutil.NewBoolQuerier(testIndex)
+		esRes, err = q.Compare("create_ts_msec", ">", 1633087521000).Do(ctx, cli)
+		res = esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
 		so(len(res), eq, 1)
 		t.Log(res)
 
 		// 全量搜索
-		q = esutil.NewBoolQuerier[PaperDocument](testIndex)
-		res, err = q.Do(ctx, cli)
+		q = esutil.NewBoolQuerier(testIndex)
+		esRes, err = q.Do(ctx, cli)
+		res = esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
 		so(len(res), eq, 2)
 		t.Log(res)
 
 		// offset, limit
-		q = esutil.NewBoolQuerier[PaperDocument](testIndex)
-		res, err = q.From(0).Limit(1).SortAsc("create_ts_msec").Do(ctx, cli)
+		q = esutil.NewBoolQuerier(testIndex)
+		esRes, err = q.From(0).Limit(1).SortAsc("create_ts_msec").Do(ctx, cli)
+		res = esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
 		so(len(res), eq, 1)
 		so(res[0].Title, eq, "示例文章01")
 
-		q = esutil.NewBoolQuerier[PaperDocument](testIndex)
-		res, err = q.From(1).Limit(1).SortAsc("create_ts_msec").Do(ctx, cli)
+		q = esutil.NewBoolQuerier(testIndex)
+		esRes, err = q.From(1).Limit(1).SortAsc("create_ts_msec").Do(ctx, cli)
+		res = esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
 		so(len(res), eq, 1)
 		so(res[0].Title, eq, "示例文章02")
 	})
 
-	cv("DoWrapped", t, func() {
+	cv("ParseWrappedSearchResult", t, func() {
 		ctx := context.Background()
 		cli := globalCli
 
 		// 包含式的搜索
-		q := esutil.NewBoolQuerier[PaperDocument](testIndex)
-		res, err := q.Contains("content", "这是一篇关于 Golang").DoWrapped(ctx, cli)
+		q := esutil.NewBoolQuerier(testIndex)
+		esRes, err := q.Contains("content", "这是一篇关于 Golang").Do(ctx, cli)
+		res := esutil.ParseWrappedSearchResult[PaperDocument](esRes)
 		so(err, isNil)
 		so(len(res), eq, 1)
 		t.Log(res)
 
 		// 模糊搜索
-		q = esutil.NewBoolQuerier[PaperDocument](testIndex)
-		res, err = q.Fuzzy("content", "这是一篇关于 Elastic").SortDesc("_score").DoWrapped(ctx, cli)
+		q = esutil.NewBoolQuerier(testIndex)
+		esRes, err = q.Fuzzy("content", "这是一篇关于 Elastic").SortDesc("_score").Do(ctx, cli)
+		res = esutil.ParseWrappedSearchResult[PaperDocument](esRes)
 		so(err, isNil)
 		so(len(res), eq, 2)
 		so(res[0].Source.Title, eq, "示例文章02")
