@@ -81,3 +81,11 @@ func Clone[K constraints.Ordered, V any](m map[K]V) map[K]V {
 	}
 	return res
 }
+
+// GetOne 表示随便从 map 中取一个 KV 对
+func GetOne[K constraints.Ordered, V any](m map[K]V) (key K, value V, exist bool) {
+	for k, v := range m {
+		return k, v, true
+	}
+	return
+}
