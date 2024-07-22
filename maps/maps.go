@@ -72,3 +72,12 @@ func GetStringOrFormat[K constraints.Ordered, V ~string](m map[K]V, key K, forma
 	}
 	return V(fmt.Sprintf(format, key))
 }
+
+// Clone 浅复制一个 map
+func Clone[K constraints.Ordered, V any](m map[K]V) map[K]V {
+	res := make(map[K]V, len(m))
+	for k, v := range m {
+		res[k] = v
+	}
+	return res
+}

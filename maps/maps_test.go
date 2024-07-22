@@ -90,7 +90,7 @@ func testUintKeys(t *testing.T) {
 	})
 }
 
-func testEqual(t *testing.T) {
+func testEqual(*testing.T) {
 	cv("Equal()", func() {
 		a := map[int]int{
 			1: -1,
@@ -119,7 +119,7 @@ func testEqual(t *testing.T) {
 	})
 }
 
-func testGetFunctions(t *testing.T) {
+func testGetFunctions(*testing.T) {
 	cv("GetOrDefault", func() {
 		m := map[int]string{
 			1: "one",

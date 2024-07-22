@@ -2,7 +2,7 @@ package maps
 
 import "testing"
 
-func testKVPairs(t *testing.T) {
+func testKVPairs(*testing.T) {
 	m := map[string]int{
 		"1":    1,
 		"-1":   -1,
