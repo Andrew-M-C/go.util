@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
 )
 
@@ -67,4 +68,44 @@ func packLine(f string, a ...interface{}) string {
 	}
 
 	return s
+}
+
+// ReadOptions 给几个选项给用户并返回用户的选择
+func ReadOptions(description string, options []string) (selection map[int]string, err error) {
+	if len(options) == 0 {
+		return map[int]string{}, nil
+	}
+
+	optionsWithIndex := make(map[string]int, len(options))
+	for i, o := range options {
+		if _, exist := optionsWithIndex[o]; exist {
+			return nil, fmt.Errorf("option '%s' is set more than once", o)
+		}
+		optionsWithIndex[o] = i
+	}
+
+	qs := []*survey.Question{
+		{
+			Name: "Options",
+			Prompt: &survey.MultiSelect{
+				Message: "Choose some colors:",
+				Options: []string{"red", "blue", "green"},
+			},
+		},
+	}
+
+	answers := struct {
+		Options []string
+	}{}
+
+	if err := survey.Ask(qs, &answers); err != nil {
+		return nil, err
+	}
+	selection = make(map[int]string, len(answers.Options))
+	for _, ans := range answers.Options {
+		if index, exist := optionsWithIndex[ans]; exist {
+			selection[index] = ans
+		}
+	}
+	return selection, nil
 }
