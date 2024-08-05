@@ -23,6 +23,7 @@ func TestTime(t *testing.T) {
 	cv("测试 SleepToNextSecond", t, func() { testSleepToNextSecond((t)) })
 	cv("测试 SleepToNextSecondsN", t, func() { testSleepToNextSecondsN((t)) })
 	cv("测试 Wait", t, func() { testWait((t)) })
+	cv("测试 Sleep", t, func() { testSleep((t)) })
 	cv("测试 Timer", t, func() { testTimer(t) })
 	cv("测试 Timer.Stop", t, func() { testTimerStop(t) })
 	cv("测试 PeriodicSleeper", t, func() { testPeriodicSleeper(t) })

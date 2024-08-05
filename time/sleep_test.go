@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-func testSleepToNextSecond(t *testing.T) {
+func testSleepToNextSecond(*testing.T) {
 	const N = 5
 	start := time.Now()
 
@@ -20,7 +20,7 @@ func testSleepToNextSecond(t *testing.T) {
 	so(end.Unix()-start.Unix(), eq, N)
 }
 
-func testSleepToNextSecondsN(t *testing.T) {
+func testSleepToNextSecondsN(*testing.T) {
 	const N = 5
 	start := time.Now()
 
@@ -31,7 +31,7 @@ func testSleepToNextSecondsN(t *testing.T) {
 	so(end.Unix()-start.Unix(), eq, N)
 }
 
-func testWait(t *testing.T) {
+func testWait(*testing.T) {
 	const N = 4
 	start := time.Now()
 
@@ -40,4 +40,18 @@ func testWait(t *testing.T) {
 	})
 
 	so(int(time.Since(start).Seconds()), eq, N)
+}
+
+func testSleep(*testing.T) {
+	t0 := time.Now()
+
+	Sleep(0.1)
+	t1 := time.Now()
+	so(t1.Sub(t0), ge, 100*time.Millisecond)
+	so(t1.Sub(t0), le, 200*time.Millisecond)
+
+	Sleep(1)
+	t2 := time.Now()
+	so(t2.Sub(t1), ge, time.Second)
+	so(t2.Sub(t1), le, time.Second+100*time.Millisecond)
 }

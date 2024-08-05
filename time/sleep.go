@@ -2,6 +2,8 @@ package time
 
 import (
 	"time"
+
+	"golang.org/x/exp/constraints"
 )
 
 // SleepToNextSecond sleep 到墙上时钟的下一秒
@@ -35,4 +37,10 @@ func Wait(f func() (done bool), interval ...time.Duration) {
 	for !f() {
 		time.Sleep(d)
 	}
+}
+
+// Sleep 按秒数 sleep
+func Sleep[N constraints.Float | constraints.Integer](secs N) {
+	duration := float64(secs) * float64(time.Second)
+	time.Sleep(time.Duration(duration))
 }
