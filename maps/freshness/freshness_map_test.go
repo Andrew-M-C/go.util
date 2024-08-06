@@ -132,5 +132,8 @@ func testMapGeneral(t *testing.T) {
 		so(v, eq, "")
 
 		so(expCount, eq, 2)
+
+		m.Close()
+		tmutil.Sleep(0.5)
 	})
 }

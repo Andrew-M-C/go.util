@@ -155,11 +155,15 @@ func (m *mapImpl[K, V]) new(key K) (v *valueWithExp[V], err error) {
 
 func (m *mapImpl[K, V]) doExpire() {
 	timer := time.NewTimer(m.nextCheckTime - timeutil.UpTime())
-	for {
+
+	for shouldExit := false; !shouldExit; {
 		select {
 		case <-m.stop:
 			timer.Stop()
 			_, _, _ = channel.ReadNonBlocked(timer.C)
+			close(m.check)
+			close(m.stop)
+			shouldExit = true
 
 		case <-m.check:
 			next := m.checkAllTimeoutsAndDo()
@@ -172,6 +176,10 @@ func (m *mapImpl[K, V]) doExpire() {
 			m.nextCheckTime = next
 		}
 	}
+
+	var kt K
+	var vt V
+	m.opts.debug("freshness.Map[%v]%v exit", reflect.TypeOf(kt), reflect.TypeOf(vt))
 }
 
 func (m *mapImpl[K, V]) checkAllTimeoutsAndDo() (nextTimeout time.Duration) {
