@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/smartystreets/goconvey/convey"
+	"golang.org/x/exp/constraints"
 )
 
 var (
@@ -113,6 +114,8 @@ func testSlice(t *testing.T) {
 
 func testCombineEvenly(t *testing.T) {
 	testCombineEvenlyProcess(t, 10, 7)
+	testCombineEvenlyProcess(t, 15, 5)
+
 	testCombineEvenlyProcess(t, 0, 0)
 	testCombineEvenlyProcess(t, 1, 0)
 	testCombineEvenlyProcess(t, 1, 1)
@@ -136,7 +139,7 @@ type testCombineEvenlyType struct {
 
 func testCombineEvenlyProcess(t *testing.T, numA, numB int) {
 	testSliceNum++
-	t.Logf("\n======== Test No.%02d ========", testSliceNum)
+	t.Logf("\n======== Test CombineEvenly No.%02d, %d, %d ========", testSliceNum, numA, numB)
 
 	a := testCombineEvenlyTypeSlice('|', numA)
 	b := testCombineEvenlyTypeSlice('.', numB)
@@ -147,19 +150,65 @@ func testCombineEvenlyProcess(t *testing.T, numA, numB int) {
 	res := CombineEvenly(a, b)
 	printTestCombineEvenlyType(t, res)
 
+	lessIntervals := map[int]struct{}{}
+	lastLessIndex := -1
+	lessValue := func() rune {
+		if numA >= numB {
+			return '.'
+		}
+		return '|'
+	}()
+
+	firstLessIndex := -1
+
 	counts := map[rune]int{}
 	existedID := map[string]struct{}{}
 
-	for _, r := range res {
+	for i, r := range res {
 		_, exist := existedID[r.ID]
 		so(exist, eq, false)
 
 		counts[r.Display] = counts[r.Display] + 1
 		existedID[r.ID] = struct{}{}
+
+		if r.Display == lessValue {
+			if lastLessIndex < 0 {
+				firstLessIndex = i
+			} else {
+				lessIntervals[i-lastLessIndex] = struct{}{}
+				// t.Log(i, "-", lastLessIndex, "=", i-lastLessIndex)
+			}
+			lastLessIndex = i
+		}
 	}
 
 	so(counts['|'], eq, numA)
 	so(counts['.'], eq, numB)
+
+	t.Log("lessIntervals", lessIntervals)
+	so(len(lessIntervals), le, 2)
+
+	if len(lessIntervals) == 2 {
+		indexes := make([]int, 0, 2)
+		for i := range lessIntervals {
+			indexes = append(indexes, i)
+		}
+		diff := indexes[0] - indexes[1]
+		t.Logf("indexes: %v", indexes)
+		so(abs(diff), eq, 1)
+	}
+
+	if firstLessIndex >= 0 {
+		lastDiff := len(res) - 1 - lastLessIndex
+		so(abs(lastDiff-firstLessIndex), le, 1)
+	}
+}
+
+func abs[T constraints.Signed](n T) T {
+	if n >= 0 {
+		return n
+	}
+	return -n
 }
 
 func testCombineEvenlyTypeSlice(r rune, repeat int) []*testCombineEvenlyType {
