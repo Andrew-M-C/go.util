@@ -3,7 +3,7 @@ module github.com/Andrew-M-C/go.util/syllables
 go 1.19
 
 require (
-	github.com/Andrew-M-C/go.emoji v1.1.1
+	github.com/Andrew-M-C/go.emoji v1.1.2
 	github.com/Andrew-M-C/go.util/maps v0.0.0-20240221044053-8b90aa4683c0
 	github.com/huichen/sego v0.0.0-20210824061530-c87651ea5c76
 	github.com/mtso/syllables v0.1.0

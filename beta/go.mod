@@ -3,7 +3,7 @@ module github.com/Andrew-M-C/go.util/beta
 go 1.19
 
 require (
-	github.com/Andrew-M-C/go.jsonvalue v1.3.8
+	github.com/Andrew-M-C/go.jsonvalue v1.4.0
 	github.com/Andrew-M-C/go.util/channel v0.0.0-20240221044053-8b90aa4683c0
 	github.com/Andrew-M-C/go.util/govet v0.0.0-20240221044053-8b90aa4683c0
 	github.com/smartystreets/goconvey v1.8.1

@@ -1,5 +1,4 @@
-github.com/Andrew-M-C/go.emoji v1.1.1 h1:XyUz+YQWJ53F22vIesCL/JRSUFzqDBy6hqHKqGk2egs=
-github.com/Andrew-M-C/go.emoji v1.1.1/go.mod h1:JUSgUL5phc2A5dovHXreSzWKYI3J9BKhI0c3IeGSq50=
+github.com/Andrew-M-C/go.emoji v1.1.2 h1:aEnNbkv+t6H7vXNgT3YztwgGyeDC1Bh3uLXBCcvSF8c=
 github.com/Andrew-M-C/go.util/maps v0.0.0-20240221044053-8b90aa4683c0 h1:poR857CPQYmKo7chZHcoOAe1BibK1c3adate/jJsWRU=
 github.com/Andrew-M-C/go.util/maps v0.0.0-20240221044053-8b90aa4683c0/go.mod h1:TCP9lpyltQg5ZpRlJTZL6oZpyW25HfMZ5Mzt40QoEBw=
 github.com/Andrew-M-C/go.util/slice v0.0.0-20240221035607-b8b572fd3e45 h1:BwtwSyZ7gbZZRZi5Aue9irlzLlquZTbNg7XpVsx8gq8=

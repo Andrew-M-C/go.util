@@ -1,7 +1,6 @@
 github.com/AlecAivazis/survey/v2 v2.3.7 h1:6I/u8FvytdGsgonrYsVn2t8t4QiRnh6QSTqkkhIiSjQ=
 github.com/AlecAivazis/survey/v2 v2.3.7/go.mod h1:xUTIdE4KCOIjsBAE1JYsUPoCqYdZ1reCfTwbto0Fduo=
-github.com/Andrew-M-C/go.emoji v1.1.1 h1:XyUz+YQWJ53F22vIesCL/JRSUFzqDBy6hqHKqGk2egs=
-github.com/Andrew-M-C/go.emoji v1.1.1/go.mod h1:JUSgUL5phc2A5dovHXreSzWKYI3J9BKhI0c3IeGSq50=
+github.com/Andrew-M-C/go.emoji v1.1.2 h1:aEnNbkv+t6H7vXNgT3YztwgGyeDC1Bh3uLXBCcvSF8c=
 github.com/Andrew-M-C/go.util/unicode v0.0.0-20240221044053-8b90aa4683c0 h1:KDBOD7o2bslw9BDutMrepctW/eBterm2lsGXlfigf6s=
 github.com/Andrew-M-C/go.util/unicode v0.0.0-20240221044053-8b90aa4683c0/go.mod h1:a5vNDXfkd9o+RgwQwNFzzUtxCCLL20/YdvfMzpn/npU=
 github.com/Netflix/go-expect v0.0.0-20220104043353-73e0943537d2 h1:+vx7roKuyA63nhn5WAunQHLTznkw5W8b1Xc0dNjp83s=
