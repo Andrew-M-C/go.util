@@ -40,6 +40,12 @@ func Milli[T constraints.Integer](msecs T) time.Duration {
 	return time.Duration(msecs) * time.Millisecond
 }
 
+// UnixFloat 返回个位数为秒、但包含了小数的 UTC 时间戳值
+func UnixFloat(t time.Time) float64 {
+	micro := t.UnixMicro()
+	return float64(micro) / float64(1000000)
+}
+
 // Reference:
 //   - [Golang中实现禁止拷贝](https://jiajunhuang.com/articles/2018_11_12-golang_nocopy.md.html)
 //   - [runtime: add NoCopy documentation struct type?](https://github.com/golang/go/issues/8005)

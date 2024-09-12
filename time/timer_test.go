@@ -28,6 +28,7 @@ func TestTime(t *testing.T) {
 	cv("测试 Timer.Stop", t, func() { testTimerStop(t) })
 	cv("测试 PeriodicSleeper", t, func() { testPeriodicSleeper(t) })
 	cv("测试 Tick", t, func() { testTick(t) })
+	cv("测试 UnixFloat", t, func() { testUnixFloat(t) })
 }
 
 type number interface {
@@ -44,7 +45,7 @@ func expectElapsed(t *testing.T, start time.Time, ela time.Duration) {
 	// TODO:
 }
 
-func expectDuration(t *testing.T, d, expect time.Duration) {
+func expectDuration(_ *testing.T, d, expect time.Duration) {
 	tolerance := 10 * time.Millisecond
 
 	abs := func(d time.Duration) time.Duration {
@@ -164,4 +165,10 @@ func testTimerStop(t *testing.T) {
 
 	// success
 	t.Logf("callback invoked")
+}
+
+func testUnixFloat(*testing.T) {
+	tm := time.Unix(1704042061, 123456789)
+	f := UnixFloat(tm)
+	so(f, eq, float64(1704042061.123456))
 }

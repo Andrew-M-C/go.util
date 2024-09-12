@@ -1,7 +1,6 @@
 package holiday
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -24,13 +23,13 @@ func isWorkday(s string) bool {
 	return s == workday
 }
 
-func unmarshalJSON(b []byte) (map[string]string, error) {
-	var data map[string]string
-	if err := json.Unmarshal(b, &data); err != nil {
-		return nil, err
-	}
-	return data, nil
-}
+// func unmarshalJSON(b []byte) (map[string]string, error) {
+// 	var data map[string]string
+// 	if err := json.Unmarshal(b, &data); err != nil {
+// 		return nil, err
+// 	}
+// 	return data, nil
+// }
 
 func unmarshalYAML(b []byte) (map[string]string, error) {
 	var data map[string]string
