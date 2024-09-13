@@ -5,6 +5,8 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+
+	"github.com/Andrew-M-C/go.util/slice"
 )
 
 // AdministrativeLevel 行政层级
@@ -63,23 +65,18 @@ func (d *Division) SubDivisions() []*Division {
 
 // SubDivisionByCode 按下一层及的子代码查询行政区划, 如果查不到则返回 nil
 func (d *Division) SubDivisionByCode(code string) *Division {
-	sub := d.sub
-
-	// 二分查找
-	left, right := 0, len(d.sub)
-	for left < right {
-		mid := (left + right) / 2
-		switch {
-		case sub[mid].code < code:
-			left = mid
-		case sub[mid].code > code:
-			right = mid
-		default:
-			return sub[mid]
-		}
+	target := &Division{
+		code: code,
 	}
+	idx := slice.BinarySearchOne(d.sub, target, divComp)
+	if idx < 0 {
+		return nil
+	}
+	return d.sub[idx]
+}
 
-	return nil
+func divComp(a, b *Division) int {
+	return strings.Compare(a.code, b.code)
 }
 
 var china = &Division{}
