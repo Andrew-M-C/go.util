@@ -2,6 +2,40 @@ package slice
 
 import "golang.org/x/exp/constraints"
 
+// BinarySearchOne 二分查找一个。注意入参必须已经从小到大排了序, 否则结果无法确定。
+// 函数返回 index, 如果 -1 则表示找不到
+func BinarySearchOne[T any](sli []T, target T, compare func(a, b T) int) int {
+	from, to := 0, len(sli)
+	if to == 0 {
+		return -1
+	}
+	if compare(target, sli[0]) < 0 {
+		return -1
+	}
+	if compare(target, sli[to-1]) > 0 {
+		return -1
+	}
+
+	for from < to-1 {
+		mid := from + (to-from)/2
+		n := sli[mid]
+		comp := compare(n, target)
+		switch {
+		default:
+			return mid
+		case comp < 0:
+			from = mid
+		case comp > 0:
+			to = mid
+		}
+	}
+
+	if compare(sli[from], target) == 0 {
+		return from
+	}
+	return -1
+}
+
 // BinarySearch 二分法搜索一段已排序的数
 func BinarySearch[T constraints.Ordered](sli []T, target T) (from, to int, hit bool) {
 	from, to = 0, len(sli)

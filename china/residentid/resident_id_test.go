@@ -26,5 +26,9 @@ func TestGeneral(t *testing.T) {
 		id, err := residentid.New("440102198001021230")
 		so(err, isNil)
 		t.Log(id.DetailInfo())
+
+		id, err = residentid.New("445121201803163925")
+		so(err, isNil)
+		t.Log(id.DetailInfo())
 	})
 }
