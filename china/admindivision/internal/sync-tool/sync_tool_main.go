@@ -11,12 +11,15 @@ func main() {
 
 	sess := &session{}
 
+	_ = sess.getAndParseTowns // 这两行是避免 unused method warning
+	_ = sess.getAndParseVillages
+
 	procedures := []func() error{
 		sess.getAndParseProvinces,
 		sess.getAndParseCities,
 		sess.getAndParseCounties,
-		sess.getAndParseTowns,
-		sess.getAndParseVillages,
+		// sess.getAndParseTowns, // 不处理村镇级以下, 数据太大了
+		// sess.getAndParseVillages,
 		sess.writeToGoFile,
 	}
 	for i, p := range procedures {

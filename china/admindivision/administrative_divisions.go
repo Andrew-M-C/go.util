@@ -1,7 +1,11 @@
 // Package admindivision 实现中国统计用行政区划查询工具
 package admindivision
 
-import "slices"
+import (
+	"slices"
+	"strconv"
+	"strings"
+)
 
 // AdministrativeLevel 行政层级
 type AdministrativeLevel int
@@ -10,8 +14,8 @@ const (
 	Province AdministrativeLevel = iota + 1
 	City
 	County
-	Town
-	Village
+	// Town
+	// Village
 )
 
 // Division 表示一级行政区划
@@ -88,4 +92,61 @@ func Provinces() []*Division {
 // ProvinceByCode 按代码查找省级行政区
 func ProvinceByCode(code string) *Division {
 	return china.SubDivisionByCode(code)
+}
+
+// SearchDivisionByCode 按照一个行政区划搜索行政节点层级链
+func SearchDivisionByCode(code string) []*Division {
+	codeChain := splitCodesToChain(code)
+	if len(codeChain) == 0 {
+		return nil
+	}
+
+	var res []*Division
+	for i, c := range codeChain {
+		var div *Division
+		if i == 0 {
+			div = ProvinceByCode(c)
+		} else {
+			div = res[len(res)-1].SubDivisionByCode(c)
+		}
+		if div == nil {
+			return res
+		}
+		res = append(res, div)
+	}
+
+	return res
+}
+
+// DescribeDivisionChain 描述一个区划链
+func DescribeDivisionChain(divisions []*Division, sep string) string {
+	var parts []string
+	for _, d := range divisions {
+		if !d.virtual || d.level == Province {
+			parts = append(parts, d.name)
+		}
+	}
+	return strings.Join(parts, sep)
+}
+
+func splitCodesToChain(code string) []string {
+	if _, err := strconv.ParseUint(code, 10, 64); err != nil {
+		return nil
+	}
+
+	switch len(code) {
+	case 2:
+		return []string{code}
+	case 4:
+		return []string{code[:2], code[2:]}
+	case 6:
+		return []string{code[:2], code[2:4], code[4:]}
+	case 9:
+		return []string{code[:2], code[2:4], code[4:6], code[6:]}
+	case 12:
+		// 例: "110101001001"
+		return []string{code[:2], code[2:4], code[4:6], code[6:9], code[9:]}
+	default:
+		return nil
+	}
 }
