@@ -6,6 +6,7 @@ use (
 	./bits
 	./bytes
 	./channel
+	./china
 	./console
 	./context
 	./datastructure
