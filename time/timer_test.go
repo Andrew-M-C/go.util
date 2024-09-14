@@ -19,6 +19,7 @@ var (
 )
 
 func TestTime(t *testing.T) {
+	cv("测试 Age", t, func() { testAge(t) })
 	cv("测试 UpTime", t, func() { testUpTime(t) })
 	cv("测试 SleepToNextSecond", t, func() { testSleepToNextSecond((t)) })
 	cv("测试 SleepToNextSecondsN", t, func() { testSleepToNextSecondsN((t)) })
