@@ -44,32 +44,11 @@ type DetailInfo struct {
 
 func (inf DetailInfo) String() string {
 	return fmt.Sprintf(
-		"{性别: %v, 出生: %s, 生日: %s (%d 岁)}",
+		"{性别: %v, 出生: %s, 生日: %s}",
 		inf.Gender,
 		admindivision.DescribeDivisionChain(inf.Hometown, ""),
-		inf.Birthday.Format("2006/01/02"), age(inf.Birthday),
+		inf.Birthday.Format("2006/01/02"),
 	)
-}
-
-func age(birthday time.Time) int {
-	now := time.Now().In(beijing)
-	yearDiff := now.Year() - birthday.Year()
-	if yearDiff <= 0 {
-		return 0
-	}
-	if now.Month() < birthday.Month() {
-		// 今年未过生日
-		return yearDiff - 1
-	}
-	if now.Month() > birthday.Month() {
-		// 今年已过生日
-		return yearDiff
-	}
-	if now.Day() >= birthday.Day() {
-		// 今年已过生日
-		return yearDiff
-	}
-	return yearDiff - 1
 }
 
 // ID 表示一个身份证号及相关信息
