@@ -4,7 +4,6 @@ package residentid
 import (
 	"errors"
 	"fmt"
-	"strconv"
 	"time"
 
 	"github.com/Andrew-M-C/go.util/china/admindivision"
@@ -101,16 +100,6 @@ func (id ID) Hometown() []*admindivision.Division {
 // Birthday 生日
 func (id ID) Birthday() time.Time {
 	return id.birthday
-}
-
-// BirthSequence 返回在同行政区划中同性别的身份证标记序号。序号一以 0 表示, 非法返回 -1。
-func (id ID) BirthSequence() int {
-	if id.raw == "" {
-		return -1
-	}
-	s := id.raw[14 : 14+3]
-	u, _ := strconv.ParseUint(s, 10, 32)
-	return int(u / 2)
 }
 
 // Gender 性别
