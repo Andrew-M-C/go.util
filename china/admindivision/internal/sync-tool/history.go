@@ -66,6 +66,9 @@ func (sess *session) getHistoryNodes() (outSideErr error) {
 
 		default:
 			// 区县级行政区
+			if _, err := sess.searchNode(k); err == nil {
+				return true
+			}
 			node := &node{
 				code:     k[4:],
 				fullCode: k,
@@ -97,6 +100,7 @@ func (sess *session) getHistoryNodes() (outSideErr error) {
 				return false
 			}
 			city.sub = append(city.sub, node)
+			sortNodes(city.sub)
 			return true
 		}
 	})

@@ -33,6 +33,9 @@ func TestGeneral(t *testing.T) {
 
 		so(desc4419, eq, "广东省/东莞市")
 		so(desc4419, eq, desc441900)
+		so(chain[0].Deprecated(), eq, false)
+		so(chain[1].Deprecated(), eq, false)
+		so(chain[2].Deprecated(), eq, false)
 	})
 
 	cv("上海市", t, func() {
