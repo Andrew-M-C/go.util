@@ -1,3 +1,3 @@
 module github.com/Andrew-M-C/go.util/constraints
 
-go 1.22.6
+go 1.21
