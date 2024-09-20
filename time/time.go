@@ -3,7 +3,7 @@ package time
 import (
 	"time"
 
-	"golang.org/x/exp/constraints"
+	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 var (

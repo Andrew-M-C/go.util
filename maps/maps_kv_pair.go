@@ -3,7 +3,7 @@ package maps
 import (
 	"sort"
 
-	"golang.org/x/exp/constraints"
+	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 // SortOrder 排序方向, 用于 KVPair

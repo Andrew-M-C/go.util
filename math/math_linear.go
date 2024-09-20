@@ -1,6 +1,6 @@
 package math
 
-import "golang.org/x/exp/constraints"
+import "github.com/Andrew-M-C/go.util/constraints"
 
 // Normalize 归一化
 func Normalize[T constraints.Float](in []T, min, max T) []T {

@@ -4,7 +4,7 @@ package draw
 import (
 	"image/color"
 
-	"golang.org/x/exp/constraints"
+	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 // Number 表示任意数字类型

@@ -1,7 +1,7 @@
 package redblacktree
 
 import (
-	"golang.org/x/exp/constraints"
+	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 // Node 表示一个节点

@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/Andrew-M-C/go.util/channel"
+	"github.com/Andrew-M-C/go.util/constraints"
 	timeutil "github.com/Andrew-M-C/go.util/time"
-	"golang.org/x/exp/constraints"
 )
 
 // Map 实现一个新鲜度 map

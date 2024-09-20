@@ -4,7 +4,7 @@ import (
 	"math/rand"
 	"sort"
 
-	"golang.org/x/exp/constraints"
+	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 // Number 表示所有的实数类型

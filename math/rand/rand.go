@@ -4,7 +4,7 @@ package rand
 import (
 	"math/rand"
 
-	"golang.org/x/exp/constraints"
+	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 type Number interface {

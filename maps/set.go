@@ -1,8 +1,8 @@
 package maps
 
 import (
+	"github.com/Andrew-M-C/go.util/constraints"
 	"github.com/Andrew-M-C/go.util/slice"
-	"golang.org/x/exp/constraints"
 )
 
 // Set 表示一个集合

@@ -2,8 +2,8 @@
 package redblacktree
 
 import (
+	"github.com/Andrew-M-C/go.util/constraints"
 	rbt "github.com/emirpasic/gods/v2/trees/redblacktree"
-	"golang.org/x/exp/constraints"
 )
 
 type treeCapability[K constraints.Ordered, V any] interface {

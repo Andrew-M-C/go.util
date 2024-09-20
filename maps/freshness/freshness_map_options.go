@@ -3,7 +3,7 @@ package freshness
 import (
 	"time"
 
-	"golang.org/x/exp/constraints"
+	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 type Option func(*options)

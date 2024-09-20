@@ -3,7 +3,7 @@ package slice
 import (
 	"sort"
 
-	"golang.org/x/exp/constraints"
+	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 // List 表示一个 slice 类型

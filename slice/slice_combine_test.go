@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"testing"
 
-	"golang.org/x/exp/constraints"
+	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 func testCombineEvenly(t *testing.T) {

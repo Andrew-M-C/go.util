@@ -4,9 +4,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Andrew-M-C/go.util/constraints"
 	"github.com/smartystreets/goconvey/convey"
 	"go.uber.org/atomic"
-	"golang.org/x/exp/constraints"
 )
 
 var (

@@ -5,7 +5,7 @@ import (
 	"os"
 	"strconv"
 
-	"golang.org/x/exp/constraints"
+	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 // GetString 获取 string 类型环境变量, 如果环境变量不存在则返回默认值

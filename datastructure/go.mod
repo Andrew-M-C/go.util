@@ -2,12 +2,10 @@ module github.com/Andrew-M-C/go.util/datastructure
 
 go 1.21
 
-toolchain go1.21.0
-
 require (
+	github.com/Andrew-M-C/go.util/constraints v0.0.0-20240920040959-400d8f87c326
 	github.com/emirpasic/gods/v2 v2.0.0-alpha
 	github.com/smartystreets/goconvey v1.8.1
-	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225
 )
 
 require (
