@@ -1,4 +1,4 @@
-go 1.21.0
+go 1.22.6
 
 use (
 	./algorithm
@@ -8,6 +8,7 @@ use (
 	./channel
 	./china
 	./console
+	./constraints
 	./context
 	./datastructure
 	./draw
