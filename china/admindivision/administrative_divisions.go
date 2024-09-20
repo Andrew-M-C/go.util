@@ -28,6 +28,8 @@ type Division struct {
 	name     string
 	virtual  bool
 	sub      []*Division
+	// 是否历史已弃用的行政区划
+	deprecated bool
 }
 
 // Level 返回行政层级
@@ -55,6 +57,11 @@ func (d *Division) Virtual() bool {
 	return d.virtual
 }
 
+// 是否已撤销
+func (d *Division) Deprecated() bool {
+	return d.deprecated
+}
+
 // SubDivisions 获取下一层级的区划列表
 func (d *Division) SubDivisions() []*Division {
 	if len(d.sub) == 0 {
@@ -79,7 +86,9 @@ func divComp(a, b *Division) int {
 	return strings.Compare(a.code, b.code)
 }
 
-var china = &Division{}
+var (
+	china = &Division{}
+)
 
 // Provinces 返回省份列表
 func Provinces() []*Division {

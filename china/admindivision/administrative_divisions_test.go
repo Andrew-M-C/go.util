@@ -54,4 +54,14 @@ func TestGeneral(t *testing.T) {
 		desc := ad.DescribeDivisionChain(chain, "/")
 		so(desc, eq, "湖北省/神农架林区")
 	})
+
+	cv("已撤销的行政区划", t, func() {
+		chain := ad.SearchDivisionByCode("352229")
+		desc := ad.DescribeDivisionChain(chain, "/")
+		so(desc, eq, "福建省/宁德地区/寿宁县")
+		so(len(chain), eq, 3)
+		so(chain[0].Deprecated(), eq, false)
+		so(chain[1].Deprecated(), eq, true)
+		so(chain[2].Deprecated(), eq, true)
+	})
 }

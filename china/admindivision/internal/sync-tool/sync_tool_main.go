@@ -20,6 +20,7 @@ func main() {
 		sess.getAndParseCounties,
 		// sess.getAndParseTowns, // 不处理村镇级以下, 数据太大了
 		// sess.getAndParseVillages,
+		sess.getHistoryNodes,
 		sess.writeToGoFile,
 	}
 	for i, p := range procedures {
