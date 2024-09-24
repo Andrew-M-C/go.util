@@ -1,6 +1,10 @@
 package http
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 )
@@ -51,6 +55,20 @@ type requestOption struct {
 	header http.Header
 	body   any
 	query  url.Values
+}
+
+func (o *requestOption) getBody() (io.Reader, error) {
+	if o.body == nil {
+		return nil, nil
+	}
+	if b, ok := o.body.([]byte); ok {
+		return bytes.NewBuffer(b), nil
+	}
+	b, e := json.Marshal(o.body)
+	if e != nil {
+		return nil, fmt.Errorf("Marshal request error (%w)", e)
+	}
+	return bytes.NewBuffer(b), nil
 }
 
 func mergeOptions(opts []RequestOption) *requestOption {
