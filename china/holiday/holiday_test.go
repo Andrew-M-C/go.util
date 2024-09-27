@@ -14,8 +14,6 @@ import (
 
 var (
 	cv = convey.Convey
-	so = convey.So
-	eq = convey.ShouldEqual
 )
 
 func TestMain(m *testing.M) {

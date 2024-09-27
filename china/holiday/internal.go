@@ -41,9 +41,9 @@ func (d date) withName(name string) date {
 	case HolidayPeriod:
 		d.desc = name + "假期"
 	case ShiftedWorkday:
-		d.desc = name + "调休上班"
+		d.desc = name + "调班"
 	case ShiftedDayOff:
-		d.desc = name + "调休休息"
+		d.desc = name + "调休"
 	default:
 		d.desc = name
 	}
