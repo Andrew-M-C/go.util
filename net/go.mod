@@ -14,7 +14,7 @@ require (
 	github.com/Andrew-M-C/go.objectid v1.0.2 // indirect
 	github.com/Andrew-M-C/go.util/runtime v0.0.0-20240221044053-8b90aa4683c0 // indirect
 	github.com/Andrew-M-C/go.util/time v0.0.0-20240221044053-8b90aa4683c0 // indirect
-	github.com/fatih/color v1.16.0 // indirect
+	github.com/fatih/color v1.17.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect

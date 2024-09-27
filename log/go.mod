@@ -7,7 +7,7 @@ require (
 	github.com/Andrew-M-C/go.objectid v1.0.2
 	github.com/Andrew-M-C/go.util/runtime v0.0.0-20240221044053-8b90aa4683c0
 	github.com/Andrew-M-C/go.util/time v0.0.0-20240221044053-8b90aa4683c0
-	github.com/fatih/color v1.16.0
+	github.com/fatih/color v1.17.0
 	github.com/smartystreets/goconvey v1.8.1
 )
 

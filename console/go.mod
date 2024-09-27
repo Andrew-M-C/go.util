@@ -5,7 +5,7 @@ go 1.19
 require (
 	github.com/AlecAivazis/survey/v2 v2.3.7
 	github.com/Andrew-M-C/go.util/unicode v0.0.0-20240221044053-8b90aa4683c0
-	github.com/fatih/color v1.16.0
+	github.com/fatih/color v1.17.0
 	github.com/smartystreets/goconvey v1.8.1
 )
 
