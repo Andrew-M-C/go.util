@@ -50,11 +50,21 @@ func WithQuery(q url.Values) RequestOption {
 	}
 }
 
+// WithDebugger 添加调试函数
+func WithDebugger(f func(string, ...any)) RequestOption {
+	return func(ro *requestOption) {
+		if f != nil {
+			ro.debugf = f
+		}
+	}
+}
+
 type requestOption struct {
 	method string
 	header http.Header
 	body   any
 	query  url.Values
+	debugf func(string, ...any)
 }
 
 func (o *requestOption) getBody() (io.Reader, error) {
@@ -77,6 +87,7 @@ func mergeOptions(opts []RequestOption) *requestOption {
 		header: http.Header{},
 		body:   nil,
 		query:  url.Values{},
+		debugf: func(s string, a ...any) {},
 	}
 	for _, f := range opts {
 		if f != nil {

@@ -8,6 +8,10 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+	"strings"
+
+	"github.com/Andrew-M-C/go.util/log"
+	"github.com/Andrew-M-C/go.util/unsafe"
 )
 
 // Raw 发起一个请求, 但是返回 []byte
@@ -26,7 +30,10 @@ func Raw(ctx context.Context, targetURL string, opts ...RequestOption) (rsp []by
 	o.mergeQuery(u.Query())
 	u.RawQuery = o.query.Encode()
 
-	httpReq, err := http.NewRequestWithContext(ctx, o.method, u.String(), reqBody)
+	fullURL := u.String()
+	o.debugf("request URL: %s", fullURL)
+
+	httpReq, err := http.NewRequestWithContext(ctx, o.method, fullURL, reqBody)
 	if err != nil {
 		err = fmt.Errorf("http.NewRequest error (%w)", err)
 		return
@@ -55,25 +62,26 @@ func Raw(ctx context.Context, targetURL string, opts ...RequestOption) (rsp []by
 }
 
 // JSON 发起一个 JSON 请求
-func JSON[T any](ctx context.Context, targetURL string, opts ...RequestOption) (rsp T, err error) {
+func JSON[T any](ctx context.Context, targetURL string, opts ...RequestOption) (*T, error) {
 	o := mergeOptions(opts)
 
 	reqBody, err := o.getBody()
 	if err != nil {
-		return rsp, err
+		return nil, err
 	}
 	u, err := url.Parse(targetURL)
 	if err != nil {
-		err = fmt.Errorf("illegal target URL (%w)", err)
-		return
+		return nil, fmt.Errorf("illegal target URL (%w)", err)
 	}
 	o.mergeQuery(u.Query())
 	u.RawQuery = o.query.Encode()
 
-	httpReq, err := http.NewRequestWithContext(ctx, o.method, u.String(), reqBody)
+	fullURL := u.String()
+	o.debugf("request URL: %s", fullURL)
+
+	httpReq, err := http.NewRequestWithContext(ctx, o.method, fullURL, reqBody)
 	if err != nil {
-		err = fmt.Errorf("http.NewRequest error (%w)", err)
-		return
+		return nil, fmt.Errorf("http.NewRequest error (%w)", err)
 	}
 
 	if reqBody != nil {
@@ -86,23 +94,32 @@ func JSON[T any](ctx context.Context, targetURL string, opts ...RequestOption) (
 	}
 	httpRsp, err := cli.Do(httpReq)
 	if err != nil {
-		err = fmt.Errorf("cli.Do error (%w)", err)
-		return
+		return nil, fmt.Errorf("cli.Do error (%w)", err)
 	}
 	if httpRsp.StatusCode != 200 {
-		err = errors.New(httpRsp.Status)
-		return
+		return nil, errors.New(httpRsp.Status)
 	}
 	defer httpRsp.Body.Close()
 	b, err := io.ReadAll(httpRsp.Body)
 	if err != nil {
-		err = fmt.Errorf("io.ReadAll error (%w)", err)
-		return
+		return nil, fmt.Errorf("io.ReadAll error (%w)", err)
 	}
-	if err = json.Unmarshal(b, &rsp); err != nil {
-		err = fmt.Errorf("json.Unmarshal error (%w)", err)
-		return
+	if len(b) == 0 {
+		return nil, errors.New("empty body from remote server")
+	}
+	o.debugf("response: '%s'", bytesStringer(b))
+	rsp := new(T)
+	if err := json.Unmarshal(b, rsp); err != nil {
+		return nil, fmt.Errorf("json.Unmarshal error (%w)", err)
 	}
 
-	return rsp, err
+	return rsp, nil
+}
+
+func bytesStringer(b []byte) any {
+	s := unsafe.BtoS(b)
+	if !strings.Contains(s, "\n") {
+		return s
+	}
+	return log.ToJSON(s)
 }

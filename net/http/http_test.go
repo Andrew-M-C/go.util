@@ -34,10 +34,9 @@ func TestJSON(t *testing.T) {
 			Int: 9999,
 			Str: "xxxx",
 		}
-		var rsp *jsonvalue.V
-		rsp, err := http.JSON[*jsonvalue.V](
+		rsp, err := http.JSON[jsonvalue.V](
 			context.Background(), "https://echo.free.beeceptor.com",
-			http.WithMethod("POST"), http.WithRequestBody(req),
+			http.WithMethod("POST"), http.WithRequestBody(req), http.WithDebugger(t.Logf),
 		)
 		so(err, isNil)
 		t.Log(rsp.MustMarshalString(jsonvalue.OptSetSequence()))

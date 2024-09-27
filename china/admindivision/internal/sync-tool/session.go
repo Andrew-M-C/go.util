@@ -120,7 +120,7 @@ func (sess *session) getAndParseProvinces() error {
 		return err
 	}
 
-	for _, n := range nodes {
+	for _, n := range *nodes {
 		node := &node{
 			code:     n.Code,
 			fullCode: n.Code,
@@ -172,7 +172,7 @@ func (sess *session) getAndParseCities() error {
 		return err
 	}
 
-	for _, n := range nodes {
+	for _, n := range *nodes {
 		node := &node{
 			code:     n.Code[2:],
 			fullCode: n.Code,
@@ -197,7 +197,7 @@ func (sess *session) getAndParseCounties() error {
 		return err
 	}
 
-	for _, n := range nodes {
+	for _, n := range *nodes {
 		node := &node{
 			code:     n.Code[4:],
 			fullCode: n.Code,
@@ -222,7 +222,7 @@ func (sess *session) getAndParseTowns() error {
 		return err
 	}
 
-	for _, n := range nodes {
+	for _, n := range *nodes {
 		node := &node{
 			code:     n.Code[6:],
 			fullCode: n.Code,
@@ -247,7 +247,7 @@ func (sess *session) getAndParseVillages() error {
 		return err
 	}
 
-	for _, n := range nodes {
+	for _, n := range *nodes {
 		node := &node{
 			code:     n.Code[9:],
 			fullCode: n.Code,
