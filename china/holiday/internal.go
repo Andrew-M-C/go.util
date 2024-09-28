@@ -1,6 +1,10 @@
 package holiday
 
-import "time"
+import (
+	"time"
+
+	syncutil "github.com/Andrew-M-C/go.util/sync"
+)
 
 var (
 	beijing = time.FixedZone("Asia/Beijing", 8*60*60)
@@ -51,11 +55,21 @@ func (d date) withName(name string) date {
 }
 
 func (d date) add() {
-	internal.specialDates[d.key()] = d
+	internal.specialDates.Store(d.key(), d)
 }
 
 var internal = struct {
-	specialDates map[uint32]date
+	specialDates syncutil.Map[uint32, date]
+	dayTypeDesc  map[DayType]string
 }{
-	specialDates: map[uint32]date{},
+	specialDates: syncutil.NewMap[uint32, date](),
+	dayTypeDesc: map[DayType]string{
+		UnknownType:    "未知类型",
+		Workday:        "工作日",
+		Weekend:        "周末",
+		Holiday:        "节日",
+		HolidayPeriod:  "节日假期",
+		ShiftedDayOff:  "调休休息",
+		ShiftedWorkday: "调休上班",
+	},
 }

@@ -14,6 +14,8 @@ import (
 
 var (
 	cv = convey.Convey
+	so = convey.So
+	eq = convey.ShouldEqual
 )
 
 func TestMain(m *testing.M) {
@@ -26,7 +28,20 @@ func Test2024(t *testing.T) {
 			m := newMonthCalendar(2024, i)
 			t.Logf("<< %v >>\n%v", time.Month(i), m)
 		}
+	})
 
+	cv("自定义类型", t, func() {
+		const vocation = holiday.DayType(holiday.ShiftedWorkday + 1)
+		holiday.AddNewDayType(vocation, "请假")
+
+		// 首先除夕不是假期
+		d := holiday.Date(2024, 2, 9)
+		so(d.Type(), eq, holiday.Workday)
+
+		// 然后请假, 就标记上了
+		holiday.AddSpecialDay(d, vocation, "年休假")
+		so(d.Type(), eq, vocation)
+		so(d.Description(), eq, "年休假")
 	})
 }
 

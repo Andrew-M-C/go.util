@@ -1,14 +1,13 @@
 // Package holiday 实现中国假期和调休统计逻辑。仅准确支持 2024 年及以后。
 package holiday
 
-import "time"
+import (
+	"fmt"
+	"maps"
+	"time"
+)
 
-// MARK: 公开定义
-
-// Day 表示一天
-type Day struct {
-	time.Time
-}
+// MARK: 公开定义 - DayType
 
 // DayType 表示这一天所属的类型
 type DayType int
@@ -35,24 +34,42 @@ const (
 )
 
 func (t DayType) String() string {
-	switch t {
-	default:
-		fallthrough
-	case UnknownType:
-		return "未知日期类型"
-	case Workday:
-		return "工作日"
-	case Weekend:
-		return "周末"
-	case Holiday:
-		return "节日"
-	case HolidayPeriod:
-		return "节日假期"
-	case ShiftedDayOff:
-		return "调休休息"
-	case ShiftedWorkday:
-		return "调休上班"
+	m := internal.dayTypeDesc
+	if s := m[t]; s != "" {
+		return s
 	}
+	return m[UnknownType]
+}
+
+// AddNewDayType 添加一个新的日期类型。注意, 不允许重复添加, 如果这个类型已经添加过, 则 panic
+func AddNewDayType(typ DayType, description string) {
+	m := internal.dayTypeDesc
+	desc, exist := m[typ]
+	if exist {
+		if desc == description {
+			// OK
+			return
+		}
+		msg := fmt.Sprintf("type %d already added as '%s'", typ, desc)
+		panic(msg)
+	}
+
+	// OK, 添加一个新的类型
+	m = maps.Clone(m)
+	m[typ] = description
+	internal.dayTypeDesc = m
+}
+
+// MARK: 公开定义 - Day
+
+// Day 表示一天
+type Day struct {
+	time.Time
+}
+
+// AddSpecialDay 添加一个特殊日期
+func AddSpecialDay(d Day, typ DayType, description string) {
+	newDate(d.Year(), d.Month(), d.Day()).withType(typ).withName(description).add()
 }
 
 // Today 表示今天
@@ -86,7 +103,7 @@ func (d Day) String() string {
 // Type 返回这一天的类型
 func (d Day) Type() DayType {
 	// 如果是特殊日子
-	if da, exist := internal.specialDates[d.key()]; exist {
+	if da, exist := internal.specialDates.Load(d.key()); exist {
 		return da.typ
 	}
 	// 不是特殊日子的话, 那就看是周中还是周末
@@ -101,7 +118,7 @@ func (d Day) Type() DayType {
 // Description 描述, 比如: 工作日 / 周末 / 国庆调休放假 / 国庆调休上班
 func (d Day) Description() string {
 	// 如果今天是特殊日子
-	if da, exist := internal.specialDates[d.key()]; exist {
+	if da, exist := internal.specialDates.Load(d.key()); exist {
 		return da.desc
 	}
 	return d.Type().String()
