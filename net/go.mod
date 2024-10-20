@@ -7,6 +7,8 @@ require (
 	github.com/Andrew-M-C/go.util/log v0.0.0-20240924120445-d310ce87211e
 	github.com/Andrew-M-C/go.util/unsafe v0.0.0-20240924120445-d310ce87211e
 	github.com/smartystreets/goconvey v1.8.1
+	golang.org/x/net v0.30.0
+	golang.org/x/text v0.19.0
 )
 
 require (
@@ -23,6 +25,5 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/smarty/assertions v1.15.0 // indirect
 	github.com/valyala/fastrand v1.0.0 // indirect
-	golang.org/x/sys v0.22.0 // indirect
-	golang.org/x/text v0.16.0 // indirect
+	golang.org/x/sys v0.26.0 // indirect
 )

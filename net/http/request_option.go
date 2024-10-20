@@ -7,6 +7,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
+
+	"golang.org/x/text/encoding"
 )
 
 // 发起请求的额外选项
@@ -59,12 +61,21 @@ func WithDebugger(f func(string, ...any)) RequestOption {
 	}
 }
 
+// WithResponseCharset 指定响应 charset
+func WithResponseCharset(c encoding.Encoding) RequestOption {
+	return func(ro *requestOption) {
+		ro.rspCharset = c
+	}
+}
+
 type requestOption struct {
 	method string
 	header http.Header
 	body   any
 	query  url.Values
 	debugf func(string, ...any)
+
+	rspCharset encoding.Encoding
 }
 
 func (o *requestOption) getBody() (io.Reader, error) {
