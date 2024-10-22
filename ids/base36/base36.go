@@ -4,6 +4,7 @@ package base36
 
 import (
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
@@ -88,4 +89,25 @@ func reverseUint64(u uint64) uint64 {
 	buff := make([]byte, 8)
 	binary.BigEndian.PutUint64(buff, u)
 	return binary.LittleEndian.Uint64(buff)
+}
+
+// QuirkyItoa32 同 RevEndianItoa32 类似, 也是为了避免暴露自增 id, 但不同的是, 这个函数将
+// uint32 进行大小端变换之后, 再在最高位加 1, 避免出现字符串过短的情况
+func QuirkyItoa32(id uint32) string {
+	id = reverseUint32(id)
+	u64 := uint64(id) + 0x100000000
+	return strconv.FormatUint(u64, 36)
+}
+
+// QuirkyAtoi32 是 QuirkyItoa32 的逆操作
+func QuirkyAtoi32(id string) (uint32, error) {
+	u64, err := strconv.ParseUint(id, 36, 64)
+	if err != nil {
+		return 0, err
+	}
+	if u64 >= 0x200000000 {
+		return 0, errors.New("integer overflow")
+	}
+	u32 := uint32(u64 & 0xFFFFFFFF)
+	return reverseUint32(u32), nil
 }

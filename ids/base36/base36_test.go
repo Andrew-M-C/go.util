@@ -82,3 +82,28 @@ func TestRevEndian(t *testing.T) {
 		t.Log("reversed string ID for 1:", s)
 	})
 }
+
+func TestQuirky(t *testing.T) {
+	cv("QuirkyItoa32 and QuirkyAtoi32", t, func() {
+		id := uint32(0x1278abef)
+		s := base36.QuirkyItoa32(id)
+		t.Log("quirky string ID:", s)
+
+		reversedID, err := strconv.ParseUint(s, 36, 64)
+		so(err, isNil)
+		so(reversedID, eq, 0x1efab7812)
+
+		parsedID, err := base36.QuirkyAtoi32(s)
+		so(err, isNil)
+		so(parsedID, eq, id)
+
+		s = base36.QuirkyItoa32(1)
+		t.Log("quirky string ID for 1:", s)
+
+		s = base36.QuirkyItoa32(0) // 最小值
+		t.Log("quirky string ID for 0:", s)
+
+		s = base36.QuirkyItoa32(0xFFFFFFFF) // 最大值
+		t.Log("quirky string ID for 0xFFFFFFFF:", s)
+	})
+}
