@@ -1,6 +1,7 @@
 package base36_test
 
 import (
+	"strconv"
 	"testing"
 
 	"github.com/Andrew-M-C/go.util/ids/base36"
@@ -40,5 +41,44 @@ func TestItoa(t *testing.T) {
 		ii, err := base36.Atoi[int64](s)
 		so(err, isNil)
 		so(ii, eq, i)
+	})
+}
+
+func TestRevEndian(t *testing.T) {
+	cv("RevEndianItoa32 and RevEndianAtoi32", t, func() {
+		id := uint32(0x1278abef)
+		s := base36.RevEndianItoa32(id)
+		t.Log("reversed string ID:", s)
+
+		reversedID, err := strconv.ParseUint(s, 36, 32)
+		so(err, isNil)
+		so(reversedID, eq, 0xefab7812)
+
+		parsedID, err := base36.RevEndianAtoi32(s)
+		so(err, isNil)
+		so(parsedID, eq, id)
+
+		s = base36.RevEndianItoa32(1)
+		t.Log("reversed string ID for 1:", s)
+
+		s = base36.RevEndianItoa32(0x1000000)
+		t.Log("reversed string ID for 0x1000000:", s)
+	})
+
+	cv("RevEndianItoa64 and RevEndianAtoi64", t, func() {
+		id := uint64(0x123456789abcdef0)
+		s := base36.RevEndianItoa64(id)
+		t.Log("reversed string ID:", s)
+
+		reversedID, err := strconv.ParseUint(s, 36, 64)
+		so(err, isNil)
+		so(reversedID, eq, uint64(0xf0debc9a78563412))
+
+		parsedID, err := base36.RevEndianAtoi64(s)
+		so(err, isNil)
+		so(parsedID, eq, id)
+
+		s = base36.RevEndianItoa64(1)
+		t.Log("reversed string ID for 1:", s)
 	})
 }

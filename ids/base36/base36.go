@@ -3,6 +3,7 @@
 package base36
 
 import (
+	"encoding/binary"
 	"fmt"
 	"strconv"
 	"strings"
@@ -42,4 +43,49 @@ func Atoi[N Double](s string) (N, error) {
 		return 0, fmt.Errorf("id should not be greater than %d", MaxID)
 	}
 	return N(u), nil
+}
+
+// RevEndianItoa32 为了避免暴露出自增 id 的本质, 将一个 uint32 类型值颠倒大小端之后再进行
+// base36 转为 string。当然缺点是数字越大, 字符串反而越短
+func RevEndianItoa32(id uint32) string {
+	id = reverseUint32(id)
+	return strconv.FormatUint(uint64(id), 36)
+}
+
+// RevEndianAtoi32 是 RevEndianItoa32 的逆操作
+func RevEndianAtoi32(id string) (uint32, error) {
+	u64, err := strconv.ParseUint(id, 36, 32)
+	if err != nil {
+		return 0, err
+	}
+	u32 := uint32(u64 & 0xFFFFFFFF)
+	return reverseUint32(u32), nil
+}
+
+func reverseUint32(u uint32) uint32 {
+	buff := make([]byte, 4)
+	binary.BigEndian.PutUint32(buff, u)
+	return binary.LittleEndian.Uint32(buff)
+}
+
+// RevEndianItoa64 为了避免暴露出自增 id 的本质, 将一个 uint64 类型值颠倒大小端之后再进行
+// base36 转为 string。当然缺点是数字越大, 字符串反而越短
+func RevEndianItoa64(id uint64) string {
+	id = reverseUint64(id)
+	return strconv.FormatUint(uint64(id), 36)
+}
+
+// RevEndianAtoi64 是 RevEndianItoa64 的逆操作
+func RevEndianAtoi64(id string) (uint64, error) {
+	u64, err := strconv.ParseUint(id, 36, 64)
+	if err != nil {
+		return 0, err
+	}
+	return reverseUint64(u64), nil
+}
+
+func reverseUint64(u uint64) uint64 {
+	buff := make([]byte, 8)
+	binary.BigEndian.PutUint64(buff, u)
+	return binary.LittleEndian.Uint64(buff)
 }
