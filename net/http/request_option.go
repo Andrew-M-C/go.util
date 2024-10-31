@@ -2,7 +2,6 @@ package http
 
 import (
 	"bytes"
-	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -76,29 +75,35 @@ type requestOption struct {
 	debugf func(string, ...any)
 
 	rspCharset encoding.Encoding
+	marshaler  marshalerType
 }
+
+type marshalerType func(any) ([]byte, error)
 
 func (o *requestOption) getBody() (io.Reader, error) {
 	if o.body == nil {
 		return nil, nil
 	}
 	if b, ok := o.body.([]byte); ok {
+		o.debugf("request body '%s'", b)
 		return bytes.NewBuffer(b), nil
 	}
-	b, e := json.Marshal(o.body)
+	b, e := o.marshaler(o.body)
 	if e != nil {
 		return nil, fmt.Errorf("Marshal request error (%w)", e)
 	}
+	o.debugf("request body '%s'", b)
 	return bytes.NewBuffer(b), nil
 }
 
-func mergeOptions(opts []RequestOption) *requestOption {
+func mergeOptions(opts []RequestOption, marshaler marshalerType) *requestOption {
 	o := &requestOption{
-		method: "GET",
-		header: http.Header{},
-		body:   nil,
-		query:  url.Values{},
-		debugf: func(s string, a ...any) {},
+		method:    "GET",
+		header:    http.Header{},
+		body:      nil,
+		query:     url.Values{},
+		debugf:    func(s string, a ...any) {},
+		marshaler: marshaler,
 	}
 	for _, f := range opts {
 		if f != nil {

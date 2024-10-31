@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -20,7 +21,7 @@ import (
 
 // Raw 发起一个请求, 但是返回 []byte
 func Raw(ctx context.Context, targetURL string, opts ...RequestOption) (rsp []byte, err error) {
-	o := mergeOptions(opts)
+	o := mergeOptions(opts, json.Marshal)
 	httpRsp, err := raw(ctx, targetURL, o)
 	if err != nil {
 		return nil, err
@@ -67,28 +68,33 @@ func raw(ctx context.Context, targetURL string, o *requestOption) (*http.Respons
 		return nil, errors.New(httpRsp.Status)
 	}
 	return httpRsp, nil
+}
 
+// rawAndRead raw 请求并 io.ReadAll, 拿到的 response 无需 close
+func rawAndRead(ctx context.Context, targetURL string, o *requestOption) (*http.Response, []byte, error) {
+	rsp, err := raw(ctx, targetURL, o)
+	if err != nil {
+		return rsp, nil, err
+	}
+
+	defer rsp.Body.Close()
+
+	b, err := io.ReadAll(rsp.Body)
+	if err != nil {
+		return rsp, nil, fmt.Errorf("io.ReadAll error (%w)", err)
+	}
+	return rsp, b, nil
 }
 
 // JSON 发起一个 JSON 请求
 func JSON[T any](ctx context.Context, targetURL string, opts ...RequestOption) (*T, error) {
-	o := mergeOptions(opts)
-
+	o := mergeOptions(opts, json.Marshal)
 	if o.body != nil {
-		if o.header == nil {
-			o.header = http.Header{}
-		}
 		o.header.Set("Content-Type", "application/json")
 	}
-	httpRsp, err := raw(ctx, targetURL, o)
+	httpRsp, b, err := rawAndRead(ctx, targetURL, o)
 	if err != nil {
 		return nil, err
-	}
-	defer httpRsp.Body.Close()
-
-	b, err := io.ReadAll(httpRsp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("io.ReadAll error (%w)", err)
 	}
 	if len(b) == 0 {
 		return nil, errors.New("empty body from remote server")
@@ -102,7 +108,42 @@ func JSON[T any](ctx context.Context, targetURL string, opts ...RequestOption) (
 	if err := json.Unmarshal(b, rsp); err != nil {
 		return nil, fmt.Errorf("json.Unmarshal error (%w)", err)
 	}
+	return rsp, nil
+}
 
+// XMLGetRspBody 发起一个 XML 请求并返回包体字节
+func XMLGetRspBody(ctx context.Context, targetURL string, opts ...RequestOption) ([]byte, error) {
+	o := mergeOptions(opts, xml.Marshal)
+	if o.body != nil {
+		o.header.Set("Content-Type", "application/xml")
+	}
+	httpRsp, b, err := rawAndRead(ctx, targetURL, o)
+	if err != nil {
+		return nil, err
+	}
+	if len(b) == 0 {
+		return nil, errors.New("empty body from remote server")
+	}
+
+	o.debugf("response: '%s'", bytesStringer(b))
+	o.debugf("response header: %+v", httpRsp.Header)
+
+	b = decodeIfNecessary(o, b, httpRsp)
+	return b, nil
+}
+
+// XML 发起一个 XML 请求
+//
+// WARNING: 未测试, 请注意
+func XML[T any](ctx context.Context, targetURL string, opts ...RequestOption) (*T, error) {
+	b, err := XMLGetRspBody(ctx, targetURL, opts...)
+	if err != nil {
+		return nil, err
+	}
+	rsp := new(T)
+	if err := xml.Unmarshal(b, &rsp); err != nil {
+		return nil, fmt.Errorf("xml.Unmarshal error (%w)", err)
+	}
 	return rsp, nil
 }
 
