@@ -13,7 +13,7 @@ func testSpinLock(t *testing.T) {
 	cv("高并发读写验证不 panic", func() { testSpinLockConcurrency(t) })
 }
 
-func testSpinLockGeneral(t *testing.T) {
+func testSpinLockGeneral(*testing.T) {
 	lck := SpinLock{}
 
 	entered2 := false
@@ -87,8 +87,7 @@ func testSpinLockTryLock(t *testing.T) {
 	so(exited2, isTrue)
 }
 
-func testSpinLockConcurrency(t *testing.T) {
-
+func testSpinLockConcurrency(*testing.T) {
 	const concurrency = 500
 	const tm = time.Second
 	m := make(map[int64]bool)

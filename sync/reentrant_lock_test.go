@@ -15,7 +15,7 @@ func testReentrantLock(t *testing.T) {
 	cv("高并发可重入读写验证不 panic", func() { testReentrantLockConcurrencyReentrantly(t) })
 }
 
-func testReentrantLockGeneral(t *testing.T) {
+func testReentrantLockGeneral(*testing.T) {
 	lck := ReentrantLock{}
 
 	entered2 := false
@@ -48,7 +48,7 @@ func testReentrantLockGeneral(t *testing.T) {
 	so(exited2, isTrue)
 }
 
-func testReentrantLockConcurrency(t *testing.T) {
+func testReentrantLockConcurrency(*testing.T) {
 
 	const concurrency = 500
 	const tm = time.Second
@@ -89,8 +89,7 @@ func testReentrantLockConcurrency(t *testing.T) {
 	}, notPanic)
 }
 
-func testReentrantLockConcurrencyReentrantly(t *testing.T) {
-
+func testReentrantLockConcurrencyReentrantly(*testing.T) {
 	const concurrency = 500
 	const tm = time.Second
 	m := make(map[int64]bool)
