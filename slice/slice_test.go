@@ -35,6 +35,7 @@ func TestSlice(t *testing.T) {
 	test(t, "binary search", testBinarySearch)
 	test(t, "List type", testList)
 	test(t, "CutIntoSectors", testCutIntoSectors)
+	test(t, "CollectionXxxxx", testCollection)
 }
 
 func testSlice(t *testing.T) {
