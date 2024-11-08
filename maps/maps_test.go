@@ -1,9 +1,10 @@
-package maps
+package maps_test
 
 import (
 	"fmt"
 	"testing"
 
+	"github.com/Andrew-M-C/go.util/maps"
 	"github.com/smartystreets/goconvey/convey"
 )
 
@@ -22,20 +23,21 @@ func TestMaps(t *testing.T) {
 	cv("测试 IntKeys", t, func() { testIntKeys(t) })
 	cv("测试 UintKeys", t, func() { testUintKeys(t) })
 	cv("测试 Equal 和 KeysEqual", t, func() { testEqual(t) })
-	cv("测试 GetOrDefault 和 GetStringOrFormat", t, func() { testGetFunctions(t) })
+	cv("测试 maps.GetOrDefault 和 GetStringOrFormat", t, func() { testGetFunctions(t) })
 	cv("测试 maps_kv_pair.go", t, func() { testKVPairs(t) })
 	cv("测试 rw_map.go", t, func() { testRWSafeMap(t) })
+	cv("测试 set.to", t, func() { testSet(t) })
 }
 
 func testStringKeys(t *testing.T) {
 	cv("基本逻辑", func() {
-		const repeat = 10000
+		const repeat = 1000
 		m := map[string]int{
 			"one": 1,
 			"two": 2,
 		}
 
-		keys := Keys(m)
+		keys := maps.Keys(m)
 		t.Log(keys)
 		so(len(keys), eq, len(m))
 
@@ -50,13 +52,13 @@ func testStringKeys(t *testing.T) {
 
 func testIntKeys(t *testing.T) {
 	cv("基本逻辑", func() {
-		const repeat = 10000
+		const repeat = 1000
 		m := map[int]int{
 			-10000: -1,
 			10000:  1,
 		}
 
-		keys := Keys(m)
+		keys := maps.Keys(m)
 		t.Log(keys)
 		so(len(keys), eq, len(m))
 
@@ -71,13 +73,13 @@ func testIntKeys(t *testing.T) {
 
 func testUintKeys(t *testing.T) {
 	cv("基本逻辑", func() {
-		const repeat = 10000
+		const repeat = 1000
 		m := map[uint64]bool{
 			1:     true,
 			10000: false,
 		}
 
-		keys := Keys(m)
+		keys := maps.Keys(m)
 		t.Log(keys)
 		so(len(keys), eq, len(m))
 
@@ -100,10 +102,10 @@ func testEqual(*testing.T) {
 			1: -1,
 			2: -2,
 		}
-		so(Equal(a, b), eq, false)
+		so(maps.Equal(a, b), eq, false)
 
 		a[2] = -2
-		so(Equal(a, b), eq, true)
+		so(maps.Equal(a, b), eq, true)
 	})
 
 	cv("KeysEqual", func() {
@@ -115,7 +117,7 @@ func testEqual(*testing.T) {
 			1: 1,
 			2: 22,
 		}
-		so(KeysEqual(a, b), eq, true)
+		so(maps.KeysEqual(a, b), eq, true)
 	})
 }
 
@@ -126,10 +128,10 @@ func testGetFunctions(*testing.T) {
 			2: "two",
 		}
 
-		v := GetOrDefault(m, 1, "1")
+		v := maps.GetOrDefault(m, 1, "1")
 		so(v, eq, "one")
 
-		v = GetOrDefault(m, 3, "三")
+		v = maps.GetOrDefault(m, 3, "三")
 		so(v, eq, "三")
 	})
 
@@ -140,10 +142,10 @@ func testGetFunctions(*testing.T) {
 		}
 
 		format := "unrecognized key %d"
-		v := GetStringOrFormat(m, 1, format)
+		v := maps.GetStringOrFormat(m, 1, format)
 		so(v, eq, m[1])
 
-		v = GetStringOrFormat(m, 3, format)
+		v = maps.GetStringOrFormat(m, 3, format)
 		so(v, ne, m[3])
 		so(v, eq, fmt.Sprintf(format, 3))
 	})

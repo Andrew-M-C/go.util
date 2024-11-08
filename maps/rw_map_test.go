@@ -1,4 +1,4 @@
-package maps
+package maps_test
 
 import (
 	"encoding/json"
@@ -9,6 +9,8 @@ import (
 	"sync/atomic"
 	"testing"
 	"time"
+
+	"github.com/Andrew-M-C/go.util/maps"
 )
 
 func testRWSafeMap(t *testing.T) {
@@ -18,7 +20,7 @@ func testRWSafeMap(t *testing.T) {
 		const testTime = 5 * time.Second
 
 		// 首先新建一个 map
-		m := NewRWSafeMap[int, string](10000)
+		m := maps.NewRWSafeMap[int, string](10000)
 		wg := sync.WaitGroup{}
 		start := time.Now()
 		var iterateCount int64
@@ -79,7 +81,7 @@ func testRWSafeMap(t *testing.T) {
 
 	cv("JSON 序列化和反序列化", func() {
 		raw := `{"aaaa":1111,"bbbb":2222}`
-		m := NewRWSafeMap[string, int]()
+		m := maps.NewRWSafeMap[string, int]()
 		err := json.Unmarshal([]byte(raw), &m)
 		so(err, isNil)
 
