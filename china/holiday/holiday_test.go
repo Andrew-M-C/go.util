@@ -30,6 +30,13 @@ func Test2024(t *testing.T) {
 		}
 	})
 
+	cv("2025", t, func() {
+		for i := 1; i <= 12; i++ {
+			m := newMonthCalendar(2025, i)
+			t.Logf("<< %v >>\n%v", time.Month(i), m)
+		}
+	})
+
 	cv("自定义类型", t, func() {
 		const vocation = holiday.DayType(holiday.ShiftedWorkday + 1)
 		holiday.AddNewDayType(vocation, "请假")
@@ -75,7 +82,7 @@ func newMonthCalendar(year, month int) *monthCalendar {
 		case holiday.Workday:
 			formatter = fmt.Sprintf
 		case holiday.ShiftedWorkday:
-			formatter = color.YellowString
+			formatter = fmt.Sprintf
 		default:
 			formatter = color.RedString
 		}
