@@ -7,7 +7,7 @@ require (
 	github.com/Andrew-M-C/go.util/net v0.0.0-20240920040959-400d8f87c326
 	github.com/Andrew-M-C/go.util/slice v0.0.0-20240920040959-400d8f87c326
 	github.com/Andrew-M-C/go.util/sync v0.0.0-20240927150702-bee2267718ce
-	github.com/fatih/color v1.17.0
+	github.com/fatih/color v1.18.0
 	github.com/smartystreets/goconvey v1.8.1
 )
 
@@ -20,5 +20,5 @@ require (
 	github.com/shopspring/decimal v1.4.0 // indirect
 	github.com/smarty/assertions v1.15.0 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
-	golang.org/x/sys v0.26.0 // indirect
+	golang.org/x/sys v0.27.0 // indirect
 )
