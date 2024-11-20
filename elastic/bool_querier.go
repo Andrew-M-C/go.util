@@ -1,4 +1,3 @@
-// Package elastic 提供 elastic 搜索工具
 package elastic
 
 import (
@@ -7,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 
 	es "github.com/olivere/elastic/v7"
 )
@@ -33,9 +33,11 @@ func NewBoolQuerier(index string) *BoolQuerier {
 	}
 }
 
+func emptyDebug(string, ...any) {}
+
 func (q *BoolQuerier) lazyInit() {
 	if q.debug == nil {
-		q.debug = func(string, ...any) {}
+		q.debug = emptyDebug
 	}
 	if q.sorts == nil {
 		q.sorts = map[string]bool{}
@@ -45,14 +47,18 @@ func (q *BoolQuerier) lazyInit() {
 	}
 }
 
+// Debug 指定调试输出器
 func (q *BoolQuerier) Debug(f func(string, ...any)) *BoolQuerier {
 	if f != nil {
 		q.debug = f
+	} else {
+		q.debug = emptyDebug
 	}
 	return q
 }
 
-// EQ 表示相等条件。请注意, EQ 不适用于 text 类型字段
+// EQ 表示相等条件。请注意, EQ 不适用于 text 类型字段, 因为 text 类型通常会被分词器处理成多个
+// tokens, 而 EQ 使用了 terms, 这是用来精确匹配单个词条的。
 func (q *BoolQuerier) EQ(field string, value any) *BoolQuerier {
 	q.lazyInit()
 	q.filters = append(q.filters, es.NewTermQuery(field, value))
@@ -152,13 +158,11 @@ type rangeOp struct {
 	v  any
 }
 
-func (q *BoolQuerier) Do(ctx context.Context, cli *es.Client) (*es.SearchResult, error) {
+func (q *BoolQuerier) packQuery() *es.BoolQuery {
 	q.lazyInit()
-	if len(q.errs) > 0 {
-		return nil, errors.Join(q.errs...)
-	}
 
 	query := es.NewBoolQuery()
+	filters := slices.Clone(q.filters)
 
 	// 打包 range
 	for field, conditions := range q.ranges {
@@ -177,23 +181,34 @@ func (q *BoolQuerier) Do(ctx context.Context, cli *es.Client) (*es.SearchResult,
 				// do nothing
 			}
 		}
-		q.filters = append(q.filters, rq)
+		filters = append(filters, rq)
 	}
 
 	// 打包 filter 和 must
-	if len(q.filters) > 0 {
-		query = query.Filter(q.filters...)
+	if len(filters) > 0 {
+		query = query.Filter(filters...)
 	}
 	if len(q.musts) > 0 {
 		query = query.Must(q.musts...)
 	}
 
+	return query
+}
+
+func (q *BoolQuerier) Do(ctx context.Context, cli *es.Client) (*es.SearchResult, error) {
+	q.lazyInit()
+	if len(q.errs) > 0 {
+		return nil, errors.Join(q.errs...)
+	}
+
+	query := q.packQuery()
+
 	// 构建搜索
 	search := cli.Search().Index(q.Index).Query(query)
 
 	// 排序
-	for field, direction := range q.sorts {
-		search = search.Sort(field, direction)
+	for field, ascending := range q.sorts {
+		search = search.Sort(field, ascending)
 	}
 
 	// offset / limit
@@ -205,10 +220,39 @@ func (q *BoolQuerier) Do(ctx context.Context, cli *es.Client) (*es.SearchResult,
 	}
 
 	// 执行
-	if f := q.debug; f != nil {
-		f("Search: %+v", toJSON(search))
-	}
+	q.debug("Search: %v", q)
+
 	return search.Do(ctx)
+}
+
+func (q *BoolQuerier) String() string {
+	s := stringer{
+		Index: q.Index,
+		From:  q.from,
+		Size:  q.size,
+	}
+	if dsl, err := q.packQuery().Source(); err == nil {
+		s.DSL.Query = dsl
+	}
+	for field, ascending := range q.sorts {
+		if ascending {
+			s.Sort = append(s.Sort, []string{field, "ASC"})
+		} else {
+			s.Sort = append(s.Sort, []string{field, "DESC"})
+		}
+	}
+	b, _ := json.Marshal(s)
+	return string(b)
+}
+
+type stringer struct {
+	Index string     `json:"index"`
+	Sort  [][]string `json:"sort,omitempty"`
+	From  *int       `json:"from,omitempty"`
+	Size  *int       `json:"size,omitempty"`
+	DSL   struct {
+		Query any `json:"query"`
+	} `json:"dsl"`
 }
 
 type jsonWrapper struct {

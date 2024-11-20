@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	esutil "github.com/Andrew-M-C/go.util/elastic"
-	"github.com/olivere/elastic/v7"
+	elastic "github.com/olivere/elastic/v7"
 	"github.com/smartystreets/goconvey/convey"
 )
 
@@ -34,6 +34,7 @@ func initializeTesting() {
 	cli, err := elastic.NewClient(
 		elastic.SetURL("http://localhost:9200"),
 		elastic.SetSniff(false),
+		elastic.SetBasicAuth("elastic", "123456"),
 	)
 	if err != nil {
 		panic(err)
@@ -51,7 +52,7 @@ type PaperDocument struct {
 /*
 创建索引:
 
-curl -X PUT "http://localhost:9200/test_index" -H 'Content-Type: application/json' -d'
+curl -X PUT "http://localhost:9200/test_index" -H 'Content-Type: application/json' -u elastic:123456 -d'
 {
   "settings": {
     "analysis": {
@@ -87,11 +88,11 @@ curl -X PUT "http://localhost:9200/test_index" -H 'Content-Type: application/jso
 
 查询索引:
 
-curl -X GET "http://localhost:9200/test_index/_mappings?pretty=true"
+curl -X GET "http://localhost:9200/test_index/_mappings?pretty=true" -u elastic:123456
 
 插入两个数据
 
-curl -X POST "http://localhost:9200/test_index/_doc" -H 'Content-Type: application/json' -d'
+curl -X POST "http://localhost:9200/test_index/_doc" -H 'Content-Type: application/json' -u elastic:123456 -d'
 {
   "title": "示例文章01",
   "create_ts_msec": 1633087521000,
@@ -100,7 +101,7 @@ curl -X POST "http://localhost:9200/test_index/_doc" -H 'Content-Type: applicati
 }
 '
 
-curl -X POST "http://localhost:9200/test_index/_doc" -H 'Content-Type: application/json' -d'
+curl -X POST "http://localhost:9200/test_index/_doc" -H 'Content-Type: application/json' -u elastic:123456 -d'
 {
   "title": "示例文章02",
   "create_ts_msec": 1720190934000,
@@ -111,11 +112,11 @@ curl -X POST "http://localhost:9200/test_index/_doc" -H 'Content-Type: applicati
 
 查询全部:
 
-curl -X GET "http://localhost:9200/test_index/_search?pretty=true" -H 'Content-Type: application/json'
+curl -X GET "http://localhost:9200/test_index/_search?pretty=true" -H 'Content-Type: application/json' -u elastic:123456
 
 查询一条
 
-curl -X GET "localhost:9200/test_index/_search?pretty=true" -H 'Content-Type: application/json' -d'
+curl -X GET "localhost:9200/test_index/_search?pretty=true" -H 'Content-Type: application/json' -u elastic:123456 -d'
 {
   "query": {
     "bool": {
@@ -139,14 +140,14 @@ func TestBoolQuerier(t *testing.T) {
 		cli := globalCli
 
 		// EQ 不适合 text 类型字段
-		q := esutil.NewBoolQuerier(testIndex)
+		q := esutil.NewBoolQuerier(testIndex).Debug(t.Logf)
 		esRes, err := q.Debug(t.Logf).EQ("title", "示例文章02").Do(ctx, cli)
 		res := esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
 		so(len(res), eq, 0)
 
 		// EQ 适合 keyword 或者是其他精确字段
-		q = esutil.NewBoolQuerier(testIndex)
+		q = esutil.NewBoolQuerier(testIndex).Debug(t.Logf)
 		esRes, err = q.EQ("create_ts_msec", 1720190934000).Do(ctx, cli)
 		res = esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
@@ -154,7 +155,7 @@ func TestBoolQuerier(t *testing.T) {
 		t.Log(res)
 
 		// 范围搜索
-		q = esutil.NewBoolQuerier(testIndex)
+		q = esutil.NewBoolQuerier(testIndex).Debug(t.Logf)
 		esRes, err = q.Compare("create_ts_msec", ">", 1633087521000).Do(ctx, cli)
 		res = esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
@@ -162,7 +163,7 @@ func TestBoolQuerier(t *testing.T) {
 		t.Log(res)
 
 		// 全量搜索
-		q = esutil.NewBoolQuerier(testIndex)
+		q = esutil.NewBoolQuerier(testIndex).Debug(t.Logf)
 		esRes, err = q.Do(ctx, cli)
 		res = esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
@@ -170,14 +171,14 @@ func TestBoolQuerier(t *testing.T) {
 		t.Log(res)
 
 		// offset, limit
-		q = esutil.NewBoolQuerier(testIndex)
+		q = esutil.NewBoolQuerier(testIndex).Debug(t.Logf)
 		esRes, err = q.From(0).Limit(1).SortAsc("create_ts_msec").Do(ctx, cli)
 		res = esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
 		so(len(res), eq, 1)
 		so(res[0].Title, eq, "示例文章01")
 
-		q = esutil.NewBoolQuerier(testIndex)
+		q = esutil.NewBoolQuerier(testIndex).Debug(t.Logf)
 		esRes, err = q.From(1).Limit(1).SortAsc("create_ts_msec").Do(ctx, cli)
 		res = esutil.ParseSearchResult[PaperDocument](esRes)
 		so(err, isNil)
@@ -190,7 +191,7 @@ func TestBoolQuerier(t *testing.T) {
 		cli := globalCli
 
 		// 包含式的搜索
-		q := esutil.NewBoolQuerier(testIndex)
+		q := esutil.NewBoolQuerier(testIndex).Debug(t.Logf)
 		esRes, err := q.Contains("content", "这是一篇关于 Golang").Do(ctx, cli)
 		res := esutil.ParseWrappedSearchResult[PaperDocument](esRes)
 		so(err, isNil)
@@ -198,8 +199,10 @@ func TestBoolQuerier(t *testing.T) {
 		t.Log(res)
 
 		// 模糊搜索
-		q = esutil.NewBoolQuerier(testIndex)
-		esRes, err = q.Fuzzy("content", "这是一篇关于 Elastic").SortDesc("_score").Do(ctx, cli)
+		q = esutil.NewBoolQuerier(testIndex).Debug(t.Logf)
+		q = q.Fuzzy("content", "这是一篇关于 Elastic").SortDesc("_score")
+		_ = q.String() // 故意执行一次 bool, 应不造成过多 filter 的操作
+		esRes, err = q.Do(ctx, cli)
 		res = esutil.ParseWrappedSearchResult[PaperDocument](esRes)
 		so(err, isNil)
 		so(len(res), eq, 2)
