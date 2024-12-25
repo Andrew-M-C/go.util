@@ -67,6 +67,13 @@ func WithResponseCharset(c encoding.Encoding) RequestOption {
 	}
 }
 
+// WithProgressCallback 指定请求回调, 一般用在预期 body 很大的场景, 比如下载大文件
+func WithProgressCallback(cb func(*RequestProgress)) RequestOption {
+	return func(ro *requestOption) {
+		ro.progressCB = cb
+	}
+}
+
 type requestOption struct {
 	method string
 	header http.Header
@@ -76,6 +83,9 @@ type requestOption struct {
 
 	rspCharset encoding.Encoding
 	marshaler  marshalerType
+
+	progressCB func(*RequestProgress)
+	progress   *requestProgressWriter
 }
 
 type marshalerType func(any) ([]byte, error)
@@ -109,6 +119,15 @@ func mergeOptions(opts []RequestOption, marshaler marshalerType) *requestOption 
 		if f != nil {
 			f(o)
 		}
+	}
+
+	// request progress
+	if o.progressCB == nil {
+		return o
+	}
+	o.progress = &requestProgressWriter{
+		RequestProgress: &RequestProgress{},
+		callback:        o.progressCB,
 	}
 	return o
 }

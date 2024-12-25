@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/Andrew-M-C/go.util/log"
 	"github.com/Andrew-M-C/go.util/unsafe"
@@ -26,14 +27,9 @@ func Raw(ctx context.Context, targetURL string, opts ...RequestOption) (rsp []by
 	if err != nil {
 		return nil, err
 	}
-
 	defer httpRsp.Body.Close()
 
-	b, err := io.ReadAll(httpRsp.Body)
-	if err != nil {
-		return nil, fmt.Errorf("io.ReadAll error (%w)", err)
-	}
-	return b, nil
+	return readBody(o, httpRsp.Body)
 }
 
 func raw(ctx context.Context, targetURL string, o *requestOption) (*http.Response, error) {
@@ -56,18 +52,44 @@ func raw(ctx context.Context, targetURL string, o *requestOption) (*http.Respons
 		return nil, fmt.Errorf("http.NewRequest error (%w)", err)
 	}
 	httpReq.Header = o.header
+	o.progress.invokeIfNotNil(ResponseReceived)
 
-	cli := http.Client{
-		Transport: http.DefaultTransport,
-	}
+	cli := http.Client{Transport: http.DefaultTransport}
+	start := time.Now()
 	httpRsp, err := cli.Do(httpReq)
+	ela := time.Since(start)
 	if err != nil {
 		return nil, fmt.Errorf("cli.Do error (%w)", err)
 	}
-	if httpRsp.StatusCode != 200 {
+
+	if o.progress != nil {
+		o.progress.rsp = httpRsp
+	}
+	o.progress.invokeIfNotNil(ResponseReceived)
+	o.debugf("request done, ela %v, status %v", ela, httpRsp.Status)
+
+	if httpRsp.StatusCode != http.StatusOK {
 		return nil, errors.New(httpRsp.Status)
 	}
 	return httpRsp, nil
+}
+
+func readBody(o *requestOption, body io.ReadCloser) ([]byte, error) {
+	if o.progressCB == nil {
+		b, err := io.ReadAll(body)
+		if err != nil {
+			return nil, fmt.Errorf("io.ReadAll error (%w)", err)
+		}
+		return b, nil
+	}
+
+	buff := &bytes.Buffer{}
+	w := io.MultiWriter(buff, o.progress)
+	if _, err := io.Copy(w, body); err != nil {
+		return nil, fmt.Errorf("io.ReadAll error (%w)", err)
+	}
+
+	return buff.Bytes(), nil
 }
 
 // rawAndRead raw 请求并 io.ReadAll, 拿到的 response 无需 close
@@ -79,9 +101,9 @@ func rawAndRead(ctx context.Context, targetURL string, o *requestOption) (*http.
 
 	defer rsp.Body.Close()
 
-	b, err := io.ReadAll(rsp.Body)
+	b, err := readBody(o, rsp.Body)
 	if err != nil {
-		return rsp, nil, fmt.Errorf("io.ReadAll error (%w)", err)
+		return rsp, nil, err
 	}
 	return rsp, b, nil
 }

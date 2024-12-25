@@ -4,8 +4,11 @@ import (
 	"context"
 	"encoding/xml"
 	"os"
+	"path"
 	"testing"
+	"time"
 
+	"github.com/Andrew-M-C/go-bytesize"
 	jsonvalue "github.com/Andrew-M-C/go.jsonvalue"
 	"github.com/Andrew-M-C/go.util/net/http"
 	"github.com/smartystreets/goconvey/convey"
@@ -15,6 +18,7 @@ var (
 	cv = convey.Convey
 	so = convey.So
 	eq = convey.ShouldEqual
+	gt = convey.ShouldBeGreaterThan
 
 	isNil = convey.ShouldBeNil
 )
@@ -62,5 +66,28 @@ func TestXML(t *testing.T) {
 		so(err, isNil)
 
 		t.Logf("%s", b) // 暂时没找到合适的请求和响应都是 XML 的接口
+	})
+}
+
+func TestDownload(t *testing.T) {
+	cv("DownloadFile", t, func() {
+		cv("文件名不在路径中", func() {
+			const target = "https://cdn.cloudflare.steamstatic.com/client/installer/steam.deb"
+			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			defer cancel()
+
+			fileName, content, err := http.DownloadFile(
+				ctx, target, http.WithDebugger(t.Logf),
+				http.WithProgressCallback(func(rp *http.RequestProgress) {
+					t.Logf("读取文件 %v / %v", bytesize.Base10(rp.ReadLength()), bytesize.Base10(rp.ContentLength()))
+				}),
+			)
+			so(err, isNil)
+
+			t.Log("下载文件名", fileName)
+			t.Log("文件大小", bytesize.Base10(len(content)))
+			so(len(content), gt, 0)
+			so(path.Ext(fileName), eq, ".deb")
+		})
 	})
 }
