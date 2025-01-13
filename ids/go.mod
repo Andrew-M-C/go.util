@@ -7,7 +7,7 @@ require (
 	github.com/Andrew-M-C/go.util/slice v0.0.0-20240221044053-8b90aa4683c0
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/smartystreets/goconvey v1.8.1
-	golang.org/x/crypto v0.29.0
+	golang.org/x/crypto v0.32.0
 )
 
 require (

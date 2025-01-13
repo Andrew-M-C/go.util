@@ -10,7 +10,7 @@ require (
 	github.com/Andrew-M-C/go.util/log v0.0.0-20241118072554-b6cba35b72fb
 	github.com/Andrew-M-C/go.util/unsafe v0.0.0-20240924120445-d310ce87211e
 	github.com/smartystreets/goconvey v1.8.1
-	golang.org/x/net v0.30.0
+	golang.org/x/net v0.34.0
 	golang.org/x/text v0.21.0
 )
 
@@ -28,5 +28,5 @@ require (
 	github.com/smarty/assertions v1.15.0 // indirect
 	github.com/valyala/fastrand v1.1.0 // indirect
 	go.mongodb.org/mongo-driver v1.17.1 // indirect
-	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 )

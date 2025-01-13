@@ -22,6 +22,6 @@ require (
 	github.com/valyala/fastrand v1.1.0 // indirect
 	go.mongodb.org/mongo-driver v1.17.1 // indirect
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
-	golang.org/x/sys v0.27.0 // indirect
+	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 )
