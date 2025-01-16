@@ -114,7 +114,7 @@ func testAutoRemove(t *testing.T) {
 	}
 }
 
-func testSetSkipCaller(t *testing.T) {
+func testSetSkipCaller(*testing.T) {
 	ctx := trace.WithTraceID(context.Background(), "testSetSkipCaller")
 
 	SetFileLevel(NoLog)
@@ -126,7 +126,7 @@ func testSetSkipCaller(t *testing.T) {
 	time.Sleep(time.Second)
 }
 
-func testDyeing(t *testing.T) {
+func testDyeing(*testing.T) {
 	SetSkipCaller(0)
 	SetLevel(ErrorLevel, NoLog)            // 暂时关闭日志
 	SetDyeingLevel(DebugLevel, DebugLevel) // 文件和日志都给调试级别的染色日志
@@ -142,7 +142,7 @@ func testDyeing(t *testing.T) {
 	ErrorContext(ctx, "这句日志取消染色了, 不应该出现在命令行")
 }
 
-func testStringer(t *testing.T) {
+func testStringer(*testing.T) {
 	cv("JSON", func() {
 		type testType struct {
 			String string `json:"string"`
