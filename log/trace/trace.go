@@ -5,39 +5,82 @@ import (
 	"context"
 
 	objectid "github.com/Andrew-M-C/go.objectid"
+	"golang.org/x/exp/slices"
 )
 
+// 保存 ctx 中的 trace ID 字段
 type traceIDKey struct{}
 
-// GetTraceID 读取 trace ID
-func GetTraceID(ctx context.Context) string {
-	if v := ctx.Value(traceIDKey{}); v != nil {
-		id, _ := v.(string)
-		return id
+type traceIDStackyValue []string
+
+func (t traceIDStackyValue) id() string {
+	if len(t) == 0 {
+		return ""
 	}
-	return ""
+	return t[len(t)-1]
 }
 
-// EnsureTraceID 如果没有 trace id 的话, 那就填充一个并返回
-func EnsureTraceID(ctx context.Context) context.Context {
-	if id := GetTraceID(ctx); id != "" {
+// WithTraceID 更新 trace ID
+func WithTraceID(ctx context.Context, traceID string) context.Context {
+	if traceID == "" {
 		return ctx
 	}
-	return SetTraceID(ctx)
-}
-
-// SetTraceID 设置一个 trace ID, 如果之前已经设置过, 则会覆盖
-func SetTraceID(ctx context.Context, traceID ...string) context.Context {
-	id := ""
-	if len(traceID) > 0 && traceID[0] != "" {
-		id = traceID[0]
-	} else {
-		id = objectid.New16().String()
+	stack := traceIDStack(ctx)
+	if stack.id() == traceID {
+		return ctx
 	}
-	return context.WithValue(ctx, traceIDKey{}, id)
+	stack = slices.Clone(stack)
+	stack = append(stack, traceID)
+	return context.WithValue(ctx, traceIDKey{}, stack)
 }
 
-// WithTraceID 等价于 SetTraceID
-func WithTraceID(ctx context.Context, traceID ...string) context.Context {
-	return SetTraceID(ctx, traceID...)
+// WithTraceIDStack 完全替换整个 trace ID 栈
+func WithTraceIDStack(ctx context.Context, traceIDStack []string) context.Context {
+	if len(traceIDStack) == 0 {
+		return ctx
+	}
+	stack := traceIDStackyValue(slices.Clone(traceIDStack))
+	return context.WithValue(ctx, traceIDKey{}, stack)
+}
+
+func traceIDStack(ctx context.Context) traceIDStackyValue {
+	v := ctx.Value(traceIDKey{})
+	if v == nil {
+		return traceIDStackyValue{}
+	}
+	st, _ := v.(traceIDStackyValue)
+	return st
+}
+
+// TraceID 从 context 中读取 trace ID
+func TraceID(ctx context.Context) string {
+	v := ctx.Value(traceIDKey{})
+	if v == nil {
+		return ""
+	}
+	s, _ := v.(traceIDStackyValue)
+	return s.id()
+}
+
+// TraceIDStack 从 context 中读取历史 trace ID 栈
+func TraceIDStack(ctx context.Context) []string {
+	v := ctx.Value(traceIDKey{})
+	if v == nil {
+		return nil
+	}
+	s, _ := v.(traceIDStackyValue)
+	return slices.Clone(s)
+}
+
+// EnsureTraceID 确保 context 中有一个 trace ID
+func EnsureTraceID(ctx context.Context) context.Context {
+	traceID := TraceID(ctx)
+	if traceID == "" {
+		return WithTraceID(ctx, generateTraceID())
+	}
+	return ctx
+}
+
+func generateTraceID() string {
+	return objectid.New16().String()
 }

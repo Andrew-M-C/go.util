@@ -49,7 +49,7 @@ func (l consoleLog) log(a ...any) {
 
 func (l consoleLog) logCtxf(ctx context.Context, f string, a ...any) {
 	fu := l.getLogger()
-	id := trace.GetTraceID(ctx)
+	id := trace.TraceID(ctx)
 	ca := caller.GetCaller(internalGetCallerSkip())
 
 	if id == "" {
@@ -70,7 +70,7 @@ func (l consoleLog) logCtxf(ctx context.Context, f string, a ...any) {
 
 func (l consoleLog) logCtx(ctx context.Context, a ...any) {
 	fu := l.getLogger()
-	id := trace.GetTraceID(ctx)
+	id := trace.TraceID(ctx)
 	ca := caller.GetCaller(internalGetCallerSkip())
 	f := fmt.Sprintf("%s - %s - %s", timeDesc(), Level(l).String(), callerDesc(ca))
 	s := fmt.Sprint(a...)

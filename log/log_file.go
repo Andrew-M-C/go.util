@@ -99,7 +99,7 @@ func (l fileLog) log(a ...any) {
 }
 
 func (l fileLog) logCtxf(ctx context.Context, f string, a ...any) {
-	id := trace.GetTraceID(ctx)
+	id := trace.TraceID(ctx)
 	ca := caller.GetCaller(internalGetCallerSkip())
 	item := &logItem{
 		Time:     timeDesc(),
@@ -112,7 +112,7 @@ func (l fileLog) logCtxf(ctx context.Context, f string, a ...any) {
 }
 
 func (l fileLog) logCtx(ctx context.Context, a ...any) {
-	id := trace.GetTraceID(ctx)
+	id := trace.TraceID(ctx)
 	ca := caller.GetCaller(internalGetCallerSkip())
 	item := &logItem{
 		Time:     timeDesc(),

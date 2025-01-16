@@ -11,9 +11,11 @@ require (
 	github.com/Andrew-M-C/go.util/time v0.0.0-20240221044053-8b90aa4683c0
 	github.com/fatih/color v1.18.0
 	github.com/smartystreets/goconvey v1.8.1
+	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8
 )
 
 require (
+	github.com/Andrew-M-C/go.util/slice v0.0.0-20240221044053-8b90aa4683c0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
@@ -21,7 +23,6 @@ require (
 	github.com/smarty/assertions v1.15.0 // indirect
 	github.com/valyala/fastrand v1.1.0 // indirect
 	go.mongodb.org/mongo-driver v1.17.1 // indirect
-	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 )

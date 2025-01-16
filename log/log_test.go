@@ -87,7 +87,7 @@ func testDebugging(t *testing.T) {
 }
 
 func testAutoRemove(t *testing.T) {
-	ctx := trace.SetTraceID(context.Background(), "refill_test")
+	ctx := trace.WithTraceID(context.Background(), "refill_test")
 
 	logMany := func() {
 		for i := 0; i < 100000; i++ {
@@ -115,7 +115,7 @@ func testAutoRemove(t *testing.T) {
 }
 
 func testSetSkipCaller(t *testing.T) {
-	ctx := trace.SetTraceID(context.Background(), "testSetSkipCaller")
+	ctx := trace.WithTraceID(context.Background(), "testSetSkipCaller")
 
 	SetFileLevel(NoLog)
 	SetConsoleLevel(DebugLevel)
@@ -132,7 +132,7 @@ func testDyeing(t *testing.T) {
 	SetDyeingLevel(DebugLevel, DebugLevel) // 文件和日志都给调试级别的染色日志
 
 	ctx := context.Background()
-	ctx = trace.SetTraceID(ctx, "dyeing-test")
+	ctx = trace.WithTraceID(ctx, "dyeing-test")
 	ErrorContext(ctx, "这句日志不应该出现在命令行")
 
 	ctx = dyeing.WithDyeing(ctx, true)

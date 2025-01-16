@@ -21,27 +21,28 @@ func TestTrace(t *testing.T) {
 	cv("trace.go", t, func() { testTraceGo(t) })
 }
 
-func testTraceGo(t *testing.T) {
+func testTraceGo(*testing.T) {
 	cv("基本逻辑", func() {
 		ctx := context.Background()
-		so(trace.GetTraceID(ctx), eq, "")
+		so(trace.TraceID(ctx), eq, "")
 
 		traceID := "test_trace_id"
 		ctx = trace.WithTraceID(context.Background(), traceID)
-		so(trace.GetTraceID(ctx), eq, traceID)
+		so(trace.TraceID(ctx), eq, traceID)
 
 		ctx = trace.EnsureTraceID(ctx)
-		so(trace.GetTraceID(ctx), eq, traceID)
+		so(trace.TraceID(ctx), eq, traceID)
 	})
 
 	cv("EnsureTraceID", func() {
 		ctx := trace.EnsureTraceID(context.Background())
-		tid := trace.GetTraceID(ctx)
+		tid := trace.TraceID(ctx)
 
 		ctx = trace.EnsureTraceID(ctx)
-		so(trace.GetTraceID(ctx), eq, tid)
+		so(trace.TraceID(ctx), eq, tid)
 
-		ctx = trace.SetTraceID(ctx)
-		so(trace.GetTraceID(ctx), ne, tid)
+		ctx = trace.WithTraceID(ctx, "12345")
+		so(trace.TraceID(ctx), ne, tid)
+		so(trace.TraceID(ctx), eq, "12345")
 	})
 }
