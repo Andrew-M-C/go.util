@@ -9,6 +9,7 @@ use (
 	./bytes
 	./channel
 	./china
+	./china/admindivision/internal
 	./console
 	./constraints
 	./context

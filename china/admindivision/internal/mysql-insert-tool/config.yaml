@@ -1,0 +1,8 @@
+file_name: ./out.sql
+file_size: 10MB
+database:
+  username: root
+  password: 123456
+  host: 127.0.0.1
+  db: db_test
+  table_name: t_china_admin_districts

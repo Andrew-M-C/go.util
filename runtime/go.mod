@@ -5,7 +5,7 @@ go 1.21
 toolchain go1.21.3
 
 require (
-	github.com/Andrew-M-C/go.jsonvalue v1.4.0
+	github.com/Andrew-M-C/go.jsonvalue v1.4.1
 	github.com/Andrew-M-C/go.util/constraints v0.0.0-20240920040959-400d8f87c326
 	github.com/Andrew-M-C/go.util/time v0.0.0-20240221044053-8b90aa4683c0
 	github.com/smartystreets/goconvey v1.8.1

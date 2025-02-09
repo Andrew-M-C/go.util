@@ -6,7 +6,7 @@ toolchain go1.23.1
 
 require (
 	github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3
-	github.com/Andrew-M-C/go.jsonvalue v1.4.0
+	github.com/Andrew-M-C/go.jsonvalue v1.4.1
 	github.com/Andrew-M-C/go.util/log v0.0.0-20241118072554-b6cba35b72fb
 	github.com/Andrew-M-C/go.util/unsafe v0.0.0-20240924120445-d310ce87211e
 	github.com/smartystreets/goconvey v1.8.1
