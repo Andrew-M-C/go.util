@@ -20,6 +20,12 @@ import (
 	"golang.org/x/text/transform"
 )
 
+// Request 发起一个请求, 但是返回 *http.Response。适合 HTTP SSE 场景适配
+func Request(ctx context.Context, targetURL string, opts ...RequestOption) (*http.Response, error) {
+	o := mergeOptions(opts, json.Marshal)
+	return raw(ctx, targetURL, o)
+}
+
 // Raw 发起一个请求, 但是返回 []byte
 func Raw(ctx context.Context, targetURL string, opts ...RequestOption) (rsp []byte, err error) {
 	o := mergeOptions(opts, json.Marshal)
