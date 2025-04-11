@@ -23,6 +23,8 @@ type treeCapability[K constraints.Ordered, V any] interface {
 	Right() *Node[K, V]
 
 	Iterate(func(k K, v V) bool)
+
+	Remove(k K)
 }
 
 var _ treeCapability[int, struct{}] = (*Tree[int, struct{}])(nil)
@@ -169,4 +171,12 @@ func (t *Tree[K, V]) Iterate(f func(k K, v V) bool) {
 			break
 		}
 	}
+}
+
+// Remove 删除一个元素
+func (t *Tree[K, V]) Remove(key K) {
+	if t.tree == nil {
+		return
+	}
+	t.tree.Remove(key)
 }
