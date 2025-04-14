@@ -155,7 +155,7 @@ func MatchDivisionByName(name ...string) []*Division {
 }
 
 // SearchDivisionByName 按照一个行政区划名称搜索行政节点层级链, 必须以省级行政区开始查询,
-// 按照编辑距离 (levenshtein) 进行匹配查询
+// 首先按照前缀查询, 如果找不到, 则按照编辑距离 (levenshtein) 进行匹配查询
 func SearchDivisionByName(name ...string) []*Division {
 	if len(name) == 0 {
 		return nil
@@ -170,6 +170,10 @@ func SearchDivisionByName(name ...string) []*Division {
 		var closest *Division
 		distance = len(n)
 		for _, sub := range curr.SubDivisions() {
+			if strings.HasPrefix(sub.name, n) {
+				closest = sub
+				break
+			}
 			dist := levenshtein.ComputeDistance(sub.name, n)
 			if dist == 0 {
 				closest = sub

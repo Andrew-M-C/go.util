@@ -86,4 +86,10 @@ func TestDivisionByName(t *testing.T) {
 		so(len(chain), eq, 2)
 		so(ad.JoinDivisionCodes(chain), eq, "4419")
 	})
+
+	cv("前缀匹配", t, func() {
+		chain := ad.SearchDivisionByName("新疆", "乌鲁木齐")
+		so(len(chain), eq, 2)
+		so(ad.JoinDivisionCodes(chain), eq, "6501")
+	})
 }
