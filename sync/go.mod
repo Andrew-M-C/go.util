@@ -3,7 +3,7 @@ module github.com/Andrew-M-C/go.util/sync
 go 1.19
 
 require (
-	github.com/petermattis/goid v0.0.0-20240813172612-4fcff4a6cae7
+	github.com/petermattis/goid v0.0.0-20250319124200-ccd6737f222a
 	github.com/smartystreets/goconvey v1.8.1
 )
 

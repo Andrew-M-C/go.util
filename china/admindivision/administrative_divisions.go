@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/Andrew-M-C/go.util/slice"
+	"github.com/agnivade/levenshtein"
 )
 
 // AdministrativeLevel 行政层级
@@ -122,6 +123,80 @@ func SearchDivisionByCode(code string) []*Division {
 	}
 
 	return res
+}
+
+// MatchDivisionByName 按照一个行政区划名称搜索行政节点层级链, 必须以省级行政区开始查询,
+// 而且必须与数据库中的名称完全一致
+func MatchDivisionByName(name ...string) []*Division {
+	if len(name) == 0 {
+		return nil
+	}
+
+	// 从省级开始查起
+	var res []*Division
+	curr := china
+	for _, n := range name {
+		// 遍历当前节点寻找匹配的名称
+		found := false
+		for _, sub := range curr.SubDivisions() {
+			if sub.name != n {
+				continue
+			}
+			curr = sub
+			found = true
+			res = append(res, sub)
+			break
+		}
+		if !found {
+			return res
+		}
+	}
+	return res
+}
+
+// SearchDivisionByName 按照一个行政区划名称搜索行政节点层级链, 必须以省级行政区开始查询,
+// 按照编辑距离 (levenshtein) 进行匹配查询
+func SearchDivisionByName(name ...string) []*Division {
+	if len(name) == 0 {
+		return nil
+	}
+
+	// 从省级开始查起
+	var res []*Division
+	distance := 0
+	curr := china
+	for _, n := range name {
+		// 遍历当前节点寻找接近的名称
+		var closest *Division
+		distance = len(n)
+		for _, sub := range curr.SubDivisions() {
+			dist := levenshtein.ComputeDistance(sub.name, n)
+			if dist == 0 {
+				closest = sub
+				break
+			}
+			if dist < distance {
+				distance = dist
+				closest = sub
+			}
+		}
+		if closest == nil {
+			return res
+		}
+		res = append(res, closest)
+		curr = closest
+	}
+
+	return res
+}
+
+// JoinDivisionCodes 将一个区划链的代码连接成一个字符串。注意, 仅按照层级 join, 不包含最后的补零
+func JoinDivisionCodes(divisions []*Division) string {
+	buff := strings.Builder{}
+	for _, d := range divisions {
+		buff.WriteString(d.code)
+	}
+	return buff.String()
 }
 
 // DescribeDivisionChain 描述一个区划链

@@ -3,6 +3,7 @@ package admindivision_test
 import (
 	"os"
 	"testing"
+	"time"
 
 	ad "github.com/Andrew-M-C/go.util/china/admindivision"
 	"github.com/smartystreets/goconvey/convey"
@@ -66,5 +67,23 @@ func TestGeneral(t *testing.T) {
 		so(chain[0].Deprecated(), eq, false)
 		so(chain[1].Deprecated(), eq, true)
 		so(chain[2].Deprecated(), eq, true)
+	})
+}
+
+func TestDivisionByName(t *testing.T) {
+	cv("精确匹配", t, func() {
+		chain := ad.MatchDivisionByName("广东省", "东莞市")
+		so(len(chain), eq, 2)
+		so(ad.JoinDivisionCodes(chain), eq, "4419")
+	})
+
+	cv("模糊匹配", t, func() {
+		start := time.Now()
+		chain := ad.SearchDivisionByName("广东", "东莞")
+		ela := time.Since(start)
+		t.Logf("耗时: %v", ela)
+
+		so(len(chain), eq, 2)
+		so(ad.JoinDivisionCodes(chain), eq, "4419")
 	})
 }
