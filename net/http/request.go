@@ -10,11 +10,8 @@ import (
 	"io"
 	"net/http"
 	"net/url"
-	"strings"
 	"time"
 
-	"github.com/Andrew-M-C/go.util/log"
-	"github.com/Andrew-M-C/go.util/unsafe"
 	"golang.org/x/net/html/charset"
 	"golang.org/x/text/encoding"
 	"golang.org/x/text/transform"
@@ -128,7 +125,7 @@ func JSON[T any](ctx context.Context, targetURL string, opts ...RequestOption) (
 		return nil, errors.New("empty body from remote server")
 	}
 
-	o.debugf("response: '%s'", bytesStringer(b))
+	o.debugf("response: '%s'", b)
 	o.debugf("response header: %+v", httpRsp.Header)
 
 	b = decodeIfNecessary(o, b, httpRsp)
@@ -153,7 +150,7 @@ func XMLGetRspBody(ctx context.Context, targetURL string, opts ...RequestOption)
 		return nil, errors.New("empty body from remote server")
 	}
 
-	o.debugf("response: '%s'", bytesStringer(b))
+	o.debugf("response: '%s'", b)
 	o.debugf("response header: %+v", httpRsp.Header)
 
 	b = decodeIfNecessary(o, b, httpRsp)
@@ -201,12 +198,4 @@ func decodeIfNecessary(o *requestOption, b []byte, httpRsp *http.Response) []byt
 	}
 
 	return utf8Byte
-}
-
-func bytesStringer(b []byte) any {
-	s := unsafe.BtoS(b)
-	if !strings.Contains(s, "\n") {
-		return s
-	}
-	return log.ToJSON(s)
 }
