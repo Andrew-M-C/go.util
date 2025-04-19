@@ -2,12 +2,12 @@
 package admindivision
 
 import (
+	"fmt"
 	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/Andrew-M-C/go.util/slice"
-	"github.com/agnivade/levenshtein"
 )
 
 // AdministrativeLevel 行政层级
@@ -21,6 +21,19 @@ const (
 	// Village
 )
 
+func (l AdministrativeLevel) String() string {
+	switch l {
+	case Province:
+		return "省级行政区"
+	case City:
+		return "市级行政区"
+	case County:
+		return "区县级行政区"
+	default:
+		return fmt.Sprintf("非法值 %d", l)
+	}
+}
+
 // Division 表示一级行政区划
 type Division struct {
 	level    AdministrativeLevel
@@ -31,6 +44,10 @@ type Division struct {
 	sub      []*Division
 	// 是否历史已弃用的行政区划
 	deprecated bool
+}
+
+func (d Division) String() string {
+	return fmt.Sprintf("%s (%v, %v)", d.name, d.level, d.code)
 }
 
 // Level 返回行政层级
@@ -71,7 +88,7 @@ func (d *Division) SubDivisions() []*Division {
 	return slices.Clone(d.sub)
 }
 
-// SubDivisionByCode 按下一层及的子代码查询行政区划, 如果查不到则返回 nil
+// SubDivisionByCode 按下一层级的子代码查询行政区划, 如果查不到则返回 nil
 func (d *Division) SubDivisionByCode(code string) *Division {
 	target := &Division{
 		code: code,
@@ -155,7 +172,7 @@ func MatchDivisionByName(name ...string) []*Division {
 }
 
 // SearchDivisionByName 按照一个行政区划名称搜索行政节点层级链, 必须以省级行政区开始查询,
-// 首先按照前缀查询, 如果找不到, 则按照编辑距离 (levenshtein) 进行匹配查询
+// 如果查找不到则按照前缀匹配
 func SearchDivisionByName(name ...string) []*Division {
 	if len(name) == 0 {
 		return nil
@@ -163,35 +180,100 @@ func SearchDivisionByName(name ...string) []*Division {
 
 	// 从省级开始查起
 	var res []*Division
-	distance := 0
 	curr := china
 	for _, n := range name {
-		// 遍历当前节点寻找接近的名称
-		var closest *Division
-		distance = len(n)
-		for _, sub := range curr.SubDivisions() {
-			if strings.HasPrefix(sub.name, n) {
-				closest = sub
-				break
-			}
-			dist := levenshtein.ComputeDistance(sub.name, n)
-			if dist == 0 {
-				closest = sub
-				break
-			}
-			if dist < distance {
-				distance = dist
-				closest = sub
-			}
-		}
+		closest := findClosestDivision(curr, n)
 		if closest == nil {
-			return res
+			break
 		}
 		res = append(res, closest)
 		curr = closest
 	}
 
+	// 判断是不是省直辖行政区划
+	if len(res) == 1 && len(name) == 2 {
+		res = searchDivisionByNameAndTryDirectCounty(res, name)
+	}
+	// 判断是不是直辖市行政区划
+	if len(res) == 1 && len(name) == 2 {
+		res = searchDivisionByNameAndTryDirectCity(res, name)
+	}
+	// 重庆市下辖县的情况
+	if len(res) == 1 && len(name) == 2 {
+		res = searchDivisionByNameAndTryChongqingCounty(res, name)
+	}
+
 	return res
+}
+
+// searchDivisionByNameAndTryDirectCounty 是 SearchDivisionByName 的子函数, 用于处理直辖市行政区划
+func searchDivisionByNameAndTryDirectCounty(res []*Division, name []string) []*Division {
+	// 看看有没有省直辖行政区划节点
+	directAdmin := res[0].SubDivisionByCode("90")
+	if directAdmin == nil {
+		return res // 找不到, 算了
+	}
+	// 从省直辖行政区划节点开始重新查询
+	sub := findClosestDivision(directAdmin, name[1])
+	if sub == nil {
+		return res
+	}
+	return append(res, directAdmin, sub)
+}
+
+// 处理直辖市行政区划
+func searchDivisionByNameAndTryDirectCity(res []*Division, name []string) []*Division {
+	// 首先看看是不是直辖市
+	switch res[0].code {
+	case "11", "12", "31", "50":
+		// continue
+	default:
+		return res // 不是直辖市, 不需要检查
+	}
+
+	// 看看有没有直辖市行政区划节点
+	directAdmin := res[0].SubDivisionByCode("01")
+	if directAdmin == nil {
+		return res // 找不到, 算了
+	}
+	sub := findClosestDivision(directAdmin, name[1])
+	if sub == nil {
+		return res
+	}
+	return append(res, directAdmin, sub)
+}
+
+// 处理重庆市下面的县。其他的几个直辖市没有县
+func searchDivisionByNameAndTryChongqingCounty(res []*Division, name []string) []*Division {
+	if res[0].code != "50" {
+		return res // 不是重庆市, 不需要检查
+	}
+
+	// 县
+	directAdmin := res[0].SubDivisionByCode("02")
+	if directAdmin == nil {
+		return res // 找不到, 算了
+	}
+	sub := findClosestDivision(directAdmin, name[1])
+	if sub == nil {
+		return res
+	}
+	return append(res, directAdmin, sub)
+}
+
+func findClosestDivision(curr *Division, name string) *Division {
+	// 遍历当前节点寻找接近的名称
+	var closest *Division
+	for _, sub := range curr.SubDivisions() {
+		if strings.HasPrefix(sub.name, name) {
+			if !sub.deprecated {
+				closest = sub
+				break
+			}
+			closest = sub
+		}
+	}
+	return closest
 }
 
 // JoinDivisionCodes 将一个区划链的代码连接成一个字符串。注意, 仅按照层级 join, 不包含最后的补零

@@ -53,6 +53,12 @@ func TestGeneral(t *testing.T) {
 		so(desc310101, eq, "上海市/黄浦区")
 	})
 
+	cv("重庆市", t, func() {
+		chain := ad.SearchDivisionByCode("500237")
+		desc := ad.DescribeDivisionChain(chain, "/")
+		so(desc, eq, "重庆市/县/巫山县")
+	})
+
 	cv("神农架林区", t, func() {
 		chain := ad.SearchDivisionByCode("429021")
 		desc := ad.DescribeDivisionChain(chain, "/")
@@ -91,5 +97,33 @@ func TestDivisionByName(t *testing.T) {
 		chain := ad.SearchDivisionByName("新疆", "乌鲁木齐")
 		so(len(chain), eq, 2)
 		so(ad.JoinDivisionCodes(chain), eq, "6501")
+	})
+
+	cv("省直辖县级行政区", t, func() {
+		// 首先尝试正确的行政区划
+		chain := ad.SearchDivisionByName("湖北", "省直辖县", "神农架林区")
+		t.Log(chain)
+		so(len(chain), eq, 3)
+		so(ad.JoinDivisionCodes(chain), eq, "429021")
+
+		// 然后尝试错误的行政区划
+		chain = ad.SearchDivisionByName("湖北", "神农架林区")
+		t.Log(chain)
+		so(len(chain), eq, 3)
+		so(ad.JoinDivisionCodes(chain), eq, "429021")
+	})
+
+	cv("直辖市", t, func() {
+		chain := ad.SearchDivisionByName("重庆", "渝北")
+		t.Log(chain)
+		so(len(chain), eq, 3)
+		so(ad.JoinDivisionCodes(chain), eq, "500112")
+	})
+
+	cv("重庆市下面的县", t, func() {
+		chain := ad.SearchDivisionByName("重庆", "巫山")
+		t.Log(chain)
+		so(len(chain), eq, 3)
+		so(ad.JoinDivisionCodes(chain), eq, "500237")
 	})
 }

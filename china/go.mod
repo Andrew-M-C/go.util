@@ -7,7 +7,6 @@ toolchain go1.23.1
 require (
 	github.com/Andrew-M-C/go.util/slice v0.0.0-20250411024944-dc1445c96c13
 	github.com/Andrew-M-C/go.util/sync v0.0.0-20250411024944-dc1445c96c13
-	github.com/agnivade/levenshtein v1.2.1
 	github.com/fatih/color v1.18.0
 	github.com/smartystreets/goconvey v1.8.1
 )
