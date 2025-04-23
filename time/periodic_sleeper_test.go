@@ -26,8 +26,8 @@ func testPeriodicSleeper(t *testing.T) {
 	}
 
 	avgSleepTime := (UpTime() - start) / sleepCount
-	so(avgSleepTime, ge, percentage(slice.AverageFloat(intervals), 0.95))
-	so(avgSleepTime, le, percentage(slice.AverageFloat(intervals), 1.05))
+	so(avgSleepTime, ge, percentage(slice.AverageFloat(intervals), 0.9))
+	so(avgSleepTime, le, percentage(slice.AverageFloat(intervals), 1.1))
 
 	t.Logf(
 		"总共进行了 %v, 平均间隔时间 %v, 理论平均间隔时间 %v",

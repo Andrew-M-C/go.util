@@ -16,6 +16,11 @@ var (
 	eq = convey.ShouldEqual
 	le = convey.ShouldBeLessThanOrEqualTo
 	ge = convey.ShouldBeGreaterThanOrEqualTo
+
+	isNil  = convey.ShouldBeNil
+	notNil = convey.ShouldNotBeNil
+
+	hasSubStr = convey.ShouldContainSubstring
 )
 
 func TestTime(t *testing.T) {
@@ -30,6 +35,7 @@ func TestTime(t *testing.T) {
 	cv("测试 PeriodicSleeper", t, func() { testPeriodicSleeper(t) })
 	cv("测试 Tick", t, func() { testTick(t) })
 	cv("测试 UnixFloat", t, func() { testUnixFloat(t) })
+	cv("测试 TimeSection", t, func() { testTimeSection(t) })
 }
 
 type number interface {
