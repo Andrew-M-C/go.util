@@ -10,7 +10,7 @@ require (
 )
 
 require (
-	github.com/Andrew-M-C/go.emoji v1.1.2 // indirect
+	github.com/Andrew-M-C/go.emoji v1.1.4 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/kballard/go-shellquote v0.0.0-20180428030007-95032a82bc51 // indirect
