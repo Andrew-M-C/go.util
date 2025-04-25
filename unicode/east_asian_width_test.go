@@ -13,6 +13,7 @@ func testEastAsianWidth(t *testing.T) {
 	cv("简单打印数据情况", func() { testEastAsianWidthPrintInternalData(t) })
 	cv("基本功能", func() { testEastAsianWidthBasicFunction(t) })
 	cv("测试 EastAsianDisplayWidth", func() { testEastAsianDisplayWidth(t) })
+	cv("测试 CutSetWithMaxDisplayWidth", func() { testCutSetWithMaxDisplayWidth(t) })
 }
 
 func testEastAsianWidthPrintInternalData(t *testing.T) {
@@ -63,7 +64,7 @@ func testEastAsianWidthPrintInternalData(t *testing.T) {
 
 	// t.Logf("完整的汉字列表:\n%s", buff.String())
 	const outfile = "./.all_runes.txt"
-	os.WriteFile(outfile, buff.Bytes(), 0644)
+	_ = os.WriteFile(outfile, buff.Bytes(), 0644)
 }
 
 func testEastAsianWidthBasicFunction(t *testing.T) {
@@ -89,7 +90,7 @@ func testEastAsianWidthBasicFunction(t *testing.T) {
 	}
 }
 
-func testEastAsianDisplayWidth(t *testing.T) {
+func testEastAsianDisplayWidth(*testing.T) {
 	s := "一二三四五"
 	w := EastAsianDisplayWidth(s)
 	so(w, eq, 10)
@@ -97,4 +98,26 @@ func testEastAsianDisplayWidth(t *testing.T) {
 	s = "\t一二三四五"
 	w = EastAsianDisplayWidth(s, WithTabWidth(4))
 	so(w, eq, 14)
+}
+
+func testCutSetWithMaxDisplayWidth(*testing.T) {
+	s := "一二三四五六七八九十😊"
+
+	res := CutSetWithMaxDisplayWidth(s, 8)
+	so(res, eq, "一二三四")
+
+	res = CutSetWithMaxDisplayWidth(s, 9)
+	so(res, eq, "一二三四")
+
+	res = CutSetWithMaxDisplayWidth(s, 10)
+	so(res, eq, "一二三四五")
+
+	res = CutSetWithMaxDisplayWidth(s, 20)
+	so(res, eq, "一二三四五六七八九十")
+
+	res = CutSetWithMaxDisplayWidth(s, 21)
+	so(res, eq, "一二三四五六七八九十")
+
+	res = CutSetWithMaxDisplayWidth(s, 22)
+	so(res, eq, "一二三四五六七八九十😊")
 }

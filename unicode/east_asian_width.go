@@ -1,6 +1,7 @@
 package unicode
 
 import (
+	"bytes"
 	_ "embed"
 	"fmt"
 	"strconv"
@@ -102,6 +103,44 @@ func eastAsianStringWidth(s string) int {
 	return width
 }
 
+// CutSetWithMaxDisplayWidth 返回一个字符串，该字符串在东亚字符集中的展示宽度不超过 maxWidth
+func CutSetWithMaxDisplayWidth(s string, maxWidth int) string {
+	if maxWidth <= 0 {
+		return ""
+	}
+	buff := bytes.Buffer{}
+	total := 0
+
+	for it := emoji.IterateChars(s); it.Next(); {
+		s := it.Current()
+		width := 0
+		r := firstRune(s)
+		if it.CurrentIsEmoji() {
+			width = 2
+		} else if w, exist := internal.eastAsianWidth[r]; exist {
+			width = w
+		} else {
+			width = 1
+		}
+		if total+width > maxWidth {
+			break
+		}
+		total += width
+		buff.WriteString(s)
+	}
+	return buff.String()
+}
+
+func firstRune(s string) rune {
+	if s == "" {
+		return 0
+	}
+	for _, r := range s {
+		return r
+	}
+	return 0
+}
+
 //go:generate rm -f EastAsianWidth.txt
 //go:generate wget http://www.unicode.org/Public/UCD/latest/ucd/EastAsianWidth.txt
 
@@ -146,7 +185,7 @@ func parseStandardLine(line string) {
 		return
 	}
 
-	width := 1
+	var width int
 	switch property {
 	default:
 		fallthrough
