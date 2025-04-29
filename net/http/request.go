@@ -32,7 +32,7 @@ func Raw(ctx context.Context, targetURL string, opts ...RequestOption) (rsp []by
 	}
 	defer httpRsp.Body.Close()
 
-	return readBody(o, httpRsp.Body)
+	return readBody(o, httpRsp.Header.Get("Content-Encoding"), httpRsp.Body)
 }
 
 func raw(ctx context.Context, targetURL string, o *requestOption) (*http.Response, error) {
@@ -77,34 +77,19 @@ func raw(ctx context.Context, targetURL string, o *requestOption) (*http.Respons
 	return httpRsp, nil
 }
 
-func readBody(o *requestOption, body io.ReadCloser) ([]byte, error) {
-	if o.progressCB == nil {
-		b, err := io.ReadAll(body)
-		if err != nil {
-			return nil, fmt.Errorf("io.ReadAll error (%w)", err)
-		}
-		return b, nil
-	}
-
-	buff := &bytes.Buffer{}
-	w := io.MultiWriter(buff, o.progress)
-	if _, err := io.Copy(w, body); err != nil {
-		return nil, fmt.Errorf("io.ReadAll error (%w)", err)
-	}
-
-	return buff.Bytes(), nil
-}
-
 // rawAndRead raw 请求并 io.ReadAll, 拿到的 response 无需 close
 func rawAndRead(ctx context.Context, targetURL string, o *requestOption) (*http.Response, []byte, error) {
 	rsp, err := raw(ctx, targetURL, o)
 	if err != nil {
 		return rsp, nil, err
 	}
-
 	defer rsp.Body.Close()
 
-	b, err := readBody(o, rsp.Body)
+	for k, v := range rsp.Header {
+		o.debugf("response header: %s: %s", k, v)
+	}
+
+	b, err := readBody(o, rsp.Header.Get("Content-Encoding"), rsp.Body)
 	if err != nil {
 		return rsp, nil, err
 	}

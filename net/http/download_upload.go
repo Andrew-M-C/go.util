@@ -44,7 +44,7 @@ func DownloadFile(
 	}
 
 	// 读取正文
-	content, err = readBody(o, httpRsp.Body)
+	content, err = readBody(o, httpRsp.Header.Get("Content-Encoding"), httpRsp.Body)
 	if err != nil {
 		return fileName, nil, fmt.Errorf("read body error (%w)", err)
 	}
