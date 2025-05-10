@@ -2,6 +2,7 @@ package http
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -81,14 +82,16 @@ type requestOption struct {
 	query  url.Values
 	debugf func(string, ...any)
 
-	rspCharset encoding.Encoding
-	marshaler  marshalerType
+	rspCharset  encoding.Encoding
+	marshaler   marshalerType
+	unmarshaler unmarshalerType
 
 	progressCB func(*RequestProgress)
 	progress   *requestProgressWriter
 }
 
 type marshalerType func(any) ([]byte, error)
+type unmarshalerType func([]byte, any) error
 
 func (o *requestOption) getBody() (io.Reader, error) {
 	if o.body == nil {
@@ -108,12 +111,13 @@ func (o *requestOption) getBody() (io.Reader, error) {
 
 func mergeOptions(opts []RequestOption, marshaler marshalerType) *requestOption {
 	o := &requestOption{
-		method:    "GET",
-		header:    http.Header{},
-		body:      nil,
-		query:     url.Values{},
-		debugf:    func(s string, a ...any) {},
-		marshaler: marshaler,
+		method:      "GET",
+		header:      http.Header{},
+		body:        nil,
+		query:       url.Values{},
+		debugf:      func(s string, a ...any) {},
+		marshaler:   marshaler,
+		unmarshaler: json.Unmarshal,
 	}
 	for _, f := range opts {
 		if f != nil {
