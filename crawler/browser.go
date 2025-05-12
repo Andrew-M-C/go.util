@@ -1,0 +1,218 @@
+package crawler
+
+import (
+	"bytes"
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+	"sync/atomic"
+	"time"
+
+	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/page"
+	"github.com/chromedp/chromedp"
+	"golang.org/x/net/html"
+)
+
+// NewBrowser 新建一个浏览器
+func NewBrowser(ctx context.Context) context.Context {
+	opts := append(chromedp.DefaultExecAllocatorOptions[:],
+		// 打开无头模式
+		chromedp.Flag("headless", true),
+		// 设置用户代理，模拟浏览器访问
+		chromedp.Flag("user-agent", "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "+
+			"AppleWebKit/537.36 (KHTML, like Gecko) Chrome/135.0.0.0 Safari/537.36"),
+		// 设置浏览器窗口大小
+		chromedp.WindowSize(1150, 1000),
+		// 设置语言
+		chromedp.Flag("lang", "zh-CN"),
+		// 防止监测webdriver
+		chromedp.Flag("enable-automation", false),
+		// 禁用blink特征，减少自动化检测
+		chromedp.Flag("disable-blink-features", "AutomationControlled"),
+		// 忽略证书错误
+		chromedp.Flag("ignore-certificate-errors", true),
+		// 关闭浏览器声音
+		chromedp.Flag("mute-audio", false),
+		// 再次设置浏览器窗口大小，确保覆盖默认值
+		chromedp.WindowSize(1150, 1000),
+		// 禁用图片加载
+		chromedp.Flag("blink-settings", "imagesEnabled=false"),
+		// 禁用视频预加载
+		chromedp.Flag("autoplay-policy", "user-gesture-required"),
+	)
+
+	ctx, cancel := chromedp.NewExecAllocator(ctx, opts...)
+	cancler := &canceler{
+		fn: cancel,
+	}
+	return context.WithValue(ctx, cancelerKey{}, cancler)
+}
+
+// CloseBrowser 关闭浏览器
+func CloseBrowser(ctx context.Context) {
+	v := ctx.Value(cancelerKey{})
+	if v == nil {
+		return
+	}
+	c, _ := v.(*canceler)
+	if c == nil {
+		return
+	}
+	if c.closed.CompareAndSwap(false, true) {
+		c.fn()
+	}
+}
+
+type cancelerKey struct{}
+
+type canceler struct {
+	fn     context.CancelFunc
+	closed atomic.Bool
+}
+
+func isBrowser(ctx context.Context) bool {
+	v := ctx.Value(cancelerKey{})
+	if v == nil {
+		return false
+	}
+	c, _ := v.(*canceler)
+	return c != nil && !c.closed.Load()
+}
+
+// GetHTML 下载 html 静态内容
+func GetHTML(ctx context.Context, targetURL string, opts ...Option) (string, error) {
+	o := mergeOptions(opts...)
+
+	// 确保这是经过 NewBrowser 创建的浏览器
+	if !isBrowser(ctx) {
+		return "", errors.New("请先使用 NewBrowser 创建浏览器")
+	}
+
+	// 存储渲染后的 HTML
+	var htmlContent string
+
+	// 用于执行具体的浏览器操作，设置日志级别为 ERROR 以过滤掉警告
+	ctx, cancel := chromedp.NewContext(ctx, chromedp.WithLogf(func(format string, args ...interface{}) {
+		if strings.Contains(format, "unhandled page event") {
+			return // 忽略未处理的页面事件警告
+		}
+		o.debug(format, args...)
+	}))
+	defer cancel() // 确保在函数结束时释放资源
+
+	// 执行浏览器操作
+	start := time.Now()
+	err := chromedp.Run(ctx,
+		// 添加事件监听器
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			chromedp.ListenTarget(ctx, func(ev interface{}) {
+				switch e := ev.(type) {
+				case *page.EventFrameStartedNavigating: //nolint:typecheck
+					o.debug("开始导航: 到 %s", e.URL)
+				case *page.EventFrameNavigated:
+					o.debug("导航完成: %s (加载方式: %s)", e.Frame.URL, e.Frame.LoaderID)
+				case *page.EventFrameStoppedLoading:
+					o.debug("导航停止: %s", e.FrameID)
+				case *page.EventLoadEventFired:
+					o.debug("页面加载完成，耗时: %v", time.Since(start))
+				case *page.EventDomContentEventFired:
+					o.debug("DOM内容加载完成, 耗时: %v", time.Since(start))
+				default:
+					// 记录其他类型的导航事件
+					if ev != nil {
+						o.debug("其他导航事件: %T", ev)
+					}
+				}
+			})
+			return nil
+		}),
+		chromedp.Navigate(targetURL),
+		// 同时处理超时和正常流程
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			select {
+			case <-ctx.Done():
+				// 超时触发：停止加载并捕获当前 HTML
+				_ = chromedp.Evaluate("window.stop()", nil).Do(ctx)
+				// 使用 DOM 方法获取 HTML（兼容原有逻辑）
+				node, _ := dom.GetDocument().Do(ctx)
+				if node != nil {
+					html, _ := dom.GetOuterHTML().WithNodeID(node.NodeID).Do(ctx)
+					htmlContent = html
+				}
+			default:
+				// 正常流程：等待 5 秒后获取 HTML
+				_ = chromedp.Sleep(5 * time.Second).Do(ctx)
+				node, err := dom.GetDocument().Do(ctx)
+				if err != nil {
+					return err
+				}
+				html, err := dom.GetOuterHTML().WithNodeID(node.NodeID).Do(ctx)
+				if err != nil {
+					return fmt.Errorf("GetOuterHTML().WithNodeID(%v) 失败 (%w)", node.NodeID, err)
+				}
+				htmlContent = html
+			}
+			return nil
+		}),
+	)
+	if err != nil {
+		return "", fmt.Errorf("执行 chrome 操作失败 (%w)", err)
+	}
+
+	if len(targetURL) > 50 {
+		o.debug("耗时 %v - %s...", time.Since(start), targetURL[:50])
+	} else {
+		o.debug("耗时 %v - %s", time.Since(start), targetURL)
+	}
+	return htmlContent, nil
+}
+
+// ExtractText 提取出所有文本
+func ExtractText(htmlBody string) (string, error) {
+	// 比较粗糙地解析 HTML 并提取链接, 尝试解析出下一页
+	rawDoc, err := html.Parse(strings.NewReader(htmlBody))
+	if err != nil {
+		return "", fmt.Errorf("解析响应失败 (%w)", err)
+	}
+
+	buff := &bytes.Buffer{}
+	findText(rawDoc, buff)
+	return buff.String(), nil
+}
+
+func findText(n *html.Node, buff *bytes.Buffer) {
+	// 首先是节点本身
+	switch n.Type {
+	case html.TextNode:
+		if s := n.Data; s != "" {
+			buff.WriteRune('\n')
+			buff.WriteString(n.Data)
+		}
+
+	case html.ElementNode: // 如果是节点类型, 那么要判断一下是否应该跳过
+		if isExcludedTag(n.Data) {
+			return // 全部跳过, 包括子节点
+		}
+
+	default:
+		// 什么都不做
+	}
+
+	// 然后是子节点
+	for child := n.FirstChild; child != nil; child = child.NextSibling {
+		findText(child, buff)
+	}
+}
+
+// 判断是否需要排除的标签
+func isExcludedTag(tagName string) bool {
+	excludedTags := []string{"script", "style", "nav", "footer", "header", "link", "meta", "aside"}
+	for _, tag := range excludedTags {
+		if tag == tagName {
+			return true
+		}
+	}
+	return false
+}
