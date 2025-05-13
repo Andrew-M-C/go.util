@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/chromedp/cdproto/dom"
+	"github.com/chromedp/cdproto/network"
 	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 	"golang.org/x/net/html"
@@ -81,17 +82,24 @@ func isBrowser(ctx context.Context) bool {
 	return c != nil && !c.closed.Load()
 }
 
-// GetHTML 下载 html 静态内容
-func GetHTML(ctx context.Context, targetURL string, opts ...Option) (string, error) {
+// HTMLResult 存储HTML内容和Cookie信息
+type HTMLResult struct {
+	Content string            // HTML内容
+	Cookies []*network.Cookie // Cookie信息
+}
+
+// GetHTML 下载 html 静态内容和网站设置的cookie
+func GetHTML(ctx context.Context, targetURL string, opts ...Option) (*HTMLResult, error) {
 	o := mergeOptions(opts...)
 
 	// 确保这是经过 NewBrowser 创建的浏览器
 	if !isBrowser(ctx) {
-		return "", errors.New("请先使用 NewBrowser 创建浏览器")
+		return nil, errors.New("请先使用 NewBrowser 创建浏览器")
 	}
 
 	// 存储渲染后的 HTML
 	var htmlContent string
+	var cookies []*network.Cookie
 
 	// 用于执行具体的浏览器操作，设置日志级别为 ERROR 以过滤掉警告
 	ctx, cancel := chromedp.NewContext(ctx, chromedp.WithLogf(func(format string, args ...interface{}) {
@@ -141,6 +149,8 @@ func GetHTML(ctx context.Context, targetURL string, opts ...Option) (string, err
 					html, _ := dom.GetOuterHTML().WithNodeID(node.NodeID).Do(ctx)
 					htmlContent = html
 				}
+				// 获取Cookie
+				cookies, _ = network.GetCookies().Do(ctx)
 			default:
 				// 正常流程：等待 5 秒后获取 HTML
 				_ = chromedp.Sleep(5 * time.Second).Do(ctx)
@@ -153,12 +163,18 @@ func GetHTML(ctx context.Context, targetURL string, opts ...Option) (string, err
 					return fmt.Errorf("GetOuterHTML().WithNodeID(%v) 失败 (%w)", node.NodeID, err)
 				}
 				htmlContent = html
+
+				// 获取Cookie
+				cookies, err = network.GetCookies().Do(ctx)
+				if err != nil {
+					return fmt.Errorf("获取Cookie失败 (%w)", err)
+				}
 			}
 			return nil
 		}),
 	)
 	if err != nil {
-		return "", fmt.Errorf("执行 chrome 操作失败 (%w)", err)
+		return nil, fmt.Errorf("执行 chrome 操作失败 (%w)", err)
 	}
 
 	if len(targetURL) > 50 {
@@ -166,7 +182,11 @@ func GetHTML(ctx context.Context, targetURL string, opts ...Option) (string, err
 	} else {
 		o.debug("耗时 %v - %s", time.Since(start), targetURL)
 	}
-	return htmlContent, nil
+
+	return &HTMLResult{
+		Content: htmlContent,
+		Cookies: cookies,
+	}, nil
 }
 
 // ExtractText 提取出所有文本

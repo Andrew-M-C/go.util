@@ -56,12 +56,12 @@ func getBingBody(ctx context.Context, keywords string, o *options) (string, erro
 	o.debug("target URL: '%s'", finalTargetURL)
 
 	start := time.Now()
-	body, err := GetHTML(ctx, finalTargetURL)
+	res, err := GetHTML(ctx, finalTargetURL)
 	ela := time.Since(start)
 	if err != nil {
 		return "", err
 	}
 
 	o.debug("搜索 '%s' 耗时 %v", keywords, ela)
-	return body, nil
+	return res.Content, nil
 }
