@@ -25,7 +25,8 @@ func ReadSSEJsonData[T any](
 	reader := bufio.NewReader(r)
 	var data string
 
-	for {
+	gotEOF := false
+	for !gotEOF || data != "" {
 		// 检查上下文是否已取消
 		select {
 		case <-ctx.Done():
@@ -35,12 +36,14 @@ func ReadSSEJsonData[T any](
 
 		line, err := reader.ReadString('\n')
 		if err != nil {
-			if errors.Is(err, io.EOF) {
-				o.debugf("Got '%v'", err)
+			if !errors.Is(err, io.EOF) {
+				o.debugf("Error: '%v'", err)
+				return err
+			}
+			o.debugf("Got '%v'", err)
+			if data == "" {
 				break
 			}
-			o.debugf("Error: '%v'", err)
-			return err
 		}
 
 		// 去除行尾的 \n 或 \r\n
@@ -51,6 +54,13 @@ func ReadSSEJsonData[T any](
 		if line == "" && data != "" {
 			var event T
 			if err := json.Unmarshal([]byte(data), &event); err != nil {
+				cb := o.sseUnmarshalErrorCB
+				o.debugf("Unmarshal error: %v, data: '%s', callback: %v", err, data, cb != nil)
+				if cb != nil {
+					cb(err, data)
+					data = ""
+					continue
+				}
 				return err
 			}
 

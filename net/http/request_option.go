@@ -75,6 +75,14 @@ func WithProgressCallback(cb func(*RequestProgress)) RequestOption {
 	}
 }
 
+// WithSSEUnmarshalErrorCallback 指定反序列化错误回调, 用在 SSE 场景。当反序列化失败时,
+// 调用该回调, 而不返回错误 (相当于出错但 continue)
+func WithSSEUnmarshalErrorCallback(cb func(error, string)) RequestOption {
+	return func(ro *requestOption) {
+		ro.sseUnmarshalErrorCB = cb
+	}
+}
+
 type requestOption struct {
 	method string
 	header http.Header
@@ -88,6 +96,8 @@ type requestOption struct {
 
 	progressCB func(*RequestProgress)
 	progress   *requestProgressWriter
+
+	sseUnmarshalErrorCB func(error, string)
 }
 
 type marshalerType func(any) ([]byte, error)

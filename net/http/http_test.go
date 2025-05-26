@@ -21,6 +21,7 @@ var (
 	gt = convey.ShouldBeGreaterThan
 
 	isNil = convey.ShouldBeNil
+	isErr = convey.ShouldBeError
 )
 
 func TestMain(m *testing.M) {

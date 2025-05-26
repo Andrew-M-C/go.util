@@ -72,4 +72,34 @@ func TestReadSSEJsonData(t *testing.T) {
 		so(readEvents[0].Data, eq, "hello1")
 		so(readEvents[1].Data, eq, "hello2")
 	})
+
+	cv("反序列化错误回调", t, func() {
+		body := "" +
+			`data: {"event": "message", "data": "hello1"}` + "\n\n" +
+			`data: {"event": "message", "data": "hello2"}` + "\n\n" +
+			`data: DONE` + "\n"
+		r := strings.NewReader(body)
+
+		handler := func(event) { /* do nothing */ }
+
+		cv("没有回调", func() {
+			err := http.ReadSSEJsonData(context.Background(), r, handler,
+				http.WithDebugger(t.Logf),
+			)
+			so(err, isErr)
+		})
+
+		cv("有回调", func() {
+			gotUnmarshalError := false
+			errHandler := func(err error, data string) {
+				t.Logf("err: %v, data: %s", err, data)
+				gotUnmarshalError = true
+			}
+			err := http.ReadSSEJsonData(context.Background(), r, handler,
+				http.WithDebugger(t.Logf), http.WithSSEUnmarshalErrorCallback(errHandler),
+			)
+			so(err, isNil)
+			so(gotUnmarshalError, eq, true)
+		})
+	})
 }
