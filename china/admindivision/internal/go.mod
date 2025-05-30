@@ -5,7 +5,7 @@ go 1.22.0
 require (
 	github.com/Andrew-M-C/go.jsonvalue v1.4.1
 	github.com/Andrew-M-C/go.util/net v0.0.0-20250116061329-8e3db2afac06
-	github.com/Andrew-M-C/go.util/slice v0.0.0-20250116061329-8e3db2afac06
+	github.com/Andrew-M-C/go.util/slices v0.0.0-20250530091121-67b21a300cc2
 	github.com/go-sql-driver/mysql v1.8.1
 	github.com/inhies/go-bytesize v0.0.0-20220417184213-4913239db9cf
 	github.com/jmoiron/sqlx v1.4.0
@@ -19,6 +19,7 @@ require (
 	github.com/Andrew-M-C/go.util/constraints v0.0.0-20241118072554-b6cba35b72fb // indirect
 	github.com/Andrew-M-C/go.util/log v0.0.0-20241118072554-b6cba35b72fb // indirect
 	github.com/Andrew-M-C/go.util/runtime v0.0.0-20241118072554-b6cba35b72fb // indirect
+	github.com/Andrew-M-C/go.util/slice v0.0.0-20250116061329-8e3db2afac06 // indirect
 	github.com/Andrew-M-C/go.util/time v0.0.0-20241118072554-b6cba35b72fb // indirect
 	github.com/Andrew-M-C/go.util/unsafe v0.0.0-20240924120445-d310ce87211e // indirect
 	github.com/fatih/color v1.18.0 // indirect

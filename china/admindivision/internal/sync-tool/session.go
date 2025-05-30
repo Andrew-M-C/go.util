@@ -9,7 +9,7 @@ import (
 	"time"
 
 	"github.com/Andrew-M-C/go.util/net/http"
-	"github.com/Andrew-M-C/go.util/slice"
+	"github.com/Andrew-M-C/go.util/slices"
 )
 
 const (
@@ -35,7 +35,7 @@ func searchSubNode(sub []*node, code string) *node {
 	target := &node{
 		code: code,
 	}
-	i := slice.BinarySearchOne(sub, target, func(a, b *node) int {
+	i := slices.BinarySearchOne(sub, target, func(a, b *node) int {
 		return strings.Compare(a.code, b.code)
 	})
 	if i < 0 {

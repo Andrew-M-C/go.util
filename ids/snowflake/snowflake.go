@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/Andrew-M-C/go.util/runtime"
-	"github.com/Andrew-M-C/go.util/slice"
+	"github.com/Andrew-M-C/go.util/slices"
 	"github.com/bwmarrin/snowflake"
 )
 
@@ -149,7 +149,7 @@ func getNodeIDByHostname(info runtime.AllStatic) int64 {
 		return 0
 	}
 	b := []byte(name)
-	slice.Reverse(b)
+	slices.Reverse(b)
 	id := binary.BigEndian.Uint32(b[len(b)-4:])
 	internal.source = fmt.Sprintf("stripped and reversed hostname '%s' (%s)", b, info.Host.Hostname)
 	return int64(id)

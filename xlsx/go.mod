@@ -1,16 +1,20 @@
 module github.com/Andrew-M-C/go.util/xlsx
 
-go 1.19
+go 1.21
+
+toolchain go1.23.5
 
 require (
 	github.com/Andrew-M-C/go.util/maps v0.0.0-20240221044053-8b90aa4683c0
-	github.com/Andrew-M-C/go.util/slice v0.0.0-20240221044053-8b90aa4683c0
+	github.com/Andrew-M-C/go.util/slices v0.0.0-20250530091121-67b21a300cc2
 	github.com/Andrew-M-C/go.util/unsafe v0.0.0-20240221044053-8b90aa4683c0
 	github.com/smartystreets/goconvey v1.8.1
 	github.com/xuri/excelize/v2 v2.8.0
 )
 
 require (
+	github.com/Andrew-M-C/go.util/constraints v0.0.0-20240920040959-400d8f87c326 // indirect
+	github.com/Andrew-M-C/go.util/slice v0.0.0-20240221044053-8b90aa4683c0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect

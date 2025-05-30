@@ -16,6 +16,8 @@ github.com/Andrew-M-C/go.util/runtime v0.0.0-20241118072554-b6cba35b72fb h1:cexD
 github.com/Andrew-M-C/go.util/runtime v0.0.0-20241118072554-b6cba35b72fb/go.mod h1:kJiPh+FBcZwYYNieNKIdunC/1i/iyNOGJTBKBxOB2Pw=
 github.com/Andrew-M-C/go.util/slice v0.0.0-20250116061329-8e3db2afac06 h1:GoJgkCzm4HYcxmvw9i+8q9Z76vsaJx5UN6ieRO3KRrc=
 github.com/Andrew-M-C/go.util/slice v0.0.0-20250116061329-8e3db2afac06/go.mod h1:c/P+jsQi0IXDwngh0D0ddAPZpxGIBL5vVv8dMnUxa5w=
+github.com/Andrew-M-C/go.util/slices v0.0.0-20250530091121-67b21a300cc2 h1:jHf2Ah02MDjmOGPh/PsGi8lrwb60EZm0jNR7HZlMvG0=
+github.com/Andrew-M-C/go.util/slices v0.0.0-20250530091121-67b21a300cc2/go.mod h1:jLwfXNpXZ/aJ0rqAoqpryfnWi9CmfbeWlvS2qt5aFts=
 github.com/Andrew-M-C/go.util/time v0.0.0-20241118072554-b6cba35b72fb h1:3glK0Ke72r8IKfMH0npz2pC3V3lXxuvJu2hIeS/OIl4=
 github.com/Andrew-M-C/go.util/time v0.0.0-20241118072554-b6cba35b72fb/go.mod h1:kYQSxjJKbyg4Xz3NieEFCTD4tpZBBbw16xlXEScIBZo=
 github.com/Andrew-M-C/go.util/unsafe v0.0.0-20240924120445-d310ce87211e h1:Og32BvTnZq5gbvtIZEYDK0salvKZQTWVy7MBV17C4dI=

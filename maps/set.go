@@ -2,7 +2,7 @@ package maps
 
 import (
 	"github.com/Andrew-M-C/go.util/constraints"
-	"github.com/Andrew-M-C/go.util/slice"
+	"github.com/Andrew-M-C/go.util/slices"
 )
 
 // Set 表示一个集合
@@ -18,7 +18,7 @@ func NewSet[K comparable](vals ...K) Set[K] {
 }
 
 // NewSetFromSlice 从一个切片转为 Set 类型
-func NewSetFromSlice[T constraints.Ordered](sli slice.List[T]) Set[T] {
+func NewSetFromSlice[T constraints.Ordered](sli slices.List[T]) Set[T] {
 	s := make(Set[T], len(sli))
 	for _, v := range sli {
 		s.Add(v)

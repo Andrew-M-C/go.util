@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/Andrew-M-C/go.util/slice"
+	sliceutil "github.com/Andrew-M-C/go.util/slices"
 )
 
 // AdministrativeLevel 行政层级
@@ -93,7 +93,7 @@ func (d *Division) SubDivisionByCode(code string) *Division {
 	target := &Division{
 		code: code,
 	}
-	idx := slice.BinarySearchOne(d.sub, target, divComp)
+	idx := sliceutil.BinarySearchOne(d.sub, target, divComp)
 	if idx < 0 {
 		return nil
 	}

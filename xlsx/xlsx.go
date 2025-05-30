@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	"github.com/Andrew-M-C/go.util/maps"
-	"github.com/Andrew-M-C/go.util/slice"
+	"github.com/Andrew-M-C/go.util/slices"
 	"github.com/Andrew-M-C/go.util/unsafe"
 	"github.com/xuri/excelize/v2"
 )
@@ -115,7 +115,7 @@ func formatCol(c int) string {
 	}
 
 	res = append(res, 'A'+byte(c)-1)
-	slice.Reverse(res)
+	slices.Reverse(res)
 
 	return unsafe.BtoS(res)
 }

@@ -5,11 +5,11 @@ import (
 	"fmt"
 
 	"github.com/Andrew-M-C/go.util/constraints"
-	"github.com/Andrew-M-C/go.util/slice"
+	"github.com/Andrew-M-C/go.util/slices"
 )
 
 // Keys 返回所有的 key
-func Keys[K constraints.Ordered, V any](m map[K]V) (keys slice.List[K]) {
+func Keys[K constraints.Ordered, V any](m map[K]V) (keys slices.List[K]) {
 	keys = make([]K, 0, len(m))
 	for k := range m {
 		keys = append(keys, k)

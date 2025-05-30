@@ -1,7 +1,7 @@
 github.com/Andrew-M-C/go.util/constraints v0.0.0-20250411024944-dc1445c96c13 h1:57psRFe8XzbssH2Ev7SlxKfkNMdccqxYwUHKodjBElo=
 github.com/Andrew-M-C/go.util/constraints v0.0.0-20250411024944-dc1445c96c13/go.mod h1:kwwhHyN9ZZcCZ9xN3KJ2nw+URJJ2JV0Jkl9WRrR4jxQ=
-github.com/Andrew-M-C/go.util/slice v0.0.0-20250411024944-dc1445c96c13 h1:ozU+BRAWnAuLVc/s7gB5pezoesx1MizBN6Or2PK6Vbw=
-github.com/Andrew-M-C/go.util/slice v0.0.0-20250411024944-dc1445c96c13/go.mod h1:c/P+jsQi0IXDwngh0D0ddAPZpxGIBL5vVv8dMnUxa5w=
+github.com/Andrew-M-C/go.util/slices v0.0.0-20250530091121-67b21a300cc2 h1:jHf2Ah02MDjmOGPh/PsGi8lrwb60EZm0jNR7HZlMvG0=
+github.com/Andrew-M-C/go.util/slices v0.0.0-20250530091121-67b21a300cc2/go.mod h1:jLwfXNpXZ/aJ0rqAoqpryfnWi9CmfbeWlvS2qt5aFts=
 github.com/Andrew-M-C/go.util/sync v0.0.0-20250411024944-dc1445c96c13 h1:ybSsj3hCVEAtaFe0dQA65mW66vG+d4zMwEe6Dk7VaEU=
 github.com/Andrew-M-C/go.util/sync v0.0.0-20250411024944-dc1445c96c13/go.mod h1:1NSK/PwV40XNw+YkLHgQkpHWZQRu6bIBdTPB6wuhWqI=
 github.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=
