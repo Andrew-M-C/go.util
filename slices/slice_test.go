@@ -107,6 +107,61 @@ func testSlice(t *testing.T) {
 		ok = SetElement(a, -4, -444)
 		so(ok, eq, false)
 	})
+
+	cv("EnsureLength", func() {
+		a := []int{1, 2, 3, 4, 5}
+
+		a = EnsureLength(a, -2)
+		so(a, eq, []int{1, 2, 3, 4, 5})
+
+		a = EnsureLength(a, 6)
+		so(a, eq, []int{1, 2, 3, 4, 5, 0})
+
+		a = EnsureLength(a, 10, 100)
+		so(a, eq, []int{1, 2, 3, 4, 5, 0, 100, 100, 100, 100})
+
+		a = EnsureLength(a, 5)
+		so(a, eq, []int{1, 2, 3, 4, 5, 0, 100, 100, 100, 100})
+	})
+
+	cv("Insert", func() {
+		a := []int{1, 2, 3, 4, 5}
+		a = Insert(a, 2, 200)
+		so(a, eq, []int{1, 2, 200, 3, 4, 5})
+
+		a = Insert(a, -1, -200)
+		so(a, eq, []int{1, 2, 200, 3, 4, -200, 5})
+
+		a = Insert(a, -3, -300)
+		so(a, eq, []int{1, 2, 200, 3, -300, 4, -200, 5})
+
+		a = Insert(a, 8, 9999)
+		so(a, eq, []int{1, 2, 200, 3, -300, 4, -200, 5})
+
+		a = Insert(a, -9, 9999)
+		so(a, eq, []int{1, 2, 200, 3, -300, 4, -200, 5})
+
+		a = Insert(a, -8, 9999)
+		so(a, eq, []int{9999, 1, 2, 200, 3, -300, 4, -200, 5})
+	})
+
+	cv("Remove", func() {
+		a := []int{1, 2, 3, 4, 5}
+		a = Remove(a, 2)
+		so(a, eq, []int{1, 2, 4, 5})
+
+		a = Remove(a, -1)
+		so(a, eq, []int{1, 2, 4})
+
+		a = Remove(a, 3)
+		so(a, eq, []int{1, 2, 4})
+
+		a = Remove(a, -4)
+		so(a, eq, []int{1, 2, 4})
+
+		a = Remove(a, -3)
+		so(a, eq, []int{2, 4})
+	})
 }
 
 func testCutIntoSectors(t *testing.T) {
