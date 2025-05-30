@@ -1,4 +1,4 @@
-package slice
+package slices
 
 // LCSMap 表示 LCS 计算结果图
 type LCSMap struct {

@@ -1,4 +1,4 @@
-package slice
+package slices
 
 import "github.com/Andrew-M-C/go.util/constraints"
 

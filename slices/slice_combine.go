@@ -1,4 +1,4 @@
-package slice
+package slices
 
 func CombineEvenly[T comparable](s1, s2 []T) []T {
 	if len(s1) < len(s2) {

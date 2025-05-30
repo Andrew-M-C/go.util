@@ -1,4 +1,4 @@
-package slice
+package slices
 
 // 本文件定义切片集合操作
 
