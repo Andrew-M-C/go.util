@@ -16,5 +16,10 @@ func testMap(*testing.T) {
 		v, exist = m.LoadOrStore("key", new(value))
 		so(exist, isTrue)
 		so(v.Count, eq, 2)
+
+		so(len(m.Map()), eq, 1)
+		so(m.Map(), eq, map[string]*value{
+			"key": v,
+		})
 	})
 }

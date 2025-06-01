@@ -4,6 +4,7 @@ import "sync"
 
 // Map 是 sync.Map 的封装, 但是暴露的参数类型是泛型
 type Map[K comparable, V comparable] interface {
+	Map() map[K]V
 	CompareAndDelete(key K, old V) (deleted bool)
 	CompareAndSwap(key K, old, new V) bool
 	Delete(key K)
@@ -23,6 +24,15 @@ func NewMap[K comparable, V comparable]() Map[K, V] {
 
 type syncMap[K comparable, V any] struct {
 	m *sync.Map
+}
+
+func (m *syncMap[K, V]) Map() map[K]V {
+	res := make(map[K]V)
+	m.Range(func(key K, value V) bool {
+		res[key] = value
+		return true
+	})
+	return res
 }
 
 func (m *syncMap[K, V]) CompareAndDelete(key K, old V) (deleted bool) {
