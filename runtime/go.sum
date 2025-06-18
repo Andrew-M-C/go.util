@@ -1,4 +1,5 @@
 github.com/Andrew-M-C/go.jsonvalue v1.4.1 h1:MGtqaKy5Z7Xi/hnWaeqWDMwno79uNRt0XoCGHa1pm74=
+github.com/Andrew-M-C/go.jsonvalue v1.4.1/go.mod h1:EsYbZ97LlOhGUs+7qTwZI9KaJrPe6nK8sEZKEqr70Ww=
 github.com/Andrew-M-C/go.util/constraints v0.0.0-20240920040959-400d8f87c326 h1:BXeBUoFBw7I7b2aSyohleo/EqDw8LSREonVyi5c1nBo=
 github.com/Andrew-M-C/go.util/constraints v0.0.0-20240920040959-400d8f87c326/go.mod h1:kwwhHyN9ZZcCZ9xN3KJ2nw+URJJ2JV0Jkl9WRrR4jxQ=
 github.com/Andrew-M-C/go.util/slice v0.0.0-20240221035607-b8b572fd3e45 h1:BwtwSyZ7gbZZRZi5Aue9irlzLlquZTbNg7XpVsx8gq8=
@@ -24,8 +25,8 @@ github.com/smartystreets/assertions v1.2.0/go.mod h1:tcbTF8ujkAEcZ8TElKY+i30BzYl
 github.com/smartystreets/goconvey v1.7.2/go.mod h1:Vw0tHAZW6lzCRk3xgdin6fKYcG+G3Pg9vgXWeJpQFMM=
 github.com/smartystreets/goconvey v1.8.1 h1:qGjIddxOk4grTu9JPOU31tVfq3cNdBlNa5sSznIX1xY=
 github.com/smartystreets/goconvey v1.8.1/go.mod h1:+/u4qLyY6x1jReYOp7GOM2FSt8aP9CzCZL03bI28W60=
-github.com/stretchr/testify v1.8.0 h1:pSgiaMZlXftHpm5L7V1+rVB+AZJydKsMxsQBIJw4PKk=
-github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
+github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
+github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 go.uber.org/atomic v1.11.0 h1:ZvwS0R+56ePWxUNi+Atn9dWONBPp/AUETXlHW0DxSjE=
 go.uber.org/atomic v1.11.0/go.mod h1:LUxbIzbOniOlMKjJjyPfpl4v+PKK2cNJn91OQbhoJI0=
 go.uber.org/automaxprocs v1.5.3 h1:kWazyxZUrS3Gs4qUpbwo5kEIMGe/DAvi5Z4tl2NW4j8=
