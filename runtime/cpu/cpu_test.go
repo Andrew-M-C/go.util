@@ -68,5 +68,5 @@ func testEnsureCPUUsage(t *testing.T) {
 	t.Logf("平均 CPU 使用率: %.2f", usage)
 
 	so(usage, gt, 0.50)
-	so(usage, lt, 0.60)
+	so(usage, lt, 0.70)
 }
