@@ -1,15 +1,18 @@
 package math
 
-// SqrtUint sqrt(x) but returns integer part only.
-func SqrtUint(x uint64) uint64 {
-	return newtonIntSqrt(x)
+import "golang.org/x/exp/constraints"
+
+// SqrtUint sqrt(x) but returns integer part only. If x is negative, it will return 0.
+func SqrtUint[T constraints.Unsigned](x T) T {
+	return T(newtonIntSqrt(uint64(x)))
 }
 
-// SqrtUint sqrt(x) but returns integer part only.
-func SqrtInt(x int64) complex128 {
+// SqrtInt sqrt(x) and returns complex number. If x is negative, it will return
+// complex number with imaginary part.
+func SqrtInt[T constraints.Signed](x T) complex128 {
 	if x >= 0 {
 		res := SqrtUint(uint64(x))
-		return complex(float64(res), 0)
+		return complex(float64(res), 0.0)
 	}
 
 	x = -x
@@ -53,25 +56,4 @@ func newtonIntSqrt(x uint64) uint64 {
 	}
 
 	return g0
-}
-
-// bitwiseSqrt 逐比特确认法
-func bitwiseSqrt(x uint64) uint64 {
-	if x <= 1 {
-		return x
-	}
-
-	sqrt := uint64(0)
-	shift := int64(31)
-	sqrt2 := uint64(0)
-
-	for shift >= 0 {
-		sqrt2 = ((sqrt << 1) + (1 << shift)) << shift
-		if sqrt2 <= x {
-			sqrt += (1 << shift)
-			x -= sqrt2
-		}
-		shift--
-	}
-	return sqrt
 }
