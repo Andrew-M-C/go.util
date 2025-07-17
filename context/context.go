@@ -46,6 +46,37 @@ func HandleContext(ctx context.Context, f func() error) error {
 	}
 }
 
+// HandleContextT is a wrapper of HandleContext, but can return a value.
+func HandleContextT[T any](ctx context.Context, f func() (T, error)) (T, error) {
+	var zero T
+	if f == nil {
+		return zero, errors.New("missing function")
+	}
+
+	type resType struct {
+		res T
+		err error
+	}
+
+	ch := make(chan resType)
+
+	go func() {
+		res, err := f()
+		ch <- resType{
+			res: res,
+			err: err,
+		}
+		close(ch)
+	}()
+
+	select {
+	case res := <-ch:
+		return res.res, res.err
+	case <-ctx.Done():
+		return zero, ctx.Err()
+	}
+}
+
 // uniqIDKeyType 定义 context 中的 uniq ID key
 type uniqIDKeyType string
 
