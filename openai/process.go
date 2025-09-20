@@ -120,6 +120,11 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 }
 
 func (p *processor) packMCPTools(ctx context.Context) error {
+	if len(p.mcpClientByID) == 0 {
+		p.Opts.debugf("没有配置远程 MCP 工具")
+		return nil
+	}
+
 	for id, cli := range p.mcpClientByID {
 		tools, err := cli.ListTools(ctx, mcp.ListToolsRequest{})
 		if err != nil {

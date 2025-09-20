@@ -2,8 +2,8 @@ github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3 h1:EEOMYQYk
 github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3/go.mod h1:YJAeUx9w5bqEQJcJXHmm66CU57vK4oNli5skYzl9LXk=
 github.com/Andrew-M-C/go.jsonvalue v1.4.1 h1:MGtqaKy5Z7Xi/hnWaeqWDMwno79uNRt0XoCGHa1pm74=
 github.com/Andrew-M-C/go.jsonvalue v1.4.1/go.mod h1:EsYbZ97LlOhGUs+7qTwZI9KaJrPe6nK8sEZKEqr70Ww=
-github.com/Andrew-M-C/go.util/net v0.0.0-20250717030110-f81c69df6845 h1:JsvYODHbNw8FdXojk5N52pXB8q/vvbP9F/7JIP/093k=
-github.com/Andrew-M-C/go.util/net v0.0.0-20250717030110-f81c69df6845/go.mod h1:mfODmKvs49xz2Y8/Gfr28HHMSAP+CEPEZlLqtU0/SrQ=
+github.com/Andrew-M-C/go.util/net v0.0.0-20250920025415-d81d9063f493 h1:4Tw6HT0moRCapbO7XnDDPx4Om87wId2cwGk5kPHlCwc=
+github.com/Andrew-M-C/go.util/net v0.0.0-20250920025415-d81d9063f493/go.mod h1:mfODmKvs49xz2Y8/Gfr28HHMSAP+CEPEZlLqtU0/SrQ=
 github.com/bahlo/generic-list-go v0.2.0 h1:5sz/EEAK+ls5wF+NeqDpk5+iNdMDXrh3z3nPnH1Wvgk=
 github.com/bahlo/generic-list-go v0.2.0/go.mod h1:2KvAjgMlE5NNynlg/5iLrrCCZ2+5xWbdbCW3pNTGyYg=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=

@@ -15,17 +15,22 @@ func connect(
 	opt *options,
 ) (*http.Response, error) {
 	h := http.Header{
+		"Content-Type":  {"application/json"},
 		"Authorization": {"Bearer " + config.APIKey},
 	}
 
 	req := openai.ChatCompletionRequest{
-		Model:      config.Model,
-		Messages:   messages,
-		Stream:     true,
-		Tools:      tools,
-		ToolChoice: "auto",
+		Model:    config.Model,
+		Messages: messages,
+		Stream:   true,
 	}
-	rsp, err := hutil.Request(ctx, config.BaseURL,
+	if len(tools) > 0 {
+		req.Tools = tools
+		req.ToolChoice = "auto"
+	}
+
+	rsp, err := hutil.Request(
+		ctx, config.BaseURL,
 		hutil.WithRequestHeader(h),
 		hutil.WithRequestBody(req),
 		hutil.WithMethod("POST"),

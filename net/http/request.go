@@ -54,6 +54,7 @@ func raw(ctx context.Context, targetURL string, o *requestOption) (*http.Respons
 	if err != nil {
 		return nil, fmt.Errorf("http.NewRequest error (%w)", err)
 	}
+
 	httpReq.Header = o.header
 	o.progress.invokeIfNotNil(ResponseReceived)
 
