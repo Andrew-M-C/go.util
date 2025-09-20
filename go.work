@@ -27,6 +27,7 @@ use (
 	./math
 	./mysql
 	./net
+	./openai
 	./recovery
 	./reflect
 	./runtime
