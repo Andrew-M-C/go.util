@@ -9,7 +9,10 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/Andrew-M-C/go-bytesize"
+	hutil "github.com/Andrew-M-C/go.util/net/http"
 	utils "github.com/Andrew-M-C/go.util/openai"
+	"github.com/Andrew-M-C/go.util/unsafe"
 	"github.com/fatih/color"
 	"github.com/sashabaranov/go-openai"
 	"github.com/smartystreets/goconvey/convey"
@@ -267,13 +270,11 @@ func TestProcessMCP(t *testing.T) {
 			BaseURL: deepseekBaseURL,
 			APIKey:  deepseekAPIKey,
 		}
-		req := []openai.ChatCompletionMessage{
-			{
-				Role:    openai.ChatMessageRoleUser,
-				Content: "请告诉我现在几点以及广州市今天的天气",
-				// Content: "现在几点了？",
-			},
-		}
+		req := []openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleUser,
+			Content: "请告诉我现在几点以及广州市今天的天气",
+			// Content: "现在几点了？",
+		}}
 
 		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
 		content := func(c string) { fmt.Printf("%s", c) }
@@ -298,6 +299,35 @@ func TestProcessMCP(t *testing.T) {
 		so(err, isNil)
 		so(rsp, notNil)
 		so(len(rsp.Messages), eq, 5) // 1问、1答、2工具调用、1答
+	})
+
+	cv("下载长篇文章, 测试大模型 token 超限", t, func() {
+		ctx := context.Background()
+		config := utils.ModelConfig{
+			Model:   deepseekModel,
+			BaseURL: deepseekBaseURL,
+			APIKey:  deepseekAPIKey,
+		}
+		data, err := hutil.Raw(ctx, "https://www.gutenberg.org/cache/epub/1184/pg1184.txt")
+		so(err, isNil)
+		text := unsafe.BtoS(data)
+		printf("全文 %v", bytesize.Base10(len(data)))
+
+		req := []openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleUser,
+			Content: text,
+		}}
+		req = utils.AddOrSetPromptForMessages(req, "请简要介绍一下这部小说")
+		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
+		content := func(c string) { fmt.Printf("%s", c) }
+		finish := func(f openai.FinishReason) { printf("结束: %v", f) }
+
+		_, err = utils.Process(ctx, config, req,
+			utils.WithContentCallback(content),
+			utils.WithReasoningCallback(reasoning),
+			utils.WithFinishCallback(finish),
+		)
+		so(err, notNil)
 	})
 }
 

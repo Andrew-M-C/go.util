@@ -6,6 +6,7 @@ toolchain go1.23.5
 
 require (
 	github.com/Andrew-M-C/go.util/net v0.0.0-20250920025415-d81d9063f493
+	github.com/Andrew-M-C/go.util/unsafe v0.0.0-20250921015404-be4cf033d16a
 	github.com/fatih/color v1.18.0
 	github.com/h2non/filetype v1.1.3
 	github.com/mark3labs/mcp-go v0.39.1

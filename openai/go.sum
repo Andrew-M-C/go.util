@@ -4,6 +4,8 @@ github.com/Andrew-M-C/go.jsonvalue v1.4.1 h1:MGtqaKy5Z7Xi/hnWaeqWDMwno79uNRt0XoC
 github.com/Andrew-M-C/go.jsonvalue v1.4.1/go.mod h1:EsYbZ97LlOhGUs+7qTwZI9KaJrPe6nK8sEZKEqr70Ww=
 github.com/Andrew-M-C/go.util/net v0.0.0-20250920025415-d81d9063f493 h1:4Tw6HT0moRCapbO7XnDDPx4Om87wId2cwGk5kPHlCwc=
 github.com/Andrew-M-C/go.util/net v0.0.0-20250920025415-d81d9063f493/go.mod h1:mfODmKvs49xz2Y8/Gfr28HHMSAP+CEPEZlLqtU0/SrQ=
+github.com/Andrew-M-C/go.util/unsafe v0.0.0-20250921015404-be4cf033d16a h1:4GQPJNlByRsxrB3bCuLgrQpaelNafDL6zRxjxXifZfI=
+github.com/Andrew-M-C/go.util/unsafe v0.0.0-20250921015404-be4cf033d16a/go.mod h1:cN+VilNtYInWPXfTf2YiBKndjbZ1oP1AMLRDNHgI7Vg=
 github.com/bahlo/generic-list-go v0.2.0 h1:5sz/EEAK+ls5wF+NeqDpk5+iNdMDXrh3z3nPnH1Wvgk=
 github.com/bahlo/generic-list-go v0.2.0/go.mod h1:2KvAjgMlE5NNynlg/5iLrrCCZ2+5xWbdbCW3pNTGyYg=
 github.com/buger/jsonparser v1.1.1 h1:2PnMjfWD7wBILjqQbt530v576A/cAbQvEW9gGIpYMUs=
