@@ -67,14 +67,13 @@ func printf(s string, a ...any) {
 
 func TestAddImageDataToLastMessage(t *testing.T) {
 	cv("为最后一个消息添加图片数据", t, func() {
-		messages := []openai.ChatCompletionMessage{
-			{
-				Role:    openai.ChatMessageRoleUser,
-				Content: "你好",
-			},
-		}
-		err := utils.AddImageDataToLastMessage(messages, testPNG)
+		messages := []openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleUser,
+			Content: "你好",
+		}}
+		messages, err := utils.AddImageDataToLastMessage(messages, testPNG)
 		so(err, isNil)
+		so(len(messages), eq, 1)
 		so(messages[0].Content, eq, "")
 		so(len(messages[0].MultiContent), eq, 2)
 		so(messages[0].MultiContent[0].Type, eq, openai.ChatMessagePartTypeText)
@@ -86,6 +85,129 @@ func TestAddImageDataToLastMessage(t *testing.T) {
 	})
 }
 
+func TestAddOrSetPromptForMessages(t *testing.T) {
+	cv("为空的消息数组添加系统提示词", t, func() {
+		messages := []openai.ChatCompletionMessage{}
+		prompt := "你是一个有用的助手"
+
+		result := utils.AddOrSetPromptForMessages(messages, prompt)
+
+		so(len(result), eq, 1)
+		so(result[0].Role, eq, openai.ChatMessageRoleSystem)
+		so(result[0].Content, eq, prompt)
+	})
+
+	cv("为已存在系统消息的数组替换提示词", t, func() {
+		messages := []openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "旧的系统提示词",
+		}, {
+			Role:    openai.ChatMessageRoleUser,
+			Content: "用户消息",
+		}}
+		newPrompt := "新的系统提示词"
+
+		result := utils.AddOrSetPromptForMessages(messages, newPrompt)
+
+		so(len(result), eq, 2)
+		so(result[0].Role, eq, openai.ChatMessageRoleSystem)
+		so(result[0].Content, eq, newPrompt)
+		so(result[1].Role, eq, openai.ChatMessageRoleUser)
+		so(result[1].Content, eq, "用户消息")
+	})
+
+	cv("为没有系统消息的数组添加系统提示词", t, func() {
+		messages := []openai.ChatCompletionMessage{
+			{
+				Role:    openai.ChatMessageRoleUser,
+				Content: "用户消息1",
+			},
+			{
+				Role:    openai.ChatMessageRoleAssistant,
+				Content: "助手回复",
+			},
+			{
+				Role:    openai.ChatMessageRoleUser,
+				Content: "用户消息2",
+			},
+		}
+		prompt := "你是一个专业的AI助手"
+
+		result := utils.AddOrSetPromptForMessages(messages, prompt)
+
+		so(len(result), eq, 4)
+		so(result[0].Role, eq, openai.ChatMessageRoleSystem)
+		so(result[0].Content, eq, prompt)
+		so(result[1].Role, eq, openai.ChatMessageRoleUser)
+		so(result[1].Content, eq, "用户消息1")
+		so(result[2].Role, eq, openai.ChatMessageRoleAssistant)
+		so(result[2].Content, eq, "助手回复")
+		so(result[3].Role, eq, openai.ChatMessageRoleUser)
+		so(result[3].Content, eq, "用户消息2")
+	})
+
+	cv("为单个用户消息添加系统提示词", t, func() {
+		messages := []openai.ChatCompletionMessage{
+			{
+				Role:    openai.ChatMessageRoleUser,
+				Content: "你好",
+			},
+		}
+		prompt := "请简洁回答问题"
+
+		result := utils.AddOrSetPromptForMessages(messages, prompt)
+
+		so(len(result), eq, 2)
+		so(result[0].Role, eq, openai.ChatMessageRoleSystem)
+		so(result[0].Content, eq, prompt)
+		so(result[1].Role, eq, openai.ChatMessageRoleUser)
+		so(result[1].Content, eq, "你好")
+	})
+
+	cv("替换系统消息时不影响原有消息顺序", t, func() {
+		messages := []openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "原系统提示",
+		}, {
+			Role:    openai.ChatMessageRoleUser,
+			Content: "第一个用户消息",
+		}, {
+			Role:    openai.ChatMessageRoleAssistant,
+			Content: "第一个助手回复",
+		}}
+		newPrompt := "替换后的系统提示"
+
+		result := utils.AddOrSetPromptForMessages(messages, newPrompt)
+
+		so(len(result), eq, 3)
+		so(result[0].Role, eq, openai.ChatMessageRoleSystem)
+		so(result[0].Content, eq, newPrompt)
+		so(result[1].Role, eq, openai.ChatMessageRoleUser)
+		so(result[1].Content, eq, "第一个用户消息")
+		so(result[2].Role, eq, openai.ChatMessageRoleAssistant)
+		so(result[2].Content, eq, "第一个助手回复")
+
+		// 确保原始数组也被修改了（引用传递）
+		so(messages[0].Content, eq, newPrompt)
+	})
+
+	cv("测试空的提示词字符串", t, func() {
+		messages := []openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleUser,
+			Content: "用户消息",
+		}}
+		prompt := ""
+
+		result := utils.AddOrSetPromptForMessages(messages, prompt)
+
+		so(len(result), eq, 2)
+		so(result[0].Role, eq, openai.ChatMessageRoleSystem)
+		so(result[0].Content, eq, "")
+		so(result[1].Role, eq, openai.ChatMessageRoleUser)
+		so(result[1].Content, eq, "用户消息")
+	})
+}
+
 func TestProcessBasic(t *testing.T) {
 	cv("简单对话", t, func() {
 		ctx := context.Background()
@@ -94,16 +216,13 @@ func TestProcessBasic(t *testing.T) {
 			BaseURL: deepseekBaseURL,
 			APIKey:  deepseekAPIKey,
 		}
-		req := []openai.ChatCompletionMessage{
-			{
-				Role:    openai.ChatMessageRoleSystem,
-				Content: "你喜欢简短地回答, 稳重、不废话",
-			},
-			{
-				Role:    openai.ChatMessageRoleUser,
-				Content: "你好",
-			},
-		}
+		req := []openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleSystem,
+			Content: "你喜欢简短地回答, 稳重、不废话",
+		}, {
+			Role:    openai.ChatMessageRoleUser,
+			Content: "你好",
+		}}
 
 		reasoningBuilder := strings.Builder{}
 		contentBuilder := strings.Builder{}
