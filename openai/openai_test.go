@@ -65,6 +65,27 @@ func printf(s string, a ...any) {
 	_, _ = fmt.Printf(s+"\n", a...)
 }
 
+func TestAddImageDataToLastMessage(t *testing.T) {
+	cv("为最后一个消息添加图片数据", t, func() {
+		messages := []openai.ChatCompletionMessage{
+			{
+				Role:    openai.ChatMessageRoleUser,
+				Content: "你好",
+			},
+		}
+		err := utils.AddImageDataToLastMessage(messages, testPNG)
+		so(err, isNil)
+		so(messages[0].Content, eq, "")
+		so(len(messages[0].MultiContent), eq, 2)
+		so(messages[0].MultiContent[0].Type, eq, openai.ChatMessagePartTypeText)
+		so(messages[0].MultiContent[0].Text, eq, "你好")
+		so(messages[0].MultiContent[1].Type, eq, openai.ChatMessagePartTypeImageURL)
+
+		expectedImageURL := "data:image/png;base64," + base64.StdEncoding.EncodeToString(testPNG)
+		so(messages[0].MultiContent[1].ImageURL.URL, eq, expectedImageURL)
+	})
+}
+
 func TestProcessBasic(t *testing.T) {
 	cv("简单对话", t, func() {
 		ctx := context.Background()
