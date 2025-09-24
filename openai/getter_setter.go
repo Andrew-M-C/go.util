@@ -2,11 +2,14 @@ package openai
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"fmt"
 
+	"github.com/Andrew-M-C/go.util/unsafe"
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
+	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -125,4 +128,85 @@ func AddOrSetPromptForMessages(
 	res = append(res, messages...)
 
 	return res
+}
+
+// -------- MCP 相关 --------
+
+// ReadMCPCallToolRequest 读取 MCP 工具调用参数, 方便实现 InitializedMCPClient 接口。
+func ReadMCPCallToolRequest[T any](req mcp.CallToolRequest) (T, error) {
+	var t T
+	b, err := json.Marshal(req.Params.Arguments)
+	if err != nil {
+		return t, err
+	}
+	err = json.Unmarshal(b, &t)
+	return t, err
+}
+
+// NewMCPCallToolResultWithString 生成一个 MCP 工具调用结果, 用于适配 InitializedMCPClient 接口
+func NewMCPCallToolResultWithString(s string) (*mcp.CallToolResult, error) {
+	return mcp.NewToolResultText(s), nil
+}
+
+// NewMCPCallToolResultWithJSON 生成一个 MCP 工具调用结果, 使用 json.Marshal 之后的数据
+// 打包为 JSON 数据, 用于适配 InitializedMCPClient 接口
+func NewMCPCallToolResultWithJSON(v any) (*mcp.CallToolResult, error) {
+	b, err := json.Marshal(v)
+	if err != nil {
+		return nil, err
+	}
+
+	s := unsafe.BtoS(b)
+	return mcp.NewToolResultText(s), nil
+}
+
+// MCPToolParamWithString 创建一个 MCP string 参数构建器, 用于构建 MCP tool 列表参数
+func MCPToolParamWithString(name string, required bool, desc string) MCPToolBuilder {
+	var res mcpToolBuilder
+	if required {
+		res.opt = mcp.WithString(name, mcp.Description(desc), mcp.Required())
+	} else {
+		res.opt = mcp.WithString(name, mcp.Description(desc))
+	}
+	return res
+}
+
+// MCPToolParamWithNumber 创建一个 MCP 数字参数构建器, 用于构建 MCP tool 列表参数
+func MCPToolParamWithNumber(name string, required bool, desc string) MCPToolBuilder {
+	var res mcpToolBuilder
+	if required {
+		res.opt = mcp.WithNumber(name, mcp.Description(desc), mcp.Required())
+	} else {
+		res.opt = mcp.WithNumber(name, mcp.Description(desc))
+	}
+	return res
+}
+
+// MCPToolParamWithBoolean 创建一个 MCP boolean 参数构建器, 用于构建 MCP tool 列表参数
+func MCPToolParamWithBoolean(name string, required bool, desc string) MCPToolBuilder {
+	var res mcpToolBuilder
+	if required {
+		res.opt = mcp.WithBoolean(name, mcp.Description(desc), mcp.Required())
+	} else {
+		res.opt = mcp.WithBoolean(name, mcp.Description(desc))
+	}
+	return res
+}
+
+type MCPToolBuilder interface {
+	AddToTool(tool *mcp.Tool)
+}
+
+type mcpToolBuilder struct {
+	opt mcp.ToolOption
+}
+
+func (b mcpToolBuilder) AddToTool(t *mcp.Tool) {
+	if t == nil {
+		return
+	}
+	if t.InputSchema.Properties == nil {
+		t.InputSchema.Properties = map[string]any{}
+	}
+	b.opt(t)
 }

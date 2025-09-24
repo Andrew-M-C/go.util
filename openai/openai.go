@@ -4,6 +4,7 @@ package openai
 import (
 	"context"
 
+	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/sashabaranov/go-openai"
 )
 
@@ -32,4 +33,10 @@ func Process(
 type ProcessResponse struct {
 	Messages     []openai.ChatCompletionMessage
 	FinishReason openai.FinishReason
+}
+
+// InitializedMCPClient 表示一个已经初始化完毕的 MCP 客户端
+type InitializedMCPClient interface {
+	ListTools(ctx context.Context, request mcp.ListToolsRequest) (*mcp.ListToolsResult, error)
+	CallTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error)
 }

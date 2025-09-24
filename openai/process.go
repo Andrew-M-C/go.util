@@ -2,16 +2,18 @@ package openai
 
 import (
 	"context"
+	"crypto/md5"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 
 	hutil "github.com/Andrew-M-C/go.util/net/http"
+	"github.com/Andrew-M-C/go.util/unsafe"
 	mcpclient "github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/sashabaranov/go-openai"
@@ -27,7 +29,7 @@ type processor struct {
 
 	// 中间参数
 	deferFuncs    []func(context.Context)
-	mcpClientByID map[string]*mcpclient.Client
+	mcpClientByID map[string]InitializedMCPClient
 	mcpTools      []openai.Tool
 
 	lastFinishReason openai.FinishReason
@@ -36,17 +38,24 @@ type processor struct {
 func (p *processor) do(ctx context.Context) (ProcessResponse, error) {
 	defer p.callDefers(ctx)
 
+	// 一些初始化工作
+	p.mcpClientByID = make(map[string]InitializedMCPClient,
+		len(p.Opts.mcpURL)+len(p.Opts.customizeMCPs),
+	)
+	// 主流程
 	procedures := []func(context.Context) error{
-		p.copyMessages,     // 浅拷贝入参
-		p.connectRemoteMCP, // 连接远程 MCP
-		p.packMCPTools,     // 打包 MCP 工具作为后续请求的参数
-		p.iteration,        // 开始迭代
+		p.copyMessages,      // 浅拷贝入参
+		p.addCustomizedMCPs, // 自定义 MCP 或者是初始化好了的 MCP
+		p.connectRemoteMCP,  // 连接远程 MCP
+		p.packMCPTools,      // 打包 MCP 工具作为后续请求的参数
+		p.iteration,         // 开始迭代
 	}
 	for _, proc := range procedures {
 		if err := proc(ctx); err != nil {
 			return ProcessResponse{}, err
 		}
 	}
+	// 打包返回
 	rsp := ProcessResponse{
 		Messages:     p.Messages,
 		FinishReason: p.lastFinishReason,
@@ -70,8 +79,6 @@ func (p *processor) copyMessages(ctx context.Context) error {
 }
 
 func (p *processor) connectRemoteMCP(ctx context.Context) error {
-	p.mcpClientByID = make(map[string]*mcpclient.Client, len(p.Opts.mcpURL))
-
 	iterateURL := func(index int, url string) error {
 		cli, err := mcpclient.NewSSEMCPClient(url)
 		if err != nil {
@@ -100,8 +107,7 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 			return fmt.Errorf("初始化 MCP '%s' 失败 (%w)", url, err)
 		}
 
-		// sha256 一下 url
-		id := strconv.Itoa(index)
+		id := p.mcpID(cli)
 		p.mcpClientByID[id] = cli
 
 		p.Opts.debugf(
@@ -119,6 +125,13 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 	return nil
 }
 
+func (p *processor) addCustomizedMCPs(ctx context.Context) error {
+	for _, cli := range p.Opts.customizeMCPs {
+		p.mcpClientByID[p.mcpID(cli)] = cli
+	}
+	return nil
+}
+
 func (p *processor) packMCPTools(ctx context.Context) error {
 	if len(p.mcpClientByID) == 0 {
 		p.Opts.debugf("没有配置远程 MCP 工具")
@@ -126,11 +139,14 @@ func (p *processor) packMCPTools(ctx context.Context) error {
 	}
 
 	for id, cli := range p.mcpClientByID {
-		tools, err := cli.ListTools(ctx, mcp.ListToolsRequest{})
+		t, err := cli.ListTools(ctx, mcp.ListToolsRequest{})
 		if err != nil {
 			return fmt.Errorf("获取 MCP '%s' 工具列表失败 (%w)", id, err)
 		}
-		for _, t := range tools.Tools {
+		if t == nil {
+			continue
+		}
+		for _, t := range t.Tools {
 			fu := &openai.FunctionDefinition{
 				Name:        fmt.Sprintf("%s%s%s", id, mcpClientNameSeparator, t.Name),
 				Description: t.Description,
@@ -199,6 +215,14 @@ func (p *processor) iteration(ctx context.Context) error {
 
 func (p *processor) lastMessage() openai.ChatCompletionMessage {
 	return p.Messages[len(p.Messages)-1]
+}
+
+func (p *processor) mcpID(cli InitializedMCPClient) string {
+	desc := fmt.Sprintf("%p-%v", cli, reflect.TypeOf(cli)) // 不是 pointer 的话, 自然会把 type 打印出来
+
+	// MD5 hash
+	hash := md5.Sum(unsafe.StoB(desc))
+	return hex.EncodeToString(hash[:])
 }
 
 // -------- 单次迭代 --------

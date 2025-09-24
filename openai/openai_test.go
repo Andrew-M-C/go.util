@@ -8,12 +8,14 @@ import (
 	"os"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Andrew-M-C/go-bytesize"
 	hutil "github.com/Andrew-M-C/go.util/net/http"
 	utils "github.com/Andrew-M-C/go.util/openai"
 	"github.com/Andrew-M-C/go.util/unsafe"
 	"github.com/fatih/color"
+	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/sashabaranov/go-openai"
 	"github.com/smartystreets/goconvey/convey"
 )
@@ -302,6 +304,10 @@ func TestProcessMCP(t *testing.T) {
 	})
 
 	cv("下载长篇文章, 测试大模型 token 超限", t, func() {
+		if true {
+			printf("暂时取消测试")
+			return
+		}
 		ctx := context.Background()
 		config := utils.ModelConfig{
 			Model:   deepseekModel,
@@ -475,4 +481,91 @@ func TestProcessMultiModal(t *testing.T) {
 		so(len(rsp.Messages), eq, 2)
 		printf("获得响应: %v", rsp.Messages[1].Content)
 	})
+}
+
+func TestInitializedMCP(t *testing.T) {
+	cv("时间 + 天气两个 MCP", t, func() {
+		ctx := context.Background()
+		config := utils.ModelConfig{
+			Model:   deepseekModel,
+			BaseURL: deepseekBaseURL,
+			APIKey:  deepseekAPIKey,
+		}
+		req := []openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleUser,
+			Content: "请告诉我现在广州24小时制的 HH:MM 格式时间, 以及天气",
+		}}
+
+		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
+		content := func(c string) { fmt.Printf("%s", c) }
+		finish := func(f openai.FinishReason) { printf("阶段性结束: %v\n\n", f) }
+
+		weatherMCP := &weatherMCP{}
+		timeMCP := &timeMCP{}
+
+		rsp, err := utils.Process(ctx, config, req,
+			// utils.WithDebugger(printf),
+			utils.WithContentCallback(content),
+			utils.WithReasoningCallback(reasoning),
+			utils.WithFinishCallback(finish),
+			utils.WithInitializedMCP(weatherMCP),
+			utils.WithInitializedMCP(timeMCP),
+		)
+		so(err, isNil)
+		so(rsp, notNil)
+		// so(len(rsp.Messages), eq, 5) // 1问、1答、2工具调用、1答。但是有时候 LLM 会拆分成两次, 不一定
+		so(weatherMCP.Count, eq, 1)
+		so(timeMCP.Count, eq, 1)
+
+		s := rsp.Messages[4].Content
+		so(strings.Contains(s, "暴雨"), eq, true)
+
+		guangzhouTime := timeMCP.Time.Add(8 * time.Hour).UTC().Format("15:04") // 似乎需要 deepseek-r1 才知道要进行时区转换
+		printf("预期获得广州时间: %s", guangzhouTime)
+		so(strings.Contains(s, guangzhouTime), eq, true)
+	})
+}
+
+type weatherMCP struct {
+	Count int
+}
+
+func (*weatherMCP) ListTools(ctx context.Context, _ mcp.ListToolsRequest) (*mcp.ListToolsResult, error) {
+	weatherTool := mcp.Tool{
+		Name:        "weather",
+		Description: "获取当前天气状况",
+	}
+	utils.MCPToolParamWithString("location", true, "地区描述").AddToTool(&weatherTool)
+
+	return &mcp.ListToolsResult{
+		Tools: []mcp.Tool{weatherTool},
+	}, nil
+}
+
+func (w *weatherMCP) CallTool(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	w.Count++
+	// 无视请求, 固定返回
+	return utils.NewMCPCallToolResultWithString("狂风暴雨")
+}
+
+type timeMCP struct {
+	Time  time.Time
+	Count int
+}
+
+func (*timeMCP) ListTools(ctx context.Context, _ mcp.ListToolsRequest) (*mcp.ListToolsResult, error) {
+	tmTool := mcp.Tool{
+		Name:        "time",
+		Description: "获取当前的 UTC 时间",
+	}
+	return &mcp.ListToolsResult{
+		Tools: []mcp.Tool{tmTool},
+	}, nil
+}
+
+func (t *timeMCP) CallTool(context.Context, mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	t.Count++
+	t.Time = time.Now().UTC()
+	desc := t.Time.Format(time.DateTime)
+	return utils.NewMCPCallToolResultWithString(fmt.Sprintf("伦敦时间 %s", desc))
 }

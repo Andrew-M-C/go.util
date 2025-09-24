@@ -6,6 +6,8 @@ type options struct {
 	debugf func(string, ...any)
 	mcpURL []string
 
+	customizeMCPs []InitializedMCPClient
+
 	// 简单回调
 	reasoningCallback func(string)
 	contentCallback   func(string)
@@ -105,6 +107,15 @@ func WithToolCallResponseCallback(c func(openai.ChatCompletionMessage)) Option {
 	return func(o *options) {
 		if c != nil {
 			o.toolCallResponseCallback = c
+		}
+	}
+}
+
+// WithInitializedMCP 设置自定义的已初始化完成的 MCP 客户端
+func WithInitializedMCP(c InitializedMCPClient) Option {
+	return func(o *options) {
+		if c != nil {
+			o.customizeMCPs = append(o.customizeMCPs, c)
 		}
 	}
 }
