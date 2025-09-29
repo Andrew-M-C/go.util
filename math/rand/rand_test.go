@@ -22,11 +22,11 @@ func TestRand(t *testing.T) {
 func testIndexByRatios(t *testing.T) {
 	cv("基本逻辑", func() {
 		const total = 10000
-		ratios := []float32{1.1, 2.2, 3.3, 4.4}
+		ratios := []int32{11, 22, 33, 44}
 		result := make([]int, len(ratios))
 
 		for i := 0; i < total; i++ {
-			v := rand.IndexByRatios(ratios)
+			v := rand.IndexByRatios(ratios, func(_ int, v int32) int32 { return v })
 			so(v, between, -1, len(ratios))
 			result[v]++
 		}
@@ -41,11 +41,11 @@ func testIndexByRatios(t *testing.T) {
 
 	cv("部分值为零或者小于零的情况", func() {
 		const total = 10000
-		ratios := []float32{-10, 2.2, 0, 3.3, 0}
+		ratios := []int{-100, 22, 0, 33, 0}
 		result := make([]int, len(ratios))
 
 		for i := 0; i < total; i++ {
-			v := rand.IndexByRatios(ratios)
+			v := rand.IndexByRatios(ratios, func(_ int, v int) int { return v })
 			so(v, between, -1, len(ratios))
 			result[v]++
 		}
