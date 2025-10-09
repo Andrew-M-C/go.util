@@ -18,7 +18,7 @@ func TestBits(t *testing.T) {
 	cv("HasAny 和 HasAll 函数", t, func() { testHasXxx(t) })
 }
 
-func testSetClear(t *testing.T) {
+func testSetClear(*testing.T) {
 	b := uint64(0)
 
 	b = bits.Set(b, 1)
@@ -40,8 +40,8 @@ func testSetClear(t *testing.T) {
 	so(b, eq, 0x0)
 }
 
-func testHasXxx(t *testing.T) {
-	b := bits.New64(0, 1, 32, 63)
+func testHasXxx(*testing.T) {
+	b := bits.New64[uint64](0, 1, 32, 63)
 
 	so(bits.HasAll(b, 0, 1, 32, 63), eq, true)
 	so(bits.HasAll(b, 0, 63), eq, true)

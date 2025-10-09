@@ -4,8 +4,13 @@ package bits
 import "github.com/Andrew-M-C/go.util/constraints"
 
 // New64 初始化一个 uint64 的位掩码
-func New64(offsetsToSet ...int) uint64 {
-	return Set(uint64(0), offsetsToSet...)
+func New64[T ~uint64](offsetsToSet ...int) T {
+	return Set(T(0), offsetsToSet...)
+}
+
+// New32 初始化一个 uint32 的位掩码
+func New32[T ~uint32](offsetsToSet ...int) T {
+	return Set(T(0), offsetsToSet...)
 }
 
 // Set 按偏移量设置位
