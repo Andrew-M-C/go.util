@@ -23,6 +23,7 @@ require (
 	github.com/Andrew-M-C/go.util/time v0.0.0-20241118072554-b6cba35b72fb // indirect
 	github.com/Andrew-M-C/go.util/unsafe v0.0.0-20240924120445-d310ce87211e // indirect
 	github.com/fatih/color v1.18.0 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/shopspring/decimal v1.4.0 // indirect
