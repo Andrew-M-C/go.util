@@ -5,8 +5,6 @@ import (
 	"path"
 	"reflect"
 	"strings"
-
-	jsonvalue "github.com/Andrew-M-C/go.jsonvalue"
 )
 
 // TypeDesc 描述一个类型的各种信息
@@ -31,24 +29,6 @@ func (t TypeDesc) Kind() reflect.Kind {
 	return t.kind
 }
 
-func (t TypeDesc) MarshalJSON() ([]byte, error) {
-	j := jsonvalue.NewObject()
-	j.MustSetString(t.TypeName).At("type_name")
-	j.MustSetString(t.PackageName).At("package_name")
-	j.MustSetInt(t.PointerLevels).At("pointer_levels")
-
-	if t.Path.Prefix != "" {
-		j.MustSetString(t.Path.Prefix).At("path", "prefix")
-	}
-	if t.Path.Full != "" {
-		j.MustSetString(t.Path.Prefix).At("path", "full")
-	}
-
-	j.MustSetString(t.kind.String()).At("kind")
-
-	return j.Marshal(jsonvalue.OptSetSequence())
-}
-
 // DescribeType 描述一个类型
 func DescribeType(v any) TypeDesc {
 	if v == nil {
@@ -62,14 +42,14 @@ func DescribeType(v any) TypeDesc {
 
 func describeNilType() (desc TypeDesc) {
 	desc.TypeName = "nil"
-	return
+	return desc
 }
 
 func describeType(typ reflect.Type) (desc TypeDesc) {
 	if typ.Kind() == reflect.Pointer {
 		desc = describeType(typ.Elem())
 		desc.PointerLevels++
-		return
+		return desc
 	}
 
 	s := typ.String()
@@ -97,5 +77,5 @@ func describeType(typ reflect.Type) (desc TypeDesc) {
 		desc.Path.Prefix = ""
 	}
 
-	return
+	return desc
 }

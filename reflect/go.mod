@@ -3,7 +3,7 @@ module github.com/Andrew-M-C/go.util/reflect
 go 1.19
 
 require (
-	github.com/Andrew-M-C/go.jsonvalue v1.4.1
+	github.com/Andrew-M-C/go.jsonvalue v1.4.2
 	github.com/smartystreets/goconvey v1.8.1
 )
 
