@@ -19,6 +19,11 @@ var (
 
 func TestReflect(t *testing.T) {
 	cv("DescribeType", t, func() { testDescribeType(t) })
+	cv("ReadAny", t, func() { testReadAny(t) })
+	cv("testReadStruct", t, func() { testReadStruct(t) })
+	cv("testReadSlice", t, func() { testReadSlice(t) })
+	cv("testReadArray", t, func() { testReadArray(t) })
+	cv("testReadMap", t, func() { testReadMap(t) })
 }
 
 func testDescribeType(t *testing.T) {

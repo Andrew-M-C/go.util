@@ -9,7 +9,7 @@ import (
 
 // TypeDesc 描述一个类型的各种信息
 type TypeDesc struct {
-	// 类型名称
+	// 底层类型名称, 不包含 *
 	TypeName string `json:"type_name"`
 	// package 名称
 	PackageName string `json:"package_name"`
@@ -21,12 +21,7 @@ type TypeDesc struct {
 		Full   string `json:"full,omitempty"`   // 完整的 path + package 路径名
 	} `json:"path"`
 
-	kind reflect.Kind
-}
-
-// Kind 返回类型的 Kind
-func (t TypeDesc) Kind() reflect.Kind {
-	return t.kind
+	Kind reflect.Kind `json:"kind"`
 }
 
 // DescribeType 描述一个类型
@@ -36,7 +31,7 @@ func DescribeType(v any) TypeDesc {
 	}
 	typ := reflect.TypeOf(v)
 	res := describeType(typ)
-	res.kind = typ.Kind()
+	res.Kind = typ.Kind()
 	return res
 }
 
