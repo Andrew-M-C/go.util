@@ -6,10 +6,10 @@ import (
 
 // ReadAny 读取任意类型的值
 func ReadAny(v any, reader ValueReader) {
-	doReadAny(-1, v, reader, 0)
+	doReadAny(-1, v, reader)
 }
 
-func doReadAny(index int, v any, reader ValueReader, pointerLevels int) {
+func doReadAny(index int, v any, reader ValueReader) {
 	desc := FieldDesc{
 		TypeDesc: describeType(reflect.TypeOf(v)),
 	}
