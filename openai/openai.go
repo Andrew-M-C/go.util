@@ -10,7 +10,7 @@ import (
 
 // ModelConfig 模型配置
 type ModelConfig struct {
-	Model   string `json:"mode,omitempty"`
+	Model   string `json:"model,omitempty"`
 	BaseURL string `json:"base_url,omitempty"`
 	APIKey  string `json:"api_key,omitempty"`
 }
