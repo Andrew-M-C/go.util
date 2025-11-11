@@ -8,6 +8,12 @@ import (
 	"golang.org/x/exp/slices"
 )
 
+// TraceIDContextKey 返回 trace ID 的 context key, 用于一些外部需要复制 context 的
+// key / value 的场景
+func TraceIDContextKey() any {
+	return traceIDKey{}
+}
+
 // 保存 ctx 中的 trace ID 字段
 type traceIDKey struct{}
 
