@@ -5,6 +5,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -46,7 +47,8 @@ func NewBrowser(ctx context.Context) context.Context {
 
 	ctx, cancel := chromedp.NewExecAllocator(ctx, opts...)
 	cancler := &canceler{
-		fn: cancel,
+		fn:     cancel,
+		closed: &atomic.Bool{},
 	}
 	return context.WithValue(ctx, cancelerKey{}, cancler)
 }
@@ -57,8 +59,8 @@ func CloseBrowser(ctx context.Context) {
 	if v == nil {
 		return
 	}
-	c, _ := v.(*canceler)
-	if c == nil {
+	c, ok := v.(*canceler)
+	if !ok || c == nil {
 		return
 	}
 	if c.closed.CompareAndSwap(false, true) {
@@ -70,7 +72,7 @@ type cancelerKey struct{}
 
 type canceler struct {
 	fn     context.CancelFunc
-	closed atomic.Bool
+	closed *atomic.Bool
 }
 
 func isBrowser(ctx context.Context) bool {
@@ -78,14 +80,18 @@ func isBrowser(ctx context.Context) bool {
 	if v == nil {
 		return false
 	}
-	c, _ := v.(*canceler)
+	c, ok := v.(*canceler)
+	if !ok {
+		return false
+	}
 	return c != nil && !c.closed.Load()
 }
 
 // HTMLResult 存储HTML内容和Cookie信息
 type HTMLResult struct {
-	Content string            // HTML内容
-	Cookies []*network.Cookie // Cookie信息
+	Content string              // HTML内容
+	Cookies []*network.Cookie   // Cookie信息
+	Images  map[string]struct{} // 引用的所有图片链接
 }
 
 // GetHTML 下载 html 静态内容和网站设置的cookie
@@ -100,6 +106,7 @@ func GetHTML(ctx context.Context, targetURL string, opts ...Option) (*HTMLResult
 	// 存储渲染后的 HTML
 	var htmlContent string
 	var cookies []*network.Cookie
+	images := map[string]struct{}{} // 存储所有图片链接
 
 	// 用于执行具体的浏览器操作，设置日志级别为 ERROR 以过滤掉警告
 	ctx, cancel := chromedp.NewContext(ctx, chromedp.WithLogf(func(format string, args ...interface{}) {
@@ -183,9 +190,21 @@ func GetHTML(ctx context.Context, targetURL string, opts ...Option) (*HTMLResult
 		o.debug("耗时 %v - %s", time.Since(start), targetURL)
 	}
 
+	// 提取所有图片链接
+	if htmlContent != "" {
+		extractedImages, err := extractImageLinks(htmlContent, targetURL)
+		if err != nil {
+			o.debug("提取图片链接失败: %v", err)
+		} else {
+			images = extractedImages
+			o.debug("提取到 %d 个图片链接", len(images))
+		}
+	}
+
 	return &HTMLResult{
 		Content: htmlContent,
 		Cookies: cookies,
+		Images:  images,
 	}, nil
 }
 
@@ -235,4 +254,81 @@ func isExcludedTag(tagName string) bool {
 		}
 	}
 	return false
+}
+
+// extractImageLinks 提取 HTML 中所有图片的完整链接
+func extractImageLinks(htmlContent, baseURL string) (map[string]struct{}, error) {
+	images := make(map[string]struct{})
+
+	// 解析 HTML
+	doc, err := html.Parse(strings.NewReader(htmlContent))
+	if err != nil {
+		return images, fmt.Errorf("解析 HTML 失败: %w", err)
+	}
+
+	// 解析基础 URL
+	base, err := url.Parse(baseURL)
+	if err != nil {
+		return images, fmt.Errorf("解析基础 URL 失败: %w", err)
+	}
+
+	// 递归遍历 HTML 节点，查找所有 img 标签
+	var findImages func(*html.Node)
+	findImages = func(n *html.Node) {
+		if n.Type == html.ElementNode && n.Data == "img" {
+			// 查找 src 属性
+			for _, attr := range n.Attr {
+				if attr.Key == "src" || attr.Key == "data-src" || attr.Key == "data-original" {
+					imgURL := strings.TrimSpace(attr.Val)
+					if imgURL == "" {
+						continue
+					}
+
+					// 跳过 data URI 和特殊协议
+					if strings.HasPrefix(imgURL, "data:") ||
+						strings.HasPrefix(imgURL, "javascript:") ||
+						strings.HasPrefix(imgURL, "about:") {
+						continue
+					}
+
+					// 将相对链接转换为绝对链接
+					absoluteURL := resolveURL(base, imgURL)
+					if absoluteURL != "" {
+						images[absoluteURL] = struct{}{}
+					}
+				}
+			}
+		}
+
+		// 递归处理子节点
+		for child := n.FirstChild; child != nil; child = child.NextSibling {
+			findImages(child)
+		}
+	}
+
+	findImages(doc)
+	return images, nil
+}
+
+// resolveURL 将相对 URL 转换为绝对 URL
+func resolveURL(base *url.URL, href string) string {
+	href = strings.TrimSpace(href)
+	if href == "" {
+		return ""
+	}
+
+	// 解析 href
+	u, err := url.Parse(href)
+	if err != nil {
+		return ""
+	}
+
+	// 如果已经是绝对 URL，直接返回
+	if u.IsAbs() {
+		return u.String()
+	}
+
+	// 否则基于 base URL 解析
+	resolved := base.ResolveReference(u)
+	return resolved.String()
 }
