@@ -74,7 +74,7 @@ func TestDownload(t *testing.T) {
 	cv("DownloadFile", t, func() {
 		cv("文件名不在路径中", func() {
 			const target = "https://cdn.cloudflare.steamstatic.com/client/installer/steam.deb"
-			ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Minute)
 			defer cancel()
 
 			fileName, content, err := http.DownloadFile(

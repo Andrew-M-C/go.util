@@ -34,6 +34,28 @@ func WithRequestHeader(h http.Header) RequestOption {
 	}
 }
 
+// WithRequestCookies 设定请求头中的 Cookie
+func WithRequestCookies(cookies []*http.Cookie) RequestOption {
+	return func(ro *requestOption) {
+		buff := bytes.Buffer{}
+		for _, cookie := range cookies {
+			if cookie == nil {
+				continue
+			}
+			if buff.Len() > 0 {
+				buff.WriteRune(';')
+			}
+			buff.WriteString(cookie.Name)
+			buff.WriteByte('=')
+			buff.WriteString(cookie.Value)
+		}
+		if buff.Len() == 0 {
+			return
+		}
+		ro.header.Set("Cookie", buff.String())
+	}
+}
+
 // WithRequestBody 请求正文
 func WithRequestBody(req any) RequestOption {
 	return func(ro *requestOption) {
@@ -113,7 +135,7 @@ func (o *requestOption) getBody() (io.Reader, error) {
 	}
 	b, e := o.marshaler(o.body)
 	if e != nil {
-		return nil, fmt.Errorf("Marshal request error (%w)", e)
+		return nil, fmt.Errorf("marshal request error (%w)", e)
 	}
 	o.debugf("request body '%s'", b)
 	return bytes.NewBuffer(b), nil
@@ -125,7 +147,7 @@ func mergeOptions(opts []RequestOption, marshaler marshalerType) *requestOption 
 		header:      http.Header{},
 		body:        nil,
 		query:       url.Values{},
-		debugf:      func(s string, a ...any) {},
+		debugf:      func(string, ...any) {},
 		marshaler:   marshaler,
 		unmarshaler: json.Unmarshal,
 	}
