@@ -3,7 +3,7 @@ module github.com/Andrew-M-C/go.util/china/admindivision/internal
 go 1.22.0
 
 require (
-	github.com/Andrew-M-C/go.jsonvalue v1.4.1
+	github.com/Andrew-M-C/go.jsonvalue v1.4.2
 	github.com/Andrew-M-C/go.util/net v0.0.0-20250116061329-8e3db2afac06
 	github.com/Andrew-M-C/go.util/slices v0.0.0-20250530091121-67b21a300cc2
 	github.com/go-sql-driver/mysql v1.8.1

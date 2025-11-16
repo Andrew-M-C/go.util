@@ -13,7 +13,7 @@ require (
 )
 
 require (
-	github.com/Andrew-M-C/go.jsonvalue v1.4.1 // indirect
+	github.com/Andrew-M-C/go.jsonvalue v1.4.2 // indirect
 	github.com/Andrew-M-C/go.util/constraints v0.0.0-20240920040959-400d8f87c326 // indirect
 	github.com/Andrew-M-C/go.util/slice v0.0.0-20240221044053-8b90aa4683c0 // indirect
 	github.com/Andrew-M-C/go.util/time v0.0.0-20240221041441-f40098fe5ae4 // indirect

@@ -1,5 +1,4 @@
-github.com/Andrew-M-C/go.jsonvalue v1.4.1 h1:MGtqaKy5Z7Xi/hnWaeqWDMwno79uNRt0XoCGHa1pm74=
-github.com/Andrew-M-C/go.jsonvalue v1.4.1/go.mod h1:EsYbZ97LlOhGUs+7qTwZI9KaJrPe6nK8sEZKEqr70Ww=
+github.com/Andrew-M-C/go.jsonvalue v1.4.2 h1:pIlh3Sr620uXDxa7rnBUqGGHKcZgS3cj+il84CQi3hc=
 github.com/Andrew-M-C/go.util/constraints v0.0.0-20240920040959-400d8f87c326 h1:BXeBUoFBw7I7b2aSyohleo/EqDw8LSREonVyi5c1nBo=
 github.com/Andrew-M-C/go.util/constraints v0.0.0-20240920040959-400d8f87c326/go.mod h1:kwwhHyN9ZZcCZ9xN3KJ2nw+URJJ2JV0Jkl9WRrR4jxQ=
 github.com/Andrew-M-C/go.util/runtime v0.0.0-20240221044053-8b90aa4683c0 h1:SjF5imujpHh9UZhZOlZD+ZMj2iR3kB4PfWc6aPO51to=

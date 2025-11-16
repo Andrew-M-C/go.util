@@ -1,6 +1,13 @@
 // Package crawler 用于实现一些简单的爬虫工具
 package crawler
 
+import (
+	"net/http"
+	"time"
+
+	"github.com/chromedp/cdproto/network"
+)
+
 // HyperLink 表示一个超链接
 type HyperLink struct {
 	Title string `json:"title" yaml:"title"`
@@ -62,5 +69,43 @@ func WithLanguage(l string) Option {
 		if l != "" {
 			o.language = l
 		}
+	}
+}
+
+// ChromeCookiesToStandard 将 chromedp 的 cookie 类型转为 Go 标准库的类型
+func ChromeCookiesToStandard(cookies []*network.Cookie) []*http.Cookie {
+	res := make([]*http.Cookie, 0, len(cookies))
+	for _, c := range cookies {
+		if c == nil {
+			continue
+		}
+
+		httpCookie := &http.Cookie{
+			Name:     c.Name,
+			Value:    c.Value,
+			Path:     c.Path,
+			Domain:   c.Domain,
+			Expires:  time.Unix(int64(c.Expires), 0),
+			Secure:   c.Secure,
+			HttpOnly: c.HTTPOnly,
+			SameSite: convertSameSite(c.SameSite),
+		}
+
+		res = append(res, httpCookie)
+	}
+
+	return res
+}
+
+func convertSameSite(sameSite network.CookieSameSite) http.SameSite {
+	switch sameSite {
+	case network.CookieSameSiteStrict:
+		return http.SameSiteStrictMode
+	case network.CookieSameSiteLax:
+		return http.SameSiteLaxMode
+	case network.CookieSameSiteNone:
+		return http.SameSiteNoneMode
+	default:
+		return http.SameSiteDefaultMode
 	}
 }

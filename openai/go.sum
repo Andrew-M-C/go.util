@@ -1,7 +1,6 @@
 github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3 h1:EEOMYQYkLbcQEfKN9/t3aOKiBD2HZ4lDd+d/aB4754o=
 github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3/go.mod h1:YJAeUx9w5bqEQJcJXHmm66CU57vK4oNli5skYzl9LXk=
-github.com/Andrew-M-C/go.jsonvalue v1.4.1 h1:MGtqaKy5Z7Xi/hnWaeqWDMwno79uNRt0XoCGHa1pm74=
-github.com/Andrew-M-C/go.jsonvalue v1.4.1/go.mod h1:EsYbZ97LlOhGUs+7qTwZI9KaJrPe6nK8sEZKEqr70Ww=
+github.com/Andrew-M-C/go.jsonvalue v1.4.2 h1:pIlh3Sr620uXDxa7rnBUqGGHKcZgS3cj+il84CQi3hc=
 github.com/Andrew-M-C/go.util/net v0.0.0-20250920025415-d81d9063f493 h1:4Tw6HT0moRCapbO7XnDDPx4Om87wId2cwGk5kPHlCwc=
 github.com/Andrew-M-C/go.util/net v0.0.0-20250920025415-d81d9063f493/go.mod h1:mfODmKvs49xz2Y8/Gfr28HHMSAP+CEPEZlLqtU0/SrQ=
 github.com/Andrew-M-C/go.util/unsafe v0.0.0-20250921015404-be4cf033d16a h1:4GQPJNlByRsxrB3bCuLgrQpaelNafDL6zRxjxXifZfI=
