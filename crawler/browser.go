@@ -143,6 +143,21 @@ func GetHTML(ctx context.Context, targetURL string, opts ...Option) (*HTMLResult
 			})
 			return nil
 		}),
+		// 设置自定义 HTTP headers
+		chromedp.ActionFunc(func(ctx context.Context) error {
+			if len(o.headers) > 0 {
+				headers := network.Headers{}
+				for key, values := range o.headers {
+					if len(values) > 0 {
+						// 如果有多个值，用逗号分隔（符合 HTTP 规范）
+						headers[key] = strings.Join(values, ", ")
+						o.debug("设置请求头: %s = %s", key, headers[key])
+					}
+				}
+				return network.SetExtraHTTPHeaders(headers).Do(ctx)
+			}
+			return nil
+		}),
 		chromedp.Navigate(targetURL),
 		// 同时处理超时和正常流程
 		chromedp.ActionFunc(func(ctx context.Context) error {

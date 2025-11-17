@@ -31,6 +31,9 @@ type options struct {
 	num      int
 	language string
 	debug    Debugger
+
+	// 额外的 HTTP header 配置
+	headers http.Header
 }
 
 func mergeOptions(opts ...Option) *options {
@@ -38,11 +41,28 @@ func mergeOptions(opts ...Option) *options {
 		num:      10,
 		language: "",
 		debug:    func(string, ...any) {},
+		headers:  http.Header{},
 	}
 	for _, o := range opts {
 		o(opt)
 	}
 	return opt
+}
+
+// WithHeader 设置额外的 HTTP header 配置
+func WithHeader(h http.Header) Option {
+	return func(o *options) {
+		hCopy := http.Header{}
+		for k, values := range h {
+			for _, v := range values {
+				hCopy.Add(k, v)
+			}
+		}
+		// 然后使用 set 的方式添加
+		for k, v := range hCopy {
+			o.headers[k] = v
+		}
+	}
 }
 
 // WithDebugger 设置调试日志器
