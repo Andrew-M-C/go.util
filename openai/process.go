@@ -2,24 +2,22 @@ package openai
 
 import (
 	"context"
-	"crypto/md5"
-	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"reflect"
 	"slices"
+	"strconv"
 	"strings"
 	"sync"
 
 	hutil "github.com/Andrew-M-C/go.util/net/http"
-	"github.com/Andrew-M-C/go.util/unsafe"
 	mcpclient "github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
 	"github.com/sashabaranov/go-openai"
 )
 
-const mcpClientNameSeparator = "-"
+const mcpClientNameSeparator = ":"
 
 type processor struct {
 	// 入参
@@ -218,11 +216,9 @@ func (p *processor) lastMessage() openai.ChatCompletionMessage {
 }
 
 func (p *processor) mcpID(cli InitializedMCPClient) string {
-	desc := fmt.Sprintf("%p-%v", cli, reflect.TypeOf(cli)) // 不是 pointer 的话, 自然会把 type 打印出来
-
-	// MD5 hash
-	hash := md5.Sum(unsafe.StoB(desc))
-	return hex.EncodeToString(hash[:])
+	_ = cli
+	le := len(p.mcpClientByID)
+	return strconv.Itoa(le + 1)
 }
 
 // -------- 单次迭代 --------
