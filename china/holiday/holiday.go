@@ -7,6 +7,11 @@ import (
 	"time"
 )
 
+// BeijingZone 返回北京时区
+func BeijingZone() *time.Location {
+	return beijing
+}
+
 // MARK: 公开定义 - DayType
 
 // DayType 表示这一天所属的类型
@@ -67,6 +72,11 @@ type Day struct {
 	time.Time
 }
 
+// DayFromTime 从时间构建一个 Day 类型。注意, 会转为北京时间
+func DayFromTime(tm time.Time) Day {
+	return Day{Time: tm.In(beijing)}
+}
+
 // AddSpecialDay 添加一个特殊日期
 func AddSpecialDay(d Day, typ DayType, description string) {
 	newDate(d.Year(), d.Month(), d.Day()).withType(typ).withName(description).add()
@@ -78,7 +88,7 @@ func Today() Day {
 	return Day{Time: tm}
 }
 
-// 从一个时间提取出日期。
+// DayOfTime 从一个时间提取出日期
 func DayOfTime(tm time.Time) Day {
 	return Day{Time: tm.In(beijing)}
 }
@@ -115,6 +125,17 @@ func (d Day) Type() DayType {
 	}
 }
 
+// IsRestDay 判断给定的时间是否是休息日, 囊括了 Weekend、Holiday、HolidayPeriod、ShiftedDayOff。
+// 但是请注意, 不包括自定义的类型
+func (d Day) IsRestDay() bool {
+	switch d.Type() {
+	case Weekend, Holiday, HolidayPeriod, ShiftedDayOff:
+		return true
+	default:
+		return false
+	}
+}
+
 // Description 描述, 比如: 工作日 / 周末 / 国庆调休放假 / 国庆调休上班
 func (d Day) Description() string {
 	// 如果今天是特殊日子
@@ -122,6 +143,31 @@ func (d Day) Description() string {
 		return da.desc
 	}
 	return d.Type().String()
+}
+
+// AddWorkday 增加指定天数的工作日, 如果遇到节假日则跳过。如果给定的时间是一个休息日,
+// 则会顺延到下一个工作日开始计算。
+//
+// 注意, 这个方法是 O(N) 的简易封装, 所以请勿传入太大的值
+func (d Day) AddWorkday(days int) Day {
+	// 首先顺延当前日期
+	direction := 1
+	if days < 0 {
+		direction = -1
+	}
+	for d.IsRestDay() {
+		d = d.AddDate(0, 0, direction)
+	}
+
+	// 然后顺延 days 天
+	for days != 0 {
+		d = d.AddDate(0, 0, direction)
+		for d.IsRestDay() {
+			d = d.AddDate(0, 0, direction)
+		}
+		days -= direction
+	}
+	return d
 }
 
 // MARK: 继承 time.Time 的方法
