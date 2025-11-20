@@ -38,7 +38,7 @@ func (p *processor) do(ctx context.Context) (ProcessResponse, error) {
 
 	// 一些初始化工作
 	p.mcpClientByID = make(map[string]InitializedMCPClient,
-		len(p.Opts.mcpURL)+len(p.Opts.customizeMCPs),
+		len(p.Opts.remoteMCPs)+len(p.Opts.customizeMCPs),
 	)
 	// 主流程
 	procedures := []func(context.Context) error{
@@ -77,10 +77,10 @@ func (p *processor) copyMessages(ctx context.Context) error {
 }
 
 func (p *processor) connectRemoteMCP(ctx context.Context) error {
-	iterateURL := func(index int, url string) error {
-		cli, err := mcpclient.NewSSEMCPClient(url)
+	iterateURL := func(index int, param remoteMCPParams) error {
+		cli, err := mcpclient.NewSSEMCPClient(param.baseURL, param.options...)
 		if err != nil {
-			return fmt.Errorf("连接 MCP '%s' 失败 (%w)", url, err)
+			return fmt.Errorf("连接 MCP '%s' 失败 (%w)", param.baseURL, err)
 		}
 
 		// 添加关闭操作
@@ -90,7 +90,7 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 
 		// 启动客户端，获取endpoint
 		if err := cli.Start(ctx); err != nil {
-			return fmt.Errorf("启动 MCP 客户端 '%s' 失败 (%w)", url, err)
+			return fmt.Errorf("启动 MCP 客户端 '%s' 失败 (%w)", param.baseURL, err)
 		}
 
 		// 初始化
@@ -102,7 +102,7 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 		}
 		initResult, err := cli.Initialize(ctx, initRequest)
 		if err != nil {
-			return fmt.Errorf("初始化 MCP '%s' 失败 (%w)", url, err)
+			return fmt.Errorf("初始化 MCP '%s' 失败 (%w)", param.baseURL, err)
 		}
 
 		id := p.mcpID(cli)
@@ -110,13 +110,13 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 
 		p.Opts.debugf(
 			"连接 MCP '%s' 并初始化成功, name '%s', id: %s, version '%s'",
-			url, initResult.ServerInfo.Name, id, initResult.ServerInfo.Version,
+			param.baseURL, initResult.ServerInfo.Name, id, initResult.ServerInfo.Version,
 		)
 		return nil
 	}
 
-	for i, u := range p.Opts.mcpURL {
-		if err := iterateURL(i, u); err != nil {
+	for i, p := range p.Opts.remoteMCPs {
+		if err := iterateURL(i, p); err != nil {
 			return err
 		}
 	}

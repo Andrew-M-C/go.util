@@ -1,6 +1,6 @@
 module github.com/Andrew-M-C/go.util/openai
 
-go 1.23
+go 1.23.0
 
 toolchain go1.23.5
 
@@ -10,7 +10,7 @@ require (
 	github.com/Andrew-M-C/go.util/unsafe v0.0.0-20250921015404-be4cf033d16a
 	github.com/fatih/color v1.18.0
 	github.com/h2non/filetype v1.1.3
-	github.com/mark3labs/mcp-go v0.39.1
+	github.com/mark3labs/mcp-go v0.43.0
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/smartystreets/goconvey v1.8.1
 )

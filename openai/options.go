@@ -1,10 +1,13 @@
 package openai
 
-import "github.com/sashabaranov/go-openai"
+import (
+	"github.com/mark3labs/mcp-go/client/transport"
+	"github.com/sashabaranov/go-openai"
+)
 
 type options struct {
-	debugf func(string, ...any)
-	mcpURL []string
+	debugf     func(string, ...any)
+	remoteMCPs []remoteMCPParams
 
 	customizeMCPs []InitializedMCPClient
 
@@ -16,6 +19,11 @@ type options struct {
 	// 工具调用回调
 	toolCallRequestCallback  func(openai.ToolCall)
 	toolCallResponseCallback func(openai.ChatCompletionMessage)
+}
+
+type remoteMCPParams struct {
+	baseURL string
+	options []transport.ClientOption
 }
 
 func mergeOptions(opts []Option) *options {
@@ -58,10 +66,13 @@ func WithDebugger(d func(string, ...any)) Option {
 }
 
 // WithRemoteMCP 设置远程 MCP 的 URL, 可以设置多个
-func WithRemoteMCP(baseURL string) Option {
+func WithRemoteMCP(baseURL string, opts ...transport.ClientOption) Option {
 	return func(o *options) {
 		if baseURL != "" {
-			o.mcpURL = append(o.mcpURL, baseURL)
+			o.remoteMCPs = append(o.remoteMCPs, remoteMCPParams{
+				baseURL: baseURL,
+				options: opts,
+			})
 		}
 	}
 }
