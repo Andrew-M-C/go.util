@@ -6,12 +6,15 @@ type option struct {
 	align Align
 	blank string
 	tab   string
+
+	debug func(string, ...any)
 }
 
 func defaultOption() *option {
 	return &option{
 		align: AlignRight,
 		blank: " ",
+		debug: func(string, ...any) {},
 	}
 }
 
@@ -49,5 +52,14 @@ func WithTabWidth(width int) Option {
 	}
 	return func(o *option) {
 		o.tab = strings.Repeat(" ", width)
+	}
+}
+
+// WithDebugger 表示指定调试器
+func WithDebugger(f func(string, ...any)) Option {
+	return func(o *option) {
+		if f != nil {
+			o.debug = f
+		}
 	}
 }
