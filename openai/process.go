@@ -268,22 +268,22 @@ func (p *toolProcessor) do(ctx context.Context) error {
 			defer wg.Done()
 
 			res, e := p.doToolCall(ctx, tc)
+			if e != nil {
+				res = fmt.Sprintf("工具调用失败, 错误: '%v', 工具 %v", e, tc.Function.Name)
+				p.Opts.debugf("%s", res)
+			} else {
+				p.Opts.debugf("工具调用返回: %v", toJSON{res})
+			}
 
 			lck.Lock()
 			defer lck.Unlock()
-
-			if e != nil {
-				err = e
-				return
-			}
 			m := openai.ChatCompletionMessage{
 				Role:       openai.ChatMessageRoleTool,
 				Content:    res,
 				ToolCallID: tc.ID,
 			}
-			p.Opts.debugf("工具调用返回: %v", toJSON{m})
-			p.Messages = append(p.Messages, m)
 
+			p.Messages = append(p.Messages, m)
 			p.Opts.toolCallResponseCallback(m)
 		}(i, tc)
 	}
