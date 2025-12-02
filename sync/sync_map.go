@@ -3,7 +3,7 @@ package sync
 import "sync"
 
 // Map 是 sync.Map 的封装, 但是暴露的参数类型是泛型
-type Map[K comparable, V comparable] interface {
+type Map[K comparable, V any] interface {
 	Map() map[K]V
 	CompareAndDelete(key K, old V) (deleted bool)
 	CompareAndSwap(key K, old, new V) bool
@@ -16,7 +16,7 @@ type Map[K comparable, V comparable] interface {
 	Swap(key K, value V) (previous V, loaded bool)
 }
 
-func NewMap[K comparable, V comparable]() Map[K, V] {
+func NewMap[K comparable, V any]() Map[K, V] {
 	return &syncMap[K, V]{
 		m: &sync.Map{},
 	}
