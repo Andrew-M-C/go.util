@@ -1,0 +1,5 @@
+﻿ignore,col1,col2,col3
+row1,value1,,value3
+row2,,value2,
+row3,a,b,c
+

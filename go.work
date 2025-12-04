@@ -12,6 +12,7 @@ use (
 	./constraints
 	./context
 	./crawler
+	./csv
 	./datastructure
 	./draw
 	./elastic
