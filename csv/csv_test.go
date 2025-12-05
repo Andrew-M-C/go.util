@@ -35,7 +35,7 @@ func TestReadCSVStringMaps_Normal(t *testing.T) {
 		data, err := readTestData("normal.csv")
 		so(err, isNil)
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -67,7 +67,7 @@ func TestReadCSVStringMaps_WithEmptyValues(t *testing.T) {
 		data, err := readTestData("with_empty_values.csv")
 		so(err, isNil)
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -99,7 +99,7 @@ func TestReadCSVStringMaps_DuplicateKeys(t *testing.T) {
 		data, err := readTestData("duplicate_keys.csv")
 		so(err, isNil)
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -120,7 +120,7 @@ func TestReadCSVStringMaps_ValidRows(t *testing.T) {
 		data, err := readTestData("incomplete_rows.csv")
 		so(err, isNil)
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -144,7 +144,7 @@ func TestReadCSVStringMaps_IncompleteRowsError(t *testing.T) {
 		// 如果有不完整的行，会返回错误
 		data := []byte("ignore,col1,col2,col3\nrow1,v1,v2,v3\nshort\nrow3,v31,v32,v33\n")
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, notNil) // 应该返回解析错误
 		so(result, isNil)
 	})
@@ -155,7 +155,7 @@ func TestReadCSVStringMaps_SingleColumn(t *testing.T) {
 		data, err := readTestData("single_column.csv")
 		so(err, isNil)
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, notNil) // 应该返回错误
 		so(result, isNil)
 		so(err.Error(), eq, "CSV 数据格式不正确：第一行至少需要两列")
@@ -167,7 +167,7 @@ func TestReadCSVStringMaps_Empty(t *testing.T) {
 		data, err := readTestData("empty.csv")
 		so(err, isNil)
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, notNil) // 应该返回错误
 		so(result, isNil)
 		so(err.Error(), eq, "CSV 数据为空")
@@ -179,7 +179,7 @@ func TestReadCSVStringMaps_Minimal(t *testing.T) {
 		data, err := readTestData("minimal.csv")
 		so(err, isNil)
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -194,7 +194,7 @@ func TestReadCSVStringMaps_Chinese(t *testing.T) {
 		data, err := readTestData("chinese.csv")
 		so(err, isNil)
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -226,7 +226,7 @@ func TestReadCSVStringMaps_WithBOM(t *testing.T) {
 		// 测试 UTF-16 BE BOM (0xFE 0xFF)
 		convey.Convey("测试 UTF-16 BE BOM", func() {
 			dataWithBOM := append([]byte{0xFE, 0xFF}, normalCSV...)
-			result, err := csv.ReadCSVStringMaps[string, string, string](dataWithBOM)
+			result, _, err := csv.ReadCSVStringMaps[string, string, string](dataWithBOM)
 			so(err, isNil)
 			so(result, notNil)
 			so(result["row1"]["col1"], eq, "value1")
@@ -235,7 +235,7 @@ func TestReadCSVStringMaps_WithBOM(t *testing.T) {
 		// 测试 UTF-16 LE BOM (0xFF 0xFE)
 		convey.Convey("测试 UTF-16 LE BOM", func() {
 			dataWithBOM := append([]byte{0xFF, 0xFE}, normalCSV...)
-			result, err := csv.ReadCSVStringMaps[string, string, string](dataWithBOM)
+			result, _, err := csv.ReadCSVStringMaps[string, string, string](dataWithBOM)
 			so(err, isNil)
 			so(result, notNil)
 			so(result["row1"]["col1"], eq, "value1")
@@ -258,7 +258,7 @@ func TestReadCSVStringMaps_CustomTypes(t *testing.T) {
 		so(err, isNil)
 
 		// 使用自定义类型
-		result, err := csv.ReadCSVStringMaps[UserID, ColumnName, CellValue](data)
+		result, _, err := csv.ReadCSVStringMaps[UserID, ColumnName, CellValue](data)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -280,7 +280,7 @@ func TestReadCSVStringMaps_MalformedCSV(t *testing.T) {
 		malformedData := []byte(`ignore,col1
 row1,"unclosed quote`)
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](malformedData)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](malformedData)
 		so(err, notNil) // 应该返回解析错误
 		so(result, isNil)
 	})
@@ -291,7 +291,7 @@ func TestReadCSVStringMaps_HeaderOnlyFile(t *testing.T) {
 		// 只有标题行，没有数据行
 		headerOnlyData := []byte("ignore,col1,col2\n")
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](headerOnlyData)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](headerOnlyData)
 		so(err, isNil)
 		so(result, notNil)
 		so(len(result), eq, 0) // 应该返回空 map
@@ -305,14 +305,14 @@ func TestReadCSVStringMaps_ColumnCountMismatch(t *testing.T) {
 
 		convey.Convey("数据行比标题行多列应返回错误", func() {
 			data := []byte("ignore,col1,col2\nrow1,v1,v2,v3,v4\n")
-			result, err := csv.ReadCSVStringMaps[string, string, string](data)
+			result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 			so(err, notNil) // 应该返回解析错误
 			so(result, isNil)
 		})
 
 		convey.Convey("数据行比标题行少列应返回错误", func() {
 			data := []byte("ignore,col1,col2,col3\nrow1,v1\n")
-			result, err := csv.ReadCSVStringMaps[string, string, string](data)
+			result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 			so(err, notNil) // 应该返回解析错误
 			so(result, isNil)
 		})
@@ -325,7 +325,7 @@ func TestReadCSVStringMaps_SpecialCharacters(t *testing.T) {
 			data := []byte(`ignore,col1,col2
 row1,"hello, world",value2
 `)
-			result, err := csv.ReadCSVStringMaps[string, string, string](data)
+			result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 			so(err, isNil)
 			so(result["row1"]["col1"], eq, "hello, world")
 		})
@@ -335,7 +335,7 @@ row1,"hello, world",value2
 row1,"line1
 line2",value2
 `)
-			result, err := csv.ReadCSVStringMaps[string, string, string](data)
+			result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 			so(err, isNil)
 			so(result["row1"]["col1"], eq, "line1\nline2")
 		})
@@ -344,7 +344,7 @@ line2",value2
 			data := []byte(`ignore,col1,col2
 row1,"say ""hello""",value2
 `)
-			result, err := csv.ReadCSVStringMaps[string, string, string](data)
+			result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 			so(err, isNil)
 			so(result["row1"]["col1"], eq, `say "hello"`)
 		})
@@ -355,7 +355,7 @@ func TestReadCSVStringMaps_EmptyRowKey(t *testing.T) {
 	cv("测试行键为空字符串的情况", t, func() {
 		data := []byte("ignore,col1,col2\n,v1,v2\nrow2,v21,v22\n")
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -374,7 +374,7 @@ func TestReadCSVStringMaps_WindowsLineEndings(t *testing.T) {
 		// Windows 风格: \r\n
 		data := []byte("ignore,col1,col2\r\nrow1,v1,v2\r\nrow2,v21,v22\r\n")
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, isNil)
 		so(result, notNil)
 		so(len(result), eq, 2)
@@ -393,7 +393,7 @@ row3,a3,b3,c3
 row4,a4,b4,c4
 row5,a5,b5,c5
 `)
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, isNil)
 		so(result, notNil)
 		so(len(result), eq, 5)
@@ -417,7 +417,7 @@ func TestReadCSVStringMaps_UTF8BOM(t *testing.T) {
 		normalCSV := []byte("ignore,col1\nrow1,value1\n")
 		dataWithBOM := append([]byte{0xEF, 0xBB, 0xBF}, normalCSV...)
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](dataWithBOM)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](dataWithBOM)
 		so(err, isNil)
 		so(result, notNil)
 		// 由于 UTF-8 BOM 未被处理，第一列键名会带有 BOM 前缀
@@ -430,7 +430,7 @@ func TestReadCSVStringMaps_EmptyColumnHeader(t *testing.T) {
 		// 列头为空字符串
 		data := []byte("ignore,,col2\nrow1,v1,v2\n")
 
-		result, err := csv.ReadCSVStringMaps[string, string, string](data)
+		result, _, err := csv.ReadCSVStringMaps[string, string, string](data)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -438,6 +438,31 @@ func TestReadCSVStringMaps_EmptyColumnHeader(t *testing.T) {
 		so(result["row1"], notNil)
 		so(result["row1"][""], eq, "v1")
 		so(result["row1"]["col2"], eq, "v2")
+	})
+}
+
+func TestReadCSVStringMaps_ColumnOrder(t *testing.T) {
+	cv("测试返回的列顺序", t, func() {
+		// 测试列顺序是否正确返回
+		data := []byte("ignore,col_z,col_a,col_m,col_b\nrow1,v1,v2,v3,v4\n")
+
+		result, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](data)
+		so(err, isNil)
+		so(result, notNil)
+		so(columnOrder, notNil)
+
+		// 验证列顺序与 CSV 中定义的顺序一致（不是按字母排序）
+		so(len(columnOrder), eq, 4)
+		so(columnOrder[0], eq, "col_z")
+		so(columnOrder[1], eq, "col_a")
+		so(columnOrder[2], eq, "col_m")
+		so(columnOrder[3], eq, "col_b")
+
+		// 验证数据也能正常读取
+		so(result["row1"]["col_z"], eq, "v1")
+		so(result["row1"]["col_a"], eq, "v2")
+		so(result["row1"]["col_m"], eq, "v3")
+		so(result["row1"]["col_b"], eq, "v4")
 	})
 }
 
@@ -451,7 +476,7 @@ func BenchmarkReadCSVStringMaps(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = csv.ReadCSVStringMaps[string, string, string](data)
+		_, _, _ = csv.ReadCSVStringMaps[string, string, string](data)
 	}
 }
 
@@ -466,6 +491,6 @@ func BenchmarkReadCSVStringMaps_Large(b *testing.B) {
 
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		_, _ = csv.ReadCSVStringMaps[string, string, string](largeData)
+		_, _, _ = csv.ReadCSVStringMaps[string, string, string](largeData)
 	}
 }
