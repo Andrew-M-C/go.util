@@ -6,15 +6,135 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"slices"
 )
+
+// WriteCSVStringMaps 将 map[LINE]map[COL]V 写入为 CSV 字节流。
+// 输出的 CSV 格式与 ReadCSVStringMaps 兼容，即第一行为列标题（第一个单元格为空），
+// 后续每行第一列为行键，其余列为对应的值。
+// 由于 map 是无序的，行和列都会按字母顺序排序以保证输出的确定性。
+func WriteCSVStringMaps[LINE ~string, COL ~string, V ~string](
+	data map[LINE]map[COL]V,
+) ([]byte, error) {
+	if len(data) == 0 {
+		return nil, errors.New("数据为空")
+	}
+
+	buff := &bytes.Buffer{}
+
+	// 写入 BOM 头, UTF-8 BOM (0xEF 0xBB 0xBF)
+	// 使用 UTF-8 BOM 而非 UTF-16，因为 Go 的 csv 包默认输出 UTF-8 编码，
+	// 且 UTF-8 BOM 在大多数程序（包括 Excel）中都能正确识别。
+	buff.Write([]byte{0xEF, 0xBB, 0xBF})
+
+	// 收集所有列名并排序（保证确定性输出）
+	columnSet := make(map[COL]struct{})
+	for _, row := range data {
+		for col := range row {
+			columnSet[col] = struct{}{}
+		}
+	}
+
+	if len(columnSet) == 0 {
+		return nil, errors.New("数据中没有有效的列")
+	}
+
+	// 将列名转换为切片并排序
+	columns := make([]COL, 0, len(columnSet))
+	for col := range columnSet {
+		columns = append(columns, col)
+	}
+	slices.SortFunc(columns, func(a, b COL) int {
+		if string(a) < string(b) {
+			return -1
+		} else if string(a) > string(b) {
+			return 1
+		}
+		return 0
+	})
+
+	// 收集所有行名并排序（保证确定性输出）
+	lines := make([]LINE, 0, len(data))
+	for line := range data {
+		lines = append(lines, line)
+	}
+	slices.SortFunc(lines, func(a, b LINE) int {
+		if string(a) < string(b) {
+			return -1
+		} else if string(a) > string(b) {
+			return 1
+		}
+		return 0
+	})
+
+	// 使用 csv.Writer 写入数据
+	writer := csv.NewWriter(buff)
+
+	// 写入标题行（第一个单元格为空，作为占位符）
+	header := make([]string, 0, len(columns)+1)
+	header = append(header, "") // 第一个单元格为空（与 ReadCSVStringMaps 格式对应）
+	for _, col := range columns {
+		header = append(header, string(col))
+	}
+	if err := writer.Write(header); err != nil {
+		return nil, fmt.Errorf("写入标题行失败: %w", err)
+	}
+
+	// 写入数据行
+	for _, line := range lines {
+		row := make([]string, 0, len(columns)+1)
+		row = append(row, string(line)) // 第一列为行键
+
+		rowData := data[line]
+		for _, col := range columns {
+			if val, exists := rowData[col]; exists {
+				row = append(row, string(val))
+			} else {
+				row = append(row, "") // 空值
+			}
+		}
+
+		if err := writer.Write(row); err != nil {
+			return nil, fmt.Errorf("写入数据行 %s 失败: %w", string(line), err)
+		}
+	}
+
+	// 刷新缓冲区
+	writer.Flush()
+	if err := writer.Error(); err != nil {
+		return nil, fmt.Errorf("写入 CSV 数据失败: %w", err)
+	}
+
+	return buff.Bytes(), nil
+}
 
 // ReadCSVStringMaps 读取 CSV 表格数据并转换为 KKV 格式, 其中每一行的第一列为最外层的 map
 // key, 第一行的每一列作为内层 map 的 key, 其余的列为 value。最左上角的单元格无意义
 func ReadCSVStringMaps[LINE ~string, COL ~string, V ~string](
 	data []byte,
 ) (map[LINE]map[COL]V, []COL, error) {
-	if bytes.HasPrefix(data, []byte{0xFE, 0xFF}) ||
+	// 处理 BOM (Byte Order Mark, 字节顺序标记)
+	// BOM 是 Unicode 文本文件开头的特殊字节序列, 用于标识文件的编码格式和字节顺序。
+	// 许多文本编辑器 (如 Windows 记事本、Excel 导出的 CSV) 会自动添加 BOM 头。
+	//
+	// UTF-8 BOM (3 字节):
+	//   - 0xEF, 0xBB, 0xBF: UTF-8 编码标识
+	//   - UTF-8 本身不需要 BOM (因为没有字节顺序问题), 但某些软件 (如 Excel) 使用它来识别 UTF-8 编码
+	//   - Go 的 csv.Reader 可以正常处理 UTF-8 编码, 只需跳过 BOM 即可
+	//
+	// UTF-16 BOM (2 字节):
+	//   - 0xFE, 0xFF: UTF-16 Big-Endian (大端序), 高位字节在前
+	//   - 0xFF, 0xFE: UTF-16 Little-Endian (小端序), 低位字节在前
+	//   - 注意: 由于 Go 的 csv.Reader 期望 UTF-8 编码, 如果原始文件确实是 UTF-16 编码,
+	//     仅跳过 BOM 可能不足以正确解析, 可能需要进行编码转换。
+	//
+	// BOM 处理优先级: UTF-8 BOM 优先 (3 字节), 然后是 UTF-16 BOM (2 字节)
+	if bytes.HasPrefix(data, []byte{0xEF, 0xBB, 0xBF}) {
+		// UTF-8 BOM
+		data = data[3:]
+	} else if bytes.HasPrefix(data, []byte{0xFE, 0xFF}) ||
 		bytes.HasPrefix(data, []byte{0xFF, 0xFE}) {
+		// UTF-16 BOM
 		data = data[2:]
 	}
 

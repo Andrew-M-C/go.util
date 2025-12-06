@@ -411,17 +411,82 @@ row5,a5,b5,c5
 
 func TestReadCSVStringMaps_UTF8BOM(t *testing.T) {
 	cv("测试 UTF-8 BOM 的 CSV 数据", t, func() {
-		// UTF-8 BOM: 0xEF 0xBB 0xBF
-		// 注意：当前实现不处理 UTF-8 BOM，所以第一个列名会带有 BOM 前缀
-		// 这个测试是为了记录当前行为
-		normalCSV := []byte("ignore,col1\nrow1,value1\n")
-		dataWithBOM := append([]byte{0xEF, 0xBB, 0xBF}, normalCSV...)
+		convey.Convey("使用内存中构造的带 UTF-8 BOM 数据", func() {
+			// UTF-8 BOM: 0xEF 0xBB 0xBF
+			normalCSV := []byte("ignore,col1\nrow1,value1\n")
+			dataWithBOM := append([]byte{0xEF, 0xBB, 0xBF}, normalCSV...)
 
-		result, _, err := csv.ReadCSVStringMaps[string, string, string](dataWithBOM)
-		so(err, isNil)
-		so(result, notNil)
-		// 由于 UTF-8 BOM 未被处理，第一列键名会带有 BOM 前缀
-		so(result["row1"]["col1"], eq, "value1")
+			result, _, err := csv.ReadCSVStringMaps[string, string, string](dataWithBOM)
+			so(err, isNil)
+			so(result, notNil)
+			// UTF-8 BOM 应该被正确处理，列名不应该带有 BOM 前缀
+			so(result["row1"]["col1"], eq, "value1")
+		})
+
+		convey.Convey("使用 WriteCSVStringMaps 生成的带 BOM 中文 CSV 文件", func() {
+			// 读取由 WriteCSVStringMaps 函数生成的带 UTF-8 BOM 的中文 CSV 文件
+			data, err := readTestData("test_write_csv_string_maps_chinese.csv")
+			so(err, isNil)
+
+			// 验证文件确实包含 UTF-8 BOM
+			so(len(data) >= 3, eq, true)
+			so(data[0], eq, byte(0xEF))
+			so(data[1], eq, byte(0xBB))
+			so(data[2], eq, byte(0xBF))
+
+			// 解析 CSV 数据
+			result, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](data)
+			so(err, isNil)
+			so(result, notNil)
+			so(len(result), eq, 2) // 用户1, 用户2
+
+			// 验证列顺序 (按字母序排序: 城市, 姓名, 年龄)
+			so(len(columnOrder), eq, 3)
+			so(columnOrder[0], eq, "城市")
+			so(columnOrder[1], eq, "姓名")
+			so(columnOrder[2], eq, "年龄")
+
+			// 验证中文数据被正确解析
+			so(result["用户1"], notNil)
+			so(result["用户1"]["姓名"], eq, "张三")
+			so(result["用户1"]["年龄"], eq, "25")
+			so(result["用户1"]["城市"], eq, "北京")
+
+			so(result["用户2"], notNil)
+			so(result["用户2"]["姓名"], eq, "李四")
+			so(result["用户2"]["年龄"], eq, "30")
+			so(result["用户2"]["城市"], eq, "上海")
+		})
+
+		convey.Convey("验证 Write 和 Read 的往返一致性", func() {
+			// 原始数据
+			original := map[string]map[string]string{
+				"用户1": {"姓名": "张三", "年龄": "25", "城市": "北京"},
+				"用户2": {"姓名": "李四", "年龄": "30", "城市": "上海"},
+			}
+
+			// 写入
+			written, err := csv.WriteCSVStringMaps(original)
+			so(err, isNil)
+
+			// 验证包含 UTF-8 BOM
+			so(written[0], eq, byte(0xEF))
+			so(written[1], eq, byte(0xBB))
+			so(written[2], eq, byte(0xBF))
+
+			// 读取
+			readBack, _, err := csv.ReadCSVStringMaps[string, string, string](written)
+			so(err, isNil)
+
+			// 验证数据一致性
+			so(len(readBack), eq, len(original))
+			for lineKey, lineData := range original {
+				so(readBack[lineKey], notNil)
+				for colKey, value := range lineData {
+					so(readBack[lineKey][colKey], eq, value)
+				}
+			}
+		})
 	})
 }
 
@@ -463,6 +528,241 @@ func TestReadCSVStringMaps_ColumnOrder(t *testing.T) {
 		so(result["row1"]["col_a"], eq, "v2")
 		so(result["row1"]["col_m"], eq, "v3")
 		so(result["row1"]["col_b"], eq, "v4")
+	})
+}
+
+// ========== TestWriteCSVStringMaps 测试 WriteCSVStringMaps 函数 ==========
+
+func TestWriteCSVStringMaps_Normal(t *testing.T) {
+	cv("正常写入 CSV", t, func() {
+		data := map[string]map[string]string{
+			"user1": {"name": "Alice", "age": "25", "city": "Beijing"},
+			"user2": {"name": "Bob", "age": "30", "city": "Shanghai"},
+			"user3": {"name": "Charlie", "age": "35", "city": "Guangzhou"},
+		}
+
+		result, err := csv.WriteCSVStringMaps(data)
+		so(err, isNil)
+		so(result, notNil)
+
+		// 验证输出包含 UTF-8 BOM
+		so(len(result) >= 3, eq, true)
+		so(result[0], eq, byte(0xEF))
+		so(result[1], eq, byte(0xBB))
+		so(result[2], eq, byte(0xBF))
+
+		// 验证可以被 ReadCSVStringMaps 正确读取
+		readBack, _, err := csv.ReadCSVStringMaps[string, string, string](result)
+		so(err, isNil)
+		so(readBack, notNil)
+		so(len(readBack), eq, 3)
+
+		// 验证数据一致性
+		so(readBack["user1"]["name"], eq, "Alice")
+		so(readBack["user1"]["age"], eq, "25")
+		so(readBack["user1"]["city"], eq, "Beijing")
+		so(readBack["user2"]["name"], eq, "Bob")
+		so(readBack["user3"]["name"], eq, "Charlie")
+
+		// 写入文件备查
+		err = os.WriteFile("./testdata/test_write_csv_string_maps_normal.csv", result, 0644)
+		so(err, isNil)
+	})
+}
+
+func TestWriteCSVStringMaps_Empty(t *testing.T) {
+	cv("写入空数据应返回错误", t, func() {
+		data := map[string]map[string]string{}
+
+		result, err := csv.WriteCSVStringMaps(data)
+		so(err, notNil)
+		so(result, isNil)
+		so(err.Error(), eq, "数据为空")
+	})
+}
+
+func TestWriteCSVStringMaps_EmptyRows(t *testing.T) {
+	cv("写入全部为空行的数据应返回错误", t, func() {
+		data := map[string]map[string]string{
+			"row1": {},
+			"row2": {},
+		}
+
+		result, err := csv.WriteCSVStringMaps(data)
+		so(err, notNil)
+		so(result, isNil)
+		so(err.Error(), eq, "数据中没有有效的列")
+	})
+}
+
+func TestWriteCSVStringMaps_Chinese(t *testing.T) {
+	cv("写入中文内容", t, func() {
+		data := map[string]map[string]string{
+			"用户1": {"姓名": "张三", "年龄": "25", "城市": "北京"},
+			"用户2": {"姓名": "李四", "年龄": "30", "城市": "上海"},
+		}
+
+		result, err := csv.WriteCSVStringMaps(data)
+		so(err, isNil)
+		so(result, notNil)
+
+		// 验证可以被正确读取
+		readBack, _, err := csv.ReadCSVStringMaps[string, string, string](result)
+		so(err, isNil)
+		so(readBack["用户1"]["姓名"], eq, "张三")
+		so(readBack["用户2"]["城市"], eq, "上海")
+
+		// 写入文件备查
+		err = os.WriteFile("./testdata/test_write_csv_string_maps_chinese.csv", result, 0644)
+		so(err, isNil)
+	})
+}
+
+func TestWriteCSVStringMaps_SparseData(t *testing.T) {
+	cv("写入稀疏数据（不同行有不同的列）", t, func() {
+		data := map[string]map[string]string{
+			"row1": {"col1": "v1", "col2": "v2"},
+			"row2": {"col2": "v22", "col3": "v23"},
+			"row3": {"col1": "v31", "col3": "v33"},
+		}
+
+		result, err := csv.WriteCSVStringMaps(data)
+		so(err, isNil)
+		so(result, notNil)
+
+		// 验证可以被正确读取
+		readBack, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](result)
+		so(err, isNil)
+		so(readBack, notNil)
+
+		// 验证所有列都被收集
+		so(len(columnOrder), eq, 3) // col1, col2, col3
+
+		// 验证数据一致性
+		so(readBack["row1"]["col1"], eq, "v1")
+		so(readBack["row1"]["col2"], eq, "v2")
+		_, hasCol3 := readBack["row1"]["col3"]
+		so(hasCol3, isFalse) // row1 没有 col3
+
+		so(readBack["row2"]["col2"], eq, "v22")
+		so(readBack["row2"]["col3"], eq, "v23")
+
+		so(readBack["row3"]["col1"], eq, "v31")
+		so(readBack["row3"]["col3"], eq, "v33")
+	})
+}
+
+func TestWriteCSVStringMaps_Deterministic(t *testing.T) {
+	cv("多次写入应产生相同的输出", t, func() {
+		data := map[string]map[string]string{
+			"z_row": {"z_col": "v1", "a_col": "v2"},
+			"a_row": {"m_col": "v3", "b_col": "v4"},
+			"m_row": {"a_col": "v5", "z_col": "v6"},
+		}
+
+		// 多次调用，结果应该完全一致
+		result1, err := csv.WriteCSVStringMaps(data)
+		so(err, isNil)
+
+		result2, err := csv.WriteCSVStringMaps(data)
+		so(err, isNil)
+
+		result3, err := csv.WriteCSVStringMaps(data)
+		so(err, isNil)
+
+		so(string(result1), eq, string(result2))
+		so(string(result2), eq, string(result3))
+	})
+}
+
+func TestWriteCSVStringMaps_CustomTypes(t *testing.T) {
+	cv("使用自定义类型写入 CSV", t, func() {
+		data := map[UserID]map[ColumnName]CellValue{
+			UserID("user1"): {ColumnName("name"): CellValue("Alice")},
+			UserID("user2"): {ColumnName("name"): CellValue("Bob")},
+		}
+
+		result, err := csv.WriteCSVStringMaps(data)
+		so(err, isNil)
+		so(result, notNil)
+
+		// 验证可以被正确读取（使用相同的自定义类型）
+		readBack, _, err := csv.ReadCSVStringMaps[UserID, ColumnName, CellValue](result)
+		so(err, isNil)
+		so(readBack[UserID("user1")][ColumnName("name")], eq, CellValue("Alice"))
+		so(readBack[UserID("user2")][ColumnName("name")], eq, CellValue("Bob"))
+	})
+}
+
+func TestWriteCSVStringMaps_SpecialCharacters(t *testing.T) {
+	cv("写入包含特殊字符的数据", t, func() {
+		convey.Convey("包含逗号", func() {
+			data := map[string]map[string]string{
+				"row1": {"col1": "hello, world"},
+			}
+
+			result, err := csv.WriteCSVStringMaps(data)
+			so(err, isNil)
+
+			readBack, _, err := csv.ReadCSVStringMaps[string, string, string](result)
+			so(err, isNil)
+			so(readBack["row1"]["col1"], eq, "hello, world")
+		})
+
+		convey.Convey("包含换行", func() {
+			data := map[string]map[string]string{
+				"row1": {"col1": "line1\nline2"},
+			}
+
+			result, err := csv.WriteCSVStringMaps(data)
+			so(err, isNil)
+
+			readBack, _, err := csv.ReadCSVStringMaps[string, string, string](result)
+			so(err, isNil)
+			so(readBack["row1"]["col1"], eq, "line1\nline2")
+		})
+
+		convey.Convey("包含双引号", func() {
+			data := map[string]map[string]string{
+				"row1": {"col1": `say "hello"`},
+			}
+
+			result, err := csv.WriteCSVStringMaps(data)
+			so(err, isNil)
+
+			readBack, _, err := csv.ReadCSVStringMaps[string, string, string](result)
+			so(err, isNil)
+			so(readBack["row1"]["col1"], eq, `say "hello"`)
+		})
+	})
+}
+
+func TestWriteCSVStringMaps_RoundTrip(t *testing.T) {
+	cv("读取-写入-读取往返测试", t, func() {
+		// 先读取一个标准文件
+		data, err := readTestData("normal.csv")
+		so(err, isNil)
+
+		original, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](data)
+		so(err, isNil)
+		so(len(columnOrder), eq, 3) // name, age, city
+
+		// 写入
+		written, err := csv.WriteCSVStringMaps(original)
+		so(err, isNil)
+
+		// 再读取
+		readBack, _, err := csv.ReadCSVStringMaps[string, string, string](written)
+		so(err, isNil)
+
+		// 验证数据一致性
+		so(len(readBack), eq, len(original))
+		for lineKey, lineData := range original {
+			so(readBack[lineKey], notNil)
+			for colKey, value := range lineData {
+				so(readBack[lineKey][colKey], eq, value)
+			}
+		}
 	})
 }
 
