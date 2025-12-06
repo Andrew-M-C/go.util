@@ -466,7 +466,7 @@ func TestReadCSVStringMaps_UTF8BOM(t *testing.T) {
 			}
 
 			// 写入
-			written, err := csv.WriteCSVStringMaps(original)
+			written, err := csv.WriteCSVStringMaps(original, nil)
 			so(err, isNil)
 
 			// 验证包含 UTF-8 BOM
@@ -541,7 +541,7 @@ func TestWriteCSVStringMaps_Normal(t *testing.T) {
 			"user3": {"name": "Charlie", "age": "35", "city": "Guangzhou"},
 		}
 
-		result, err := csv.WriteCSVStringMaps(data)
+		result, err := csv.WriteCSVStringMaps(data, nil)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -574,7 +574,7 @@ func TestWriteCSVStringMaps_Empty(t *testing.T) {
 	cv("写入空数据应返回错误", t, func() {
 		data := map[string]map[string]string{}
 
-		result, err := csv.WriteCSVStringMaps(data)
+		result, err := csv.WriteCSVStringMaps(data, nil)
 		so(err, notNil)
 		so(result, isNil)
 		so(err.Error(), eq, "数据为空")
@@ -588,7 +588,7 @@ func TestWriteCSVStringMaps_EmptyRows(t *testing.T) {
 			"row2": {},
 		}
 
-		result, err := csv.WriteCSVStringMaps(data)
+		result, err := csv.WriteCSVStringMaps(data, nil)
 		so(err, notNil)
 		so(result, isNil)
 		so(err.Error(), eq, "数据中没有有效的列")
@@ -602,7 +602,7 @@ func TestWriteCSVStringMaps_Chinese(t *testing.T) {
 			"用户2": {"姓名": "李四", "年龄": "30", "城市": "上海"},
 		}
 
-		result, err := csv.WriteCSVStringMaps(data)
+		result, err := csv.WriteCSVStringMaps(data, nil)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -626,7 +626,7 @@ func TestWriteCSVStringMaps_SparseData(t *testing.T) {
 			"row3": {"col1": "v31", "col3": "v33"},
 		}
 
-		result, err := csv.WriteCSVStringMaps(data)
+		result, err := csv.WriteCSVStringMaps(data, nil)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -661,13 +661,13 @@ func TestWriteCSVStringMaps_Deterministic(t *testing.T) {
 		}
 
 		// 多次调用，结果应该完全一致
-		result1, err := csv.WriteCSVStringMaps(data)
+		result1, err := csv.WriteCSVStringMaps(data, nil)
 		so(err, isNil)
 
-		result2, err := csv.WriteCSVStringMaps(data)
+		result2, err := csv.WriteCSVStringMaps(data, nil)
 		so(err, isNil)
 
-		result3, err := csv.WriteCSVStringMaps(data)
+		result3, err := csv.WriteCSVStringMaps(data, nil)
 		so(err, isNil)
 
 		so(string(result1), eq, string(result2))
@@ -682,7 +682,7 @@ func TestWriteCSVStringMaps_CustomTypes(t *testing.T) {
 			UserID("user2"): {ColumnName("name"): CellValue("Bob")},
 		}
 
-		result, err := csv.WriteCSVStringMaps(data)
+		result, err := csv.WriteCSVStringMaps(data, nil)
 		so(err, isNil)
 		so(result, notNil)
 
@@ -701,7 +701,7 @@ func TestWriteCSVStringMaps_SpecialCharacters(t *testing.T) {
 				"row1": {"col1": "hello, world"},
 			}
 
-			result, err := csv.WriteCSVStringMaps(data)
+			result, err := csv.WriteCSVStringMaps(data, nil)
 			so(err, isNil)
 
 			readBack, _, err := csv.ReadCSVStringMaps[string, string, string](result)
@@ -714,7 +714,7 @@ func TestWriteCSVStringMaps_SpecialCharacters(t *testing.T) {
 				"row1": {"col1": "line1\nline2"},
 			}
 
-			result, err := csv.WriteCSVStringMaps(data)
+			result, err := csv.WriteCSVStringMaps(data, nil)
 			so(err, isNil)
 
 			readBack, _, err := csv.ReadCSVStringMaps[string, string, string](result)
@@ -727,7 +727,7 @@ func TestWriteCSVStringMaps_SpecialCharacters(t *testing.T) {
 				"row1": {"col1": `say "hello"`},
 			}
 
-			result, err := csv.WriteCSVStringMaps(data)
+			result, err := csv.WriteCSVStringMaps(data, nil)
 			so(err, isNil)
 
 			readBack, _, err := csv.ReadCSVStringMaps[string, string, string](result)
@@ -748,7 +748,7 @@ func TestWriteCSVStringMaps_RoundTrip(t *testing.T) {
 		so(len(columnOrder), eq, 3) // name, age, city
 
 		// 写入
-		written, err := csv.WriteCSVStringMaps(original)
+		written, err := csv.WriteCSVStringMaps(original, nil)
 		so(err, isNil)
 
 		// 再读取
@@ -763,6 +763,335 @@ func TestWriteCSVStringMaps_RoundTrip(t *testing.T) {
 				so(readBack[lineKey][colKey], eq, value)
 			}
 		}
+	})
+}
+
+// ========== TestWriteCSVStringMaps_ColumnSequences 测试列顺序功能 ==========
+
+func TestWriteCSVStringMaps_ColumnSequences_Default(t *testing.T) {
+	cv("传 nil columnSequences 时按字母排序", t, func() {
+		data := map[string]map[string]string{
+			"row1": {"z_col": "v1", "a_col": "v2", "m_col": "v3"},
+		}
+
+		// 传 nil，应该按字母排序
+		result, err := csv.WriteCSVStringMaps(data, nil)
+		so(err, isNil)
+		so(result, notNil)
+
+		// 读取并验证列顺序
+		readBack, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](result)
+		so(err, isNil)
+		so(readBack, notNil)
+
+		// 列应该按字母排序: a_col, m_col, z_col
+		so(len(columnOrder), eq, 3)
+		so(columnOrder[0], eq, "a_col")
+		so(columnOrder[1], eq, "m_col")
+		so(columnOrder[2], eq, "z_col")
+	})
+}
+
+func TestWriteCSVStringMaps_ColumnSequences_CustomOrder(t *testing.T) {
+	cv("传入 columnSequences 时按指定顺序输出", t, func() {
+		data := map[string]map[string]string{
+			"row1": {"col_a": "v1", "col_b": "v2", "col_c": "v3"},
+			"row2": {"col_a": "v4", "col_b": "v5", "col_c": "v6"},
+		}
+
+		// 指定列顺序: col_c, col_a, col_b
+		result, err := csv.WriteCSVStringMaps(data, []string{"col_c", "col_a", "col_b"})
+		so(err, isNil)
+		so(result, notNil)
+
+		// 读取并验证列顺序
+		readBack, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](result)
+		so(err, isNil)
+		so(readBack, notNil)
+
+		// 列应该按指定顺序: col_c, col_a, col_b
+		so(len(columnOrder), eq, 3)
+		so(columnOrder[0], eq, "col_c")
+		so(columnOrder[1], eq, "col_a")
+		so(columnOrder[2], eq, "col_b")
+
+		// 验证数据完整性
+		so(readBack["row1"]["col_a"], eq, "v1")
+		so(readBack["row1"]["col_b"], eq, "v2")
+		so(readBack["row1"]["col_c"], eq, "v3")
+		so(readBack["row2"]["col_a"], eq, "v4")
+		so(readBack["row2"]["col_b"], eq, "v5")
+		so(readBack["row2"]["col_c"], eq, "v6")
+	})
+}
+
+func TestWriteCSVStringMaps_ColumnSequences_PartialColumns(t *testing.T) {
+	cv("指定部分列时，指定的列优先，其余列按字母序排在后面", t, func() {
+		data := map[string]map[string]string{
+			"row1": {"name": "Alice", "age": "25", "city": "Beijing", "country": "China"},
+			"row2": {"name": "Bob", "age": "30", "city": "Shanghai", "country": "China"},
+		}
+
+		// 指定 name 和 city 优先
+		result, err := csv.WriteCSVStringMaps(data, []string{"name", "city"})
+		so(err, isNil)
+		so(result, notNil)
+
+		// 读取并验证
+		readBack, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](result)
+		so(err, isNil)
+		so(readBack, notNil)
+
+		// 应该有 4 列: name, city（指定的优先）, age, country（未指定的按字母序）
+		so(len(columnOrder), eq, 4)
+		so(columnOrder[0], eq, "name")
+		so(columnOrder[1], eq, "city")
+		so(columnOrder[2], eq, "age")     // 未指定的按字母序
+		so(columnOrder[3], eq, "country") // 未指定的按字母序
+
+		// 验证数据
+		so(readBack["row1"]["name"], eq, "Alice")
+		so(readBack["row1"]["city"], eq, "Beijing")
+		so(readBack["row1"]["age"], eq, "25")
+		so(readBack["row1"]["country"], eq, "China")
+
+		so(readBack["row2"]["name"], eq, "Bob")
+		so(readBack["row2"]["city"], eq, "Shanghai")
+	})
+}
+
+func TestWriteCSVStringMaps_ColumnSequences_WithNonExistentColumns(t *testing.T) {
+	cv("指定的列包含不存在的列名", t, func() {
+		data := map[string]map[string]string{
+			"row1": {"col_a": "v1", "col_b": "v2"},
+		}
+
+		convey.Convey("混合存在和不存在的列名", func() {
+			// 指定 col_b（存在）, col_x（不存在）, col_a（存在）
+			result, err := csv.WriteCSVStringMaps(data, []string{"col_b", "col_x", "col_a"})
+			so(err, isNil)
+			so(result, notNil)
+
+			// 读取并验证：指定的存在列优先，不存在的列被忽略
+			readBack, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](result)
+			so(err, isNil)
+
+			// 应该有 2 列: col_b, col_a（按指定顺序，跳过不存在的 col_x，无其他未指定列）
+			so(len(columnOrder), eq, 2)
+			so(columnOrder[0], eq, "col_b")
+			so(columnOrder[1], eq, "col_a")
+
+			so(readBack["row1"]["col_a"], eq, "v1")
+			so(readBack["row1"]["col_b"], eq, "v2")
+		})
+
+		convey.Convey("全部都是不存在的列名时，所有列按字母序输出", func() {
+			// 如果指定的列全部不存在，则所有实际列按字母序输出
+			result, err := csv.WriteCSVStringMaps(data, []string{"col_x", "col_y", "col_z"})
+			so(err, isNil)
+			so(result, notNil)
+
+			readBack, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](result)
+			so(err, isNil)
+
+			// 应该有 2 列，按字母序: col_a, col_b
+			so(len(columnOrder), eq, 2)
+			so(columnOrder[0], eq, "col_a")
+			so(columnOrder[1], eq, "col_b")
+
+			so(readBack["row1"]["col_a"], eq, "v1")
+			so(readBack["row1"]["col_b"], eq, "v2")
+		})
+	})
+}
+
+func TestWriteCSVStringMaps_ColumnSequences_ChineseColumns(t *testing.T) {
+	cv("使用中文列名并指定顺序", t, func() {
+		data := map[string]map[string]string{
+			"用户1": {"姓名": "张三", "年龄": "25", "城市": "北京"},
+			"用户2": {"姓名": "李四", "年龄": "30", "城市": "上海"},
+		}
+
+		// 指定中文列顺序: 城市, 年龄, 姓名（与字母序不同）
+		result, err := csv.WriteCSVStringMaps(data, []string{"城市", "年龄", "姓名"})
+		so(err, isNil)
+		so(result, notNil)
+
+		// 读取并验证列顺序
+		readBack, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](result)
+		so(err, isNil)
+		so(readBack, notNil)
+
+		// 列应该按指定顺序
+		so(len(columnOrder), eq, 3)
+		so(columnOrder[0], eq, "城市")
+		so(columnOrder[1], eq, "年龄")
+		so(columnOrder[2], eq, "姓名")
+
+		// 验证数据完整性
+		so(readBack["用户1"]["姓名"], eq, "张三")
+		so(readBack["用户1"]["年龄"], eq, "25")
+		so(readBack["用户1"]["城市"], eq, "北京")
+	})
+}
+
+func TestWriteCSVStringMaps_ColumnSequences_DuplicateColumns(t *testing.T) {
+	cv("指定重复的列名", t, func() {
+		data := map[string]map[string]string{
+			"row1": {"col_a": "v1", "col_b": "v2", "col_c": "v3"},
+		}
+
+		// 指定重复的列名: col_a, col_b, col_a
+		// 实现中会去重，重复的列只输出一次（第一次出现的位置）
+		// 未指定的 col_c 会排在后面
+		result, err := csv.WriteCSVStringMaps(data, []string{"col_a", "col_b", "col_a"})
+		so(err, isNil)
+		so(result, notNil)
+
+		// 读取并验证
+		readBack, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](result)
+		so(err, isNil)
+
+		// 应该有 3 列: col_a, col_b（去重后的指定列）, col_c（未指定的列按字母序）
+		so(len(columnOrder), eq, 3)
+		so(columnOrder[0], eq, "col_a")
+		so(columnOrder[1], eq, "col_b")
+		so(columnOrder[2], eq, "col_c")
+
+		so(readBack["row1"]["col_a"], eq, "v1")
+		so(readBack["row1"]["col_b"], eq, "v2")
+		so(readBack["row1"]["col_c"], eq, "v3")
+	})
+}
+
+func TestWriteCSVStringMaps_ColumnSequences_SparseData(t *testing.T) {
+	cv("稀疏数据按指定列顺序输出", t, func() {
+		// 不同行有不同的列
+		data := map[string]map[string]string{
+			"row1": {"col_a": "v1", "col_c": "v3"},   // 没有 col_b
+			"row2": {"col_b": "v22", "col_c": "v23"}, // 没有 col_a
+			"row3": {"col_a": "v31", "col_b": "v32"}, // 没有 col_c
+		}
+
+		// 指定列顺序: col_c, col_b, col_a（正好覆盖所有列）
+		result, err := csv.WriteCSVStringMaps(data, []string{"col_c", "col_b", "col_a"})
+		so(err, isNil)
+		so(result, notNil)
+
+		// 读取并验证
+		readBack, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](result)
+		so(err, isNil)
+
+		// 验证列顺序
+		so(len(columnOrder), eq, 3)
+		so(columnOrder[0], eq, "col_c")
+		so(columnOrder[1], eq, "col_b")
+		so(columnOrder[2], eq, "col_a")
+
+		// 验证数据（空值不应该存在于结果中）
+		so(readBack["row1"]["col_a"], eq, "v1")
+		so(readBack["row1"]["col_c"], eq, "v3")
+		_, hasColB := readBack["row1"]["col_b"]
+		so(hasColB, isFalse)
+
+		so(readBack["row2"]["col_b"], eq, "v22")
+		so(readBack["row2"]["col_c"], eq, "v23")
+
+		so(readBack["row3"]["col_a"], eq, "v31")
+		so(readBack["row3"]["col_b"], eq, "v32")
+	})
+}
+
+func TestWriteCSVStringMaps_ColumnSequences_Deterministic(t *testing.T) {
+	cv("指定列顺序后多次写入应产生相同的输出", t, func() {
+		data := map[string]map[string]string{
+			"z_row": {"z_col": "v1", "a_col": "v2", "m_col": "v3"},
+			"a_row": {"z_col": "v4", "a_col": "v5", "m_col": "v6"},
+			"m_row": {"z_col": "v7", "a_col": "v8", "m_col": "v9"},
+		}
+
+		// 指定固定的列顺序
+		columnOrder := []string{"m_col", "z_col", "a_col"}
+
+		// 多次调用，结果应该完全一致
+		result1, err := csv.WriteCSVStringMaps(data, columnOrder)
+		so(err, isNil)
+
+		result2, err := csv.WriteCSVStringMaps(data, columnOrder)
+		so(err, isNil)
+
+		result3, err := csv.WriteCSVStringMaps(data, columnOrder)
+		so(err, isNil)
+
+		so(string(result1), eq, string(result2))
+		so(string(result2), eq, string(result3))
+	})
+}
+
+func TestWriteCSVStringMaps_ColumnSequences_CustomTypes(t *testing.T) {
+	cv("使用自定义类型并指定列顺序", t, func() {
+		data := map[UserID]map[ColumnName]CellValue{
+			UserID("user1"): {
+				ColumnName("name"): CellValue("Alice"),
+				ColumnName("age"):  CellValue("25"),
+				ColumnName("city"): CellValue("Beijing"),
+			},
+			UserID("user2"): {
+				ColumnName("name"): CellValue("Bob"),
+				ColumnName("age"):  CellValue("30"),
+				ColumnName("city"): CellValue("Shanghai"),
+			},
+		}
+
+		// 指定列顺序: city, name 优先，age 会排在后面
+		result, err := csv.WriteCSVStringMaps(data, []ColumnName{ColumnName("city"), ColumnName("name")})
+		so(err, isNil)
+		so(result, notNil)
+
+		// 读取并验证
+		readBack, columnOrder, err := csv.ReadCSVStringMaps[UserID, ColumnName, CellValue](result)
+		so(err, isNil)
+
+		// 验证列顺序: city, name（指定的）, age（未指定的按字母序）
+		so(len(columnOrder), eq, 3)
+		so(columnOrder[0], eq, ColumnName("city"))
+		so(columnOrder[1], eq, ColumnName("name"))
+		so(columnOrder[2], eq, ColumnName("age"))
+
+		// 验证数据
+		so(readBack[UserID("user1")][ColumnName("name")], eq, CellValue("Alice"))
+		so(readBack[UserID("user1")][ColumnName("city")], eq, CellValue("Beijing"))
+		so(readBack[UserID("user1")][ColumnName("age")], eq, CellValue("25"))
+	})
+}
+
+func TestWriteCSVStringMaps_ColumnSequences_SingleColumn(t *testing.T) {
+	cv("指定单列优先", t, func() {
+		data := map[string]map[string]string{
+			"row1": {"col_a": "v1", "col_b": "v2", "col_c": "v3"},
+			"row2": {"col_a": "v4", "col_b": "v5", "col_c": "v6"},
+		}
+
+		// 指定 col_b 优先，其余列按字母序排在后面
+		result, err := csv.WriteCSVStringMaps(data, []string{"col_b"})
+		so(err, isNil)
+		so(result, notNil)
+
+		// 读取并验证
+		readBack, columnOrder, err := csv.ReadCSVStringMaps[string, string, string](result)
+		so(err, isNil)
+
+		// 应该有 3 列: col_b（指定的优先）, col_a, col_c（未指定的按字母序）
+		so(len(columnOrder), eq, 3)
+		so(columnOrder[0], eq, "col_b")
+		so(columnOrder[1], eq, "col_a")
+		so(columnOrder[2], eq, "col_c")
+
+		// 验证数据
+		so(readBack["row1"]["col_a"], eq, "v1")
+		so(readBack["row1"]["col_b"], eq, "v2")
+		so(readBack["row1"]["col_c"], eq, "v3")
+		so(readBack["row2"]["col_b"], eq, "v5")
 	})
 }
 

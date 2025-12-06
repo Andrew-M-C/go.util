@@ -12,9 +12,17 @@ import (
 // WriteCSVStringMaps 将 map[LINE]map[COL]V 写入为 CSV 字节流。
 // 输出的 CSV 格式与 ReadCSVStringMaps 兼容，即第一行为列标题（第一个单元格为空），
 // 后续每行第一列为行键，其余列为对应的值。
-// 由于 map 是无序的，行和列都会按字母顺序排序以保证输出的确定性。
+//
+// 参数说明：
+//   - data: 要写入的数据，格式为 map[行键]map[列键]值
+//   - columnSequences: 指定列的优先输出顺序。
+//     如果为 nil，则所有列按字母顺序排序输出；
+//     如果指定了列顺序，则优先按指定顺序输出这些列，数据中存在但未在 columnSequences 中指定的列
+//     会按字母顺序排在后面输出。columnSequences 中不存在于数据中的列会被忽略。
+//
+// 行的输出顺序始终按字母排序以保证确定性输出。
 func WriteCSVStringMaps[LINE ~string, COL ~string, V ~string](
-	data map[LINE]map[COL]V,
+	data map[LINE]map[COL]V, columnSequences []COL,
 ) ([]byte, error) {
 	if len(data) == 0 {
 		return nil, errors.New("数据为空")
@@ -27,7 +35,7 @@ func WriteCSVStringMaps[LINE ~string, COL ~string, V ~string](
 	// 且 UTF-8 BOM 在大多数程序（包括 Excel）中都能正确识别。
 	buff.Write([]byte{0xEF, 0xBB, 0xBF})
 
-	// 收集所有列名并排序（保证确定性输出）
+	// 收集所有列名
 	columnSet := make(map[COL]struct{})
 	for _, row := range data {
 		for col := range row {
@@ -39,12 +47,30 @@ func WriteCSVStringMaps[LINE ~string, COL ~string, V ~string](
 		return nil, errors.New("数据中没有有效的列")
 	}
 
-	// 将列名转换为切片并排序
-	columns := make([]COL, 0, len(columnSet))
-	for col := range columnSet {
-		columns = append(columns, col)
+	// 确定最终的列顺序
+	var columns []COL
+	usedColumns := make(map[COL]struct{}) // 记录已经添加的列，避免重复
+
+	if len(columnSequences) > 0 {
+		// 1. 先按指定顺序添加存在于数据中的列
+		for _, col := range columnSequences {
+			if _, exists := columnSet[col]; exists {
+				if _, used := usedColumns[col]; !used {
+					columns = append(columns, col)
+					usedColumns[col] = struct{}{}
+				}
+			}
+		}
 	}
-	slices.SortFunc(columns, func(a, b COL) int {
+
+	// 2. 收集未在 columnSequences 中指定的列，按字母序排序后追加
+	var remainingColumns []COL
+	for col := range columnSet {
+		if _, used := usedColumns[col]; !used {
+			remainingColumns = append(remainingColumns, col)
+		}
+	}
+	slices.SortFunc(remainingColumns, func(a, b COL) int {
 		if string(a) < string(b) {
 			return -1
 		} else if string(a) > string(b) {
@@ -52,6 +78,7 @@ func WriteCSVStringMaps[LINE ~string, COL ~string, V ~string](
 		}
 		return 0
 	})
+	columns = append(columns, remainingColumns...)
 
 	// 收集所有行名并排序（保证确定性输出）
 	lines := make([]LINE, 0, len(data))
