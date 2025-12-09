@@ -132,9 +132,6 @@ func testReadStruct(*testing.T) {
 	})
 
 	cv("多级指针字段", func() {
-		type ptrSt struct {
-			Num int
-		}
 		n := 456
 		p1 := &n
 		p2 := &p1
