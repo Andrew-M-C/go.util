@@ -941,16 +941,18 @@ func TestLoadWithUniqueColumn(t *testing.T) {
 			so(err, isNil)
 
 			// 通过唯一列加载
-			row, exist := db.LoadWithUniqueColumn("email", "zhangsan@example.com")
+			line, row, exist := db.LoadWithUniqueColumn("email", "zhangsan@example.com")
 			so(exist, isTrue)
+			so(line, eq, "user1")
 			so(row, notNil)
 			so(row["name"], eq, "张三")
 			so(row["email"], eq, "zhangsan@example.com")
 			so(row["age"], eq, "25")
 
 			// 加载另一个用户
-			row2, exist2 := db.LoadWithUniqueColumn("email", "lisi@example.com")
+			line2, row2, exist2 := db.LoadWithUniqueColumn("email", "lisi@example.com")
 			so(exist2, isTrue)
+			so(line2, eq, "user2")
 			so(row2["name"], eq, "李四")
 			so(row2["age"], eq, "30")
 		})
@@ -970,8 +972,9 @@ func TestLoadWithUniqueColumn(t *testing.T) {
 			so(err, isNil)
 
 			// 查询不存在的值
-			row, exist := db.LoadWithUniqueColumn("email", "nonexistent@example.com")
+			line, row, exist := db.LoadWithUniqueColumn("email", "nonexistent@example.com")
 			so(exist, isFalse)
+			so(line, eq, "")
 			so(row, isNil)
 		})
 
@@ -990,8 +993,9 @@ func TestLoadWithUniqueColumn(t *testing.T) {
 			so(err, isNil)
 
 			// 尝试通过非唯一列加载
-			row, exist := db.LoadWithUniqueColumn("name", "张三")
+			line, row, exist := db.LoadWithUniqueColumn("name", "张三")
 			so(exist, isFalse)
+			so(line, eq, "")
 			so(row, isNil)
 		})
 
@@ -1011,14 +1015,16 @@ func TestLoadWithUniqueColumn(t *testing.T) {
 			so(err, isNil)
 
 			// 通过 email 加载
-			row1, exist1 := db.LoadWithUniqueColumn("email", "zhangsan@example.com")
+			line1, row1, exist1 := db.LoadWithUniqueColumn("email", "zhangsan@example.com")
 			so(exist1, isTrue)
+			so(line1, eq, "user1")
 			so(row1["name"], eq, "张三")
 			so(row1["phone"], eq, "13800138001")
 
 			// 通过 phone 加载（应该加载到同一行）
-			row2, exist2 := db.LoadWithUniqueColumn("phone", "13800138001")
+			line2, row2, exist2 := db.LoadWithUniqueColumn("phone", "13800138001")
 			so(exist2, isTrue)
+			so(line2, eq, "user1")
 			so(row2["name"], eq, "张三")
 			so(row2["email"], eq, "zhangsan@example.com")
 		})
@@ -1039,8 +1045,9 @@ func TestLoadWithUniqueColumn(t *testing.T) {
 			so(err, isNil)
 
 			// 通过旧值可以加载
-			row1, exist1 := db.LoadWithUniqueColumn("email", "old@example.com")
+			line1, row1, exist1 := db.LoadWithUniqueColumn("email", "old@example.com")
 			so(exist1, isTrue)
+			so(line1, eq, "user1")
 			so(row1["name"], eq, "张三")
 
 			// 更新 email
@@ -1050,13 +1057,15 @@ func TestLoadWithUniqueColumn(t *testing.T) {
 			so(err, isNil)
 
 			// 旧值不能加载
-			row2, exist2 := db.LoadWithUniqueColumn("email", "old@example.com")
+			line2, row2, exist2 := db.LoadWithUniqueColumn("email", "old@example.com")
 			so(exist2, isFalse)
+			so(line2, eq, "")
 			so(row2, isNil)
 
 			// 新值可以加载
-			row3, exist3 := db.LoadWithUniqueColumn("email", "new@example.com")
+			line3, row3, exist3 := db.LoadWithUniqueColumn("email", "new@example.com")
 			so(exist3, isTrue)
+			so(line3, eq, "user1")
 			so(row3["name"], eq, "张三")
 		})
 
@@ -1076,8 +1085,9 @@ func TestLoadWithUniqueColumn(t *testing.T) {
 			so(err, isNil)
 
 			// 通过空值查询
-			row, exist := db.LoadWithUniqueColumn("email", "")
+			line, row, exist := db.LoadWithUniqueColumn("email", "")
 			so(exist, isTrue)
+			so(line, eq, "user1")
 			so(row["name"], eq, "张三")
 			so(row["email"], eq, "")
 		})
@@ -1106,8 +1116,9 @@ func TestLoadWithUniqueColumn(t *testing.T) {
 			so(err, isNil)
 
 			// 通过唯一列加载应该正常工作
-			row, exist := db2.LoadWithUniqueColumn("email", "zhangsan@example.com")
+			line, row, exist := db2.LoadWithUniqueColumn("email", "zhangsan@example.com")
 			so(exist, isTrue)
+			so(line, eq, "user1")
 			so(row["name"], eq, "张三")
 		})
 
@@ -1137,9 +1148,14 @@ func TestLoadWithUniqueColumn(t *testing.T) {
 				go func(idx int) {
 					defer wg.Done()
 					email := fmt.Sprintf("user%d@example.com", idx%10)
-					row, exist := db.LoadWithUniqueColumn("email", email)
+					line, row, exist := db.LoadWithUniqueColumn("email", email)
 					if !exist {
 						errors <- fmt.Errorf("未找到 email: %s", email)
+						return
+					}
+					expectedLine := fmt.Sprintf("user%d", idx%10)
+					if line != expectedLine {
+						errors <- fmt.Errorf("line 不匹配: 期望 %s, 得到 %s", expectedLine, line)
 						return
 					}
 					expectedName := fmt.Sprintf("用户%d", idx%10)

@@ -65,17 +65,17 @@ func (db *DB[LINE, COL, V]) Load(key LINE) (map[COL]V, bool) {
 }
 
 // LoadWithUniqueColumn 按照唯一键加载数据
-func (db *DB[LINE, COL, V]) LoadWithUniqueColumn(column COL, value V) (map[COL]V, bool) {
+func (db *DB[LINE, COL, V]) LoadWithUniqueColumn(column COL, value V) (LINE, map[COL]V, bool) {
 	db.lock.RLock()
 	defer db.lock.RUnlock()
 
 	row, exist := db.uniqueColumns[column][value]
 	if !exist {
-		return nil, false
+		return "", nil, false
 	}
 
 	res, exist := db.data[row]
-	return res, exist
+	return row, res, exist
 }
 
 // LoadWithColumn 按照指定列和值查找所有匹配的行
