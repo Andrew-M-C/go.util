@@ -22,13 +22,13 @@ func WithAsyncTime(tm time.Duration) Option {
 }
 
 // WithUniqueColumn 设置需要保持唯一的列名
-func WithUniqueColumns(columns ...string) Option {
+func WithUniqueColumns[T ~string](columns ...T) Option {
 	return func(o *options) {
 		if o.uniqueColumns == nil {
 			o.uniqueColumns = make(map[string]struct{})
 		}
 		for _, column := range columns {
-			o.uniqueColumns[column] = struct{}{}
+			o.uniqueColumns[string(column)] = struct{}{}
 		}
 	}
 }

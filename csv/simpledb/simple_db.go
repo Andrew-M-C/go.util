@@ -64,6 +64,20 @@ func (db *DB[LINE, COL, V]) Load(key LINE) (map[COL]V, bool) {
 	return row, exist
 }
 
+// LoadWithUniqueColumn 按照唯一键加载数据
+func (db *DB[LINE, COL, V]) LoadWithUniqueColumn(column COL, value V) (map[COL]V, bool) {
+	db.lock.RLock()
+	defer db.lock.RUnlock()
+
+	row, exist := db.uniqueColumns[column][value]
+	if !exist {
+		return nil, false
+	}
+
+	res, exist := db.data[row]
+	return res, exist
+}
+
 // Store 存储一个数据
 func (db *DB[LINE, COL, V]) Store(key LINE, value map[COL]V) error {
 	if key == "" {

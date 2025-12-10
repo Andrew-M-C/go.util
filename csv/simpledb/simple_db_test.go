@@ -910,6 +910,256 @@ func TestNilOption(t *testing.T) {
 	})
 }
 
+// ========== LoadWithUniqueColumn 测试 ==========
+
+func TestLoadWithUniqueColumn(t *testing.T) {
+	cv("测试 LoadWithUniqueColumn 按唯一列加载", t, func() {
+		ensureTestDataDir(t)
+		defer cleanupTestDataDir()
+
+		cv("通过唯一列成功加载数据", func() {
+			filePath := filepath.Join(testDataDir, "load_unique_test.csv")
+			db, err := simpledb.NewDB[string, string, string](
+				filePath,
+				simpledb.WithUniqueColumns("email"),
+			)
+			so(err, isNil)
+
+			// 存储数据
+			err = db.Store("user1", map[string]string{
+				"name":  "张三",
+				"email": "zhangsan@example.com",
+				"age":   "25",
+			})
+			so(err, isNil)
+
+			err = db.Store("user2", map[string]string{
+				"name":  "李四",
+				"email": "lisi@example.com",
+				"age":   "30",
+			})
+			so(err, isNil)
+
+			// 通过唯一列加载
+			row, exist := db.LoadWithUniqueColumn("email", "zhangsan@example.com")
+			so(exist, isTrue)
+			so(row, notNil)
+			so(row["name"], eq, "张三")
+			so(row["email"], eq, "zhangsan@example.com")
+			so(row["age"], eq, "25")
+
+			// 加载另一个用户
+			row2, exist2 := db.LoadWithUniqueColumn("email", "lisi@example.com")
+			so(exist2, isTrue)
+			so(row2["name"], eq, "李四")
+			so(row2["age"], eq, "30")
+		})
+
+		cv("加载不存在的唯一列值", func() {
+			filePath := filepath.Join(testDataDir, "load_unique_notfound_test.csv")
+			db, err := simpledb.NewDB[string, string, string](
+				filePath,
+				simpledb.WithUniqueColumns("email"),
+			)
+			so(err, isNil)
+
+			err = db.Store("user1", map[string]string{
+				"name":  "张三",
+				"email": "zhangsan@example.com",
+			})
+			so(err, isNil)
+
+			// 查询不存在的值
+			row, exist := db.LoadWithUniqueColumn("email", "nonexistent@example.com")
+			so(exist, isFalse)
+			so(row, isNil)
+		})
+
+		cv("尝试从非唯一列加载（列未配置为唯一）", func() {
+			filePath := filepath.Join(testDataDir, "load_nonunique_column_test.csv")
+			db, err := simpledb.NewDB[string, string, string](
+				filePath,
+				simpledb.WithUniqueColumns("email"), // 只有 email 是唯一的
+			)
+			so(err, isNil)
+
+			err = db.Store("user1", map[string]string{
+				"name":  "张三",
+				"email": "zhangsan@example.com",
+			})
+			so(err, isNil)
+
+			// 尝试通过非唯一列加载
+			row, exist := db.LoadWithUniqueColumn("name", "张三")
+			so(exist, isFalse)
+			so(row, isNil)
+		})
+
+		cv("多个唯一列分别加载", func() {
+			filePath := filepath.Join(testDataDir, "load_multi_unique_test.csv")
+			db, err := simpledb.NewDB[string, string, string](
+				filePath,
+				simpledb.WithUniqueColumns("email", "phone"),
+			)
+			so(err, isNil)
+
+			err = db.Store("user1", map[string]string{
+				"name":  "张三",
+				"email": "zhangsan@example.com",
+				"phone": "13800138001",
+			})
+			so(err, isNil)
+
+			// 通过 email 加载
+			row1, exist1 := db.LoadWithUniqueColumn("email", "zhangsan@example.com")
+			so(exist1, isTrue)
+			so(row1["name"], eq, "张三")
+			so(row1["phone"], eq, "13800138001")
+
+			// 通过 phone 加载（应该加载到同一行）
+			row2, exist2 := db.LoadWithUniqueColumn("phone", "13800138001")
+			so(exist2, isTrue)
+			so(row2["name"], eq, "张三")
+			so(row2["email"], eq, "zhangsan@example.com")
+		})
+
+		cv("唯一列值更新后的加载", func() {
+			filePath := filepath.Join(testDataDir, "load_after_update_test.csv")
+			db, err := simpledb.NewDB[string, string, string](
+				filePath,
+				simpledb.WithUniqueColumns("email"),
+			)
+			so(err, isNil)
+
+			// 初始存储
+			err = db.Store("user1", map[string]string{
+				"name":  "张三",
+				"email": "old@example.com",
+			})
+			so(err, isNil)
+
+			// 通过旧值可以加载
+			row1, exist1 := db.LoadWithUniqueColumn("email", "old@example.com")
+			so(exist1, isTrue)
+			so(row1["name"], eq, "张三")
+
+			// 更新 email
+			err = db.StoreColumns("user1", map[string]string{
+				"email": "new@example.com",
+			})
+			so(err, isNil)
+
+			// 旧值不能加载
+			row2, exist2 := db.LoadWithUniqueColumn("email", "old@example.com")
+			so(exist2, isFalse)
+			so(row2, isNil)
+
+			// 新值可以加载
+			row3, exist3 := db.LoadWithUniqueColumn("email", "new@example.com")
+			so(exist3, isTrue)
+			so(row3["name"], eq, "张三")
+		})
+
+		cv("空值的处理", func() {
+			filePath := filepath.Join(testDataDir, "load_empty_value_test.csv")
+			db, err := simpledb.NewDB[string, string, string](
+				filePath,
+				simpledb.WithUniqueColumns("email"),
+			)
+			so(err, isNil)
+
+			// 存储空 email 值
+			err = db.Store("user1", map[string]string{
+				"name":  "张三",
+				"email": "",
+			})
+			so(err, isNil)
+
+			// 通过空值查询
+			row, exist := db.LoadWithUniqueColumn("email", "")
+			so(exist, isTrue)
+			so(row["name"], eq, "张三")
+			so(row["email"], eq, "")
+		})
+
+		cv("从持久化文件重建索引后加载", func() {
+			filePath := filepath.Join(testDataDir, "load_persist_test.csv")
+
+			// 第一个数据库实例写入数据
+			db1, err := simpledb.NewDB[string, string, string](
+				filePath,
+				simpledb.WithUniqueColumns("email"),
+			)
+			so(err, isNil)
+
+			err = db1.Store("user1", map[string]string{
+				"name":  "张三",
+				"email": "zhangsan@example.com",
+			})
+			so(err, isNil)
+
+			// 创建新实例，重建索引
+			db2, err := simpledb.NewDB[string, string, string](
+				filePath,
+				simpledb.WithUniqueColumns("email"),
+			)
+			so(err, isNil)
+
+			// 通过唯一列加载应该正常工作
+			row, exist := db2.LoadWithUniqueColumn("email", "zhangsan@example.com")
+			so(exist, isTrue)
+			so(row["name"], eq, "张三")
+		})
+
+		cv("并发读取唯一列", func() {
+			filePath := filepath.Join(testDataDir, "load_concurrent_test.csv")
+			db, err := simpledb.NewDB[string, string, string](
+				filePath,
+				simpledb.WithUniqueColumns("email"),
+			)
+			so(err, isNil)
+
+			// 先存储一些数据
+			for i := 0; i < 10; i++ {
+				err = db.Store(fmt.Sprintf("user%d", i), map[string]string{
+					"name":  fmt.Sprintf("用户%d", i),
+					"email": fmt.Sprintf("user%d@example.com", i),
+				})
+				so(err, isNil)
+			}
+
+			var wg sync.WaitGroup
+			errors := make(chan error, 50)
+
+			// 并发读取
+			for i := 0; i < 50; i++ {
+				wg.Add(1)
+				go func(idx int) {
+					defer wg.Done()
+					email := fmt.Sprintf("user%d@example.com", idx%10)
+					row, exist := db.LoadWithUniqueColumn("email", email)
+					if !exist {
+						errors <- fmt.Errorf("未找到 email: %s", email)
+						return
+					}
+					expectedName := fmt.Sprintf("用户%d", idx%10)
+					if row["name"] != expectedName {
+						errors <- fmt.Errorf("name 不匹配: 期望 %s, 得到 %s", expectedName, row["name"])
+					}
+				}(i)
+			}
+
+			wg.Wait()
+			close(errors)
+
+			// 检查是否有错误
+			for err := range errors {
+				so(err, isNil)
+			}
+		})
+	})
+}
+
 // ========== 当前目录文件路径测试 ==========
 
 func TestCurrentDirPath(t *testing.T) {
