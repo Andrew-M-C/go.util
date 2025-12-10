@@ -78,6 +78,21 @@ func (db *DB[LINE, COL, V]) LoadWithUniqueColumn(column COL, value V) (map[COL]V
 	return res, exist
 }
 
+// LoadWithColumn 按照指定列和值查找所有匹配的行
+func (db *DB[LINE, COL, V]) LoadWithColumn(column COL, value V) map[LINE]map[COL]V {
+	db.lock.RLock()
+	defer db.lock.RUnlock()
+
+	res := map[LINE]map[COL]V{}
+
+	for line, row := range db.data {
+		if v, exist := row[column]; exist && v == value {
+			res[line] = row
+		}
+	}
+	return res
+}
+
 // Store 存储一个数据
 func (db *DB[LINE, COL, V]) Store(key LINE, value map[COL]V) error {
 	if key == "" {
