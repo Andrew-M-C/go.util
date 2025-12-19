@@ -1,6 +1,8 @@
 package openai
 
 import (
+	"strings"
+
 	"github.com/mark3labs/mcp-go/client/transport"
 	"github.com/sashabaranov/go-openai"
 )
@@ -9,7 +11,7 @@ type options struct {
 	debugf     func(string, ...any)
 	remoteMCPs []remoteMCPParams
 
-	customizeMCPs []InitializedMCPClient
+	customizeMCPs []initializedMCPParams
 
 	// 简单回调
 	reasoningCallback func(string)
@@ -21,7 +23,13 @@ type options struct {
 	toolCallResponseCallback func(openai.ChatCompletionMessage)
 }
 
+type initializedMCPParams struct {
+	id     string
+	client InitializedMCPClient
+}
+
 type remoteMCPParams struct {
+	id      string
 	baseURL string
 	options []transport.ClientOption
 }
@@ -65,11 +73,13 @@ func WithDebugger(d func(string, ...any)) Option {
 	}
 }
 
-// WithRemoteMCP 设置远程 MCP 的 URL, 可以设置多个
-func WithRemoteMCP(baseURL string, opts ...transport.ClientOption) Option {
+// WithRemoteMCP 设置远程 MCP 的 URL, 可以设置多个。
+// 参数 id 可以是任意不含空格和毛好的字符串, 多个 MCP 之间不得重复
+func WithRemoteMCP(baseURL string, id string, opts ...transport.ClientOption) Option {
 	return func(o *options) {
 		if baseURL != "" {
 			o.remoteMCPs = append(o.remoteMCPs, remoteMCPParams{
+				id:      stripMcpID(id),
 				baseURL: baseURL,
 				options: opts,
 			})
@@ -122,11 +132,23 @@ func WithToolCallResponseCallback(c func(openai.ChatCompletionMessage)) Option {
 	}
 }
 
-// WithInitializedMCP 设置自定义的已初始化完成的 MCP 客户端
-func WithInitializedMCP(c InitializedMCPClient) Option {
+// WithInitializedMCP 设置自定义的已初始化完成的 MCP 客户端, 可以设置多个
+// 参数 id 可以是任意不含空格和毛好的字符串, 多个 MCP 之间不得重复
+func WithInitializedMCP(c InitializedMCPClient, id string) Option {
 	return func(o *options) {
 		if c != nil {
-			o.customizeMCPs = append(o.customizeMCPs, c)
+			m := initializedMCPParams{
+				id:     stripMcpID(id),
+				client: c,
+			}
+			o.customizeMCPs = append(o.customizeMCPs, m)
 		}
 	}
+}
+
+func stripMcpID(id string) string {
+	id = strings.TrimSpace(id)
+	id = strings.Replace(id, " ", "-", -1)
+	id = strings.Replace(id, mcpClientNameSeparator, "-", -1)
+	return id
 }

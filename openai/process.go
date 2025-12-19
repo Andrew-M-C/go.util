@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"reflect"
 	"slices"
-	"strconv"
 	"strings"
 	"sync"
 
@@ -78,6 +77,12 @@ func (p *processor) copyMessages(ctx context.Context) error {
 
 func (p *processor) connectRemoteMCP(ctx context.Context) error {
 	iterateURL := func(index int, param remoteMCPParams) error {
+		if param.id == "" {
+			return fmt.Errorf("指定的远程 MCP ID 为空, 远程 URL 为 '%s'", param.baseURL)
+		}
+		if _, exist := p.mcpClientByID[param.id]; exist {
+			fmt.Errorf("MCP ID 重复 (%s)", param.id)
+		}
 		cli, err := mcpclient.NewSSEMCPClient(param.baseURL, param.options...)
 		if err != nil {
 			return fmt.Errorf("连接 MCP '%s' 失败 (%w)", param.baseURL, err)
@@ -105,12 +110,11 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 			return fmt.Errorf("初始化 MCP '%s' 失败 (%w)", param.baseURL, err)
 		}
 
-		id := p.mcpID(cli)
-		p.mcpClientByID[id] = cli
+		p.mcpClientByID[param.id] = cli
 
 		p.Opts.debugf(
 			"连接 MCP '%s' 并初始化成功, name '%s', id: %s, version '%s'",
-			param.baseURL, initResult.ServerInfo.Name, id, initResult.ServerInfo.Version,
+			param.baseURL, initResult.ServerInfo.Name, param.id, initResult.ServerInfo.Version,
 		)
 		return nil
 	}
@@ -125,7 +129,13 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 
 func (p *processor) addCustomizedMCPs(ctx context.Context) error {
 	for _, cli := range p.Opts.customizeMCPs {
-		p.mcpClientByID[p.mcpID(cli)] = cli
+		if cli.id == "" {
+			return errors.New("MCP ID 为空")
+		}
+		if _, exist := p.mcpClientByID[cli.id]; exist {
+			return fmt.Errorf("MCP ID 重复 (%s)", cli.id)
+		}
+		p.mcpClientByID[cli.id] = cli.client
 	}
 	return nil
 }
@@ -213,12 +223,6 @@ func (p *processor) iteration(ctx context.Context) error {
 
 func (p *processor) lastMessage() openai.ChatCompletionMessage {
 	return p.Messages[len(p.Messages)-1]
-}
-
-func (p *processor) mcpID(cli InitializedMCPClient) string {
-	_ = cli
-	le := len(p.mcpClientByID)
-	return strconv.Itoa(le + 1)
 }
 
 // -------- 单次迭代 --------

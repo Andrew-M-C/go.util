@@ -296,7 +296,7 @@ func TestProcessMCP(t *testing.T) {
 			utils.WithFinishCallback(finish),
 			utils.WithToolCallRequestCallback(tcStart),
 			utils.WithToolCallResponseCallback(tcEnds),
-			utils.WithRemoteMCP(deepseekMCPURL),
+			utils.WithRemoteMCP(deepseekMCPURL, "deepseek-mcp"),
 		)
 		so(err, isNil)
 		so(rsp, notNil)
@@ -508,8 +508,8 @@ func TestInitializedMCP(t *testing.T) {
 			utils.WithContentCallback(content),
 			utils.WithReasoningCallback(reasoning),
 			utils.WithFinishCallback(finish),
-			utils.WithInitializedMCP(weatherMCP),
-			utils.WithInitializedMCP(timeMCP),
+			utils.WithInitializedMCP(weatherMCP, "tool-weather"),
+			utils.WithInitializedMCP(timeMCP, "tool-time"),
 		)
 		so(err, isNil)
 		so(rsp, notNil)
