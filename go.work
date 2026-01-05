@@ -10,6 +10,7 @@ use (
 	./china/admindivision/internal
 	./console
 	./constraints
+	./container/heap
 	./context
 	./crawler
 	./csv
