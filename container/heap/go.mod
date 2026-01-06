@@ -2,7 +2,11 @@ module github.com/Andrew-M-C/go.util/container/heap
 
 go 1.23.5
 
-require github.com/smartystreets/goconvey v1.8.1
+require (
+	github.com/Andrew-M-C/go.util/constraints v0.0.0-20260105020314-b5743998e3cc
+	github.com/emirpasic/gods v1.18.1
+	github.com/smartystreets/goconvey v1.8.1
+)
 
 require (
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
