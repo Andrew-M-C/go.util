@@ -1,9 +1,7 @@
-github.com/Andrew-M-C/go.util/constraints v0.0.0-20250411024944-dc1445c96c13 h1:57psRFe8XzbssH2Ev7SlxKfkNMdccqxYwUHKodjBElo=
-github.com/Andrew-M-C/go.util/constraints v0.0.0-20250411024944-dc1445c96c13/go.mod h1:kwwhHyN9ZZcCZ9xN3KJ2nw+URJJ2JV0Jkl9WRrR4jxQ=
-github.com/Andrew-M-C/go.util/slices v0.0.0-20260112075256-c90bcb5867f8 h1:uO+wa93bTAP5lN3RSZRyL5V9QuX/zdpI4pAjbWTwxss=
-github.com/Andrew-M-C/go.util/slices v0.0.0-20260112075256-c90bcb5867f8/go.mod h1:jLwfXNpXZ/aJ0rqAoqpryfnWi9CmfbeWlvS2qt5aFts=
-github.com/Andrew-M-C/go.util/sync v0.0.0-20250411024944-dc1445c96c13 h1:ybSsj3hCVEAtaFe0dQA65mW66vG+d4zMwEe6Dk7VaEU=
-github.com/Andrew-M-C/go.util/sync v0.0.0-20250411024944-dc1445c96c13/go.mod h1:1NSK/PwV40XNw+YkLHgQkpHWZQRu6bIBdTPB6wuhWqI=
+github.com/Andrew-M-C/go.util/slices v0.0.0-20260112083547-2bd245af81b5 h1:xKMGCEEZWAvIxPbqzkHmRKGDFHpzFJk3CA1NaxT8XxE=
+github.com/Andrew-M-C/go.util/slices v0.0.0-20260112083547-2bd245af81b5/go.mod h1:uyhcK/X/avnwgeIJ1jnpC9aiJSTKdl+VKGPmhvm4OsU=
+github.com/Andrew-M-C/go.util/sync v0.0.0-20260112083547-2bd245af81b5 h1:x8s0oxN2veHqW07WjXXnwrxTRuueTVy79v3z9t38Cmg=
+github.com/Andrew-M-C/go.util/sync v0.0.0-20260112083547-2bd245af81b5/go.mod h1:E9NE5QyrczAm10m6iuMGkuVzvzpkZIVY8PVX5EnoEKA=
 github.com/fatih/color v1.18.0 h1:S8gINlzdQ840/4pfAwic/ZE0djQEH3wM94VfqLTZcOM=
 github.com/fatih/color v1.18.0/go.mod h1:4FelSpRwEGDpQ12mAdzqdOukCy4u8WUtOY6lkT/6HfU=
 github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25dO0g=
