@@ -1,5 +1,3 @@
-github.com/Andrew-M-C/go.util/constraints v0.0.0-20260105020314-b5743998e3cc h1:YgsohovHohRoTCJK9r/od4oRcvgjbNlMc+DdBlaecEM=
-github.com/Andrew-M-C/go.util/constraints v0.0.0-20260105020314-b5743998e3cc/go.mod h1:kwwhHyN9ZZcCZ9xN3KJ2nw+URJJ2JV0Jkl9WRrR4jxQ=
 github.com/emirpasic/gods v1.18.1 h1:FXtiHYKDGKCW2KzwZKx0iC0PQmdlorYgdFG9jPXJ1Bc=
 github.com/emirpasic/gods v1.18.1/go.mod h1:8tpGGwCnJ5H4r6BWwaV6OrWmMoPhUl5jm/FMNAnJvWQ=
 github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25dO0g=
