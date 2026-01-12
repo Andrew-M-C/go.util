@@ -5,8 +5,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 // Point 表示一个时间点, 用于比较。支持 30 小时制 (实际上支持到 48 小时)
@@ -17,7 +15,7 @@ type Point struct {
 }
 
 // NewPoint 创建一个时间点
-func NewPoint[I constraints.Integer](hour, minute, second I) Point {
+func NewPoint[I Integer](hour, minute, second I) Point {
 	return Point{
 		Hour:   int(hour),
 		Minute: int(minute),

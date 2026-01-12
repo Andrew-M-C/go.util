@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Andrew-M-C/go.util/constraints"
 	"github.com/smartystreets/goconvey/convey"
 	"go.uber.org/atomic"
 )
@@ -39,10 +38,10 @@ func TestTime(t *testing.T) {
 }
 
 type number interface {
-	constraints.Integer | constraints.Float
+	Integer | Float
 }
 
-func percentage[V number, P constraints.Float](v V, percent P) V {
+func percentage[V number, P Float](v V, percent P) V {
 	return V(P(v) * percent)
 }
 

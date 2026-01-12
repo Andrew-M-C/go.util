@@ -2,8 +2,6 @@ package time
 
 import (
 	"time"
-
-	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 var (
@@ -16,27 +14,27 @@ var (
 )
 
 // Days 用天数生成 time.Duration
-func Days[T constraints.Integer](days T) time.Duration {
+func Days[T Integer](days T) time.Duration {
 	return time.Duration(days) * 24 * time.Hour
 }
 
 // Hour 用小时数生成 time.Duration
-func Hour[T constraints.Integer](hours T) time.Duration {
+func Hour[T Integer](hours T) time.Duration {
 	return time.Duration(hours) * time.Hour
 }
 
 // Min 用分钟数生成 time.Duration
-func Min[T constraints.Integer](mins T) time.Duration {
+func Min[T Integer](mins T) time.Duration {
 	return time.Duration(mins) * time.Minute
 }
 
 // Sec 用秒数生成 time.Duration
-func Sec[T constraints.Integer](secs T) time.Duration {
+func Sec[T Integer](secs T) time.Duration {
 	return time.Duration(secs) * time.Second
 }
 
 // Milli 用毫秒数生成 time.Duration
-func Milli[T constraints.Integer](msecs T) time.Duration {
+func Milli[T Integer](msecs T) time.Duration {
 	return time.Duration(msecs) * time.Millisecond
 }
 
