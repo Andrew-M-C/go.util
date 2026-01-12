@@ -1,7 +1,6 @@
 package heap
 
 import (
-	"github.com/Andrew-M-C/go.util/constraints"
 	"github.com/emirpasic/gods/trees/binaryheap"
 )
 
@@ -12,7 +11,7 @@ type Heap[T any] struct {
 }
 
 // NewBasic 创建一个最小堆, 使用 constraints.Ordered 约束
-func NewBasic[T constraints.Ordered]() *Heap[T] {
+func NewBasic[T Ordered]() *Heap[T] {
 	return New(func(i, j T) bool {
 		return i < j
 	})
@@ -23,11 +22,11 @@ func New[T any](lessFunc func(i, j T) bool) *Heap[T] {
 	if lessFunc == nil {
 		panic("lessFunc is nil")
 	}
-	
+
 	h := &Heap[T]{
 		lessFunc: lessFunc,
 	}
-	
+
 	// 将 lessFunc 转换为 gods 库要求的 comparator
 	// comparator 要求: a < b 返回负数, a == b 返回 0, a > b 返回正数
 	comparator := func(a, b any) int {
@@ -40,7 +39,7 @@ func New[T any](lessFunc func(i, j T) bool) *Heap[T] {
 		}
 		return 0 // a == b
 	}
-	
+
 	h.heap = binaryheap.NewWith(comparator)
 	return h
 }
@@ -62,9 +61,3 @@ func (h *Heap[T]) Pop() T {
 	res, _ := val.(T)
 	return res
 }
-
-
-
-
-
-
