@@ -3,7 +3,6 @@ package json_test
 import (
 	"github.com/Andrew-M-C/go.util/encoding/json"
 	"github.com/smartystreets/goconvey/convey"
-	"golang.org/x/exp/constraints"
 )
 
 var (
@@ -15,7 +14,7 @@ var (
 )
 
 type jsonOrdered interface {
-	constraints.Integer | ~string
+	~int | ~int8 | ~int16 | ~int32 | ~int64 | ~uint | ~uint8 | ~uint16 | ~uint32 | ~uint64 | ~uintptr | ~string
 }
 
 type collection[T jsonOrdered] map[T]struct{}

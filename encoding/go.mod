@@ -7,7 +7,6 @@ toolchain go1.23.1
 require (
 	github.com/Andrew-M-C/go.util/unsafe v0.0.0-20240328080120-73db13babc7d
 	github.com/smartystreets/goconvey v1.8.1
-	golang.org/x/exp v0.0.0-20250106191152-7588d65b2ba8
 )
 
 require (
