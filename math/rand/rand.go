@@ -4,7 +4,7 @@ package rand
 import (
 	"math/rand"
 
-	"github.com/Andrew-M-C/go.util/constraints"
+	"github.com/Andrew-M-C/go.util/math/constraints"
 )
 
 // IndexByRatios 抽奖。

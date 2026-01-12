@@ -1,6 +1,6 @@
 package math
 
-import "golang.org/x/exp/constraints"
+import "github.com/Andrew-M-C/go.util/math/constraints"
 
 // SqrtUint sqrt(x) but returns integer part only. If x is negative, it will return 0.
 func SqrtUint[T constraints.Unsigned](x T) T {
