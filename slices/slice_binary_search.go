@@ -1,6 +1,6 @@
 package slices
 
-import "github.com/Andrew-M-C/go.util/constraints"
+import "github.com/Andrew-M-C/go.util/slices/constraints"
 
 // BinarySearchOne 二分查找一个。注意入参必须已经从小到大排了序, 否则结果无法确定。
 // 函数返回 index, 如果 -1 则表示找不到

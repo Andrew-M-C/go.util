@@ -3,7 +3,7 @@ package slices
 import (
 	"sort"
 
-	"github.com/Andrew-M-C/go.util/constraints"
+	"github.com/Andrew-M-C/go.util/slices/constraints"
 )
 
 // List 表示一个 slice 类型

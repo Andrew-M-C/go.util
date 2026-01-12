@@ -4,13 +4,8 @@ import (
 	"math/rand"
 	"sort"
 
-	"github.com/Andrew-M-C/go.util/constraints"
+	"github.com/Andrew-M-C/go.util/slices/constraints"
 )
-
-// Number 表示所有的实数类型
-type Number interface {
-	constraints.Float | constraints.Integer
-}
 
 // Equal 逐个比较两个切片里的值是否相等
 func Equal[T comparable](a, b []T) bool {
@@ -81,7 +76,7 @@ func SetElement[T any, I constraints.Signed](sli []T, signedIndex I, value T) (i
 }
 
 // Sum 求和
-func Sum[T Number](numbers []T) T {
+func Sum[T constraints.Number](numbers []T) T {
 	var res T
 	for _, n := range numbers {
 		res += n
@@ -90,13 +85,13 @@ func Sum[T Number](numbers []T) T {
 }
 
 // AverageFloat 求平均值, 返回值是浮点数
-func AverageFloat[T Number](numbers []T) float64 {
+func AverageFloat[T constraints.Number](numbers []T) float64 {
 	sum := Sum(numbers)
 	return float64(sum) / float64(len(numbers))
 }
 
 // Minimum 找最小值
-func Minimum[T Number](numbers []T) T {
+func Minimum[T constraints.Number](numbers []T) T {
 	if len(numbers) == 0 {
 		return 0
 	}
@@ -111,7 +106,7 @@ func Minimum[T Number](numbers []T) T {
 }
 
 // Maximum 找最小值
-func Maximum[T Number](numbers []T) T {
+func Maximum[T constraints.Number](numbers []T) T {
 	if len(numbers) == 0 {
 		return 0
 	}
