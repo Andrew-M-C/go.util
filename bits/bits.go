@@ -1,7 +1,7 @@
 // Package bits 提供位操作相关的逻辑
 package bits
 
-import "github.com/Andrew-M-C/go.util/constraints"
+import "github.com/Andrew-M-C/go.util/bits/constraints"
 
 // New64 初始化一个 uint64 的位掩码
 func New64[T ~uint64](offsetsToSet ...int) T {

@@ -2,7 +2,7 @@
 package binarysearch
 
 import (
-	"github.com/Andrew-M-C/go.util/constraints"
+	"github.com/Andrew-M-C/go.util/algorithm/constraints"
 )
 
 // CompareFunction 表示比较函数
