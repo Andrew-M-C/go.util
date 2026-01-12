@@ -18,6 +18,7 @@ type Float interface {
 	~float32 | ~float64
 }
 
+
 type Complex interface {
 	~complex64 | ~complex128
 }
@@ -25,3 +26,22 @@ type Complex interface {
 type Ordered interface {
 	Integer | Float | ~string
 }
+
+// Abs 返回绝对值
+func Abs[T Signed | Float](x T) T {
+	if x >= 0 {
+		return x
+	}
+	return -x
+}
+
+// Min 返回两个数中的最小值, 实际上在 1.21 开始就已经有内置的 min 了, 以防开发者不知道
+func Min[T Ordered](a, b T) T {
+	return min(a, b)
+}
+
+// Max 返回两个数中的最大值, 实际上在 1.21 开始就已经有内置的 max 了, 以防开发者不知道
+func Max[T Ordered](a, b T) T {
+	return max(a, b)
+}
+
