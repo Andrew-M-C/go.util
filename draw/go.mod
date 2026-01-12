@@ -3,7 +3,6 @@ module github.com/Andrew-M-C/go.util/draw
 go 1.21
 
 require (
-	github.com/Andrew-M-C/go.util/constraints v0.0.0-20240920040959-400d8f87c326
 	github.com/ajstarks/svgo v0.0.0-20211024235047-1546f124cd8b
 	github.com/smartystreets/goconvey v1.8.1
 )

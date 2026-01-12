@@ -3,14 +3,7 @@ package draw
 
 import (
 	"image/color"
-
-	"github.com/Andrew-M-C/go.util/constraints"
 )
-
-// Number 表示任意数字类型
-type Number interface {
-	constraints.Integer | constraints.Float
-}
 
 // Point 表示一个点
 type Point struct {
