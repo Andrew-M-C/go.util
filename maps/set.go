@@ -1,7 +1,7 @@
 package maps
 
 import (
-	"github.com/Andrew-M-C/go.util/constraints"
+	"github.com/Andrew-M-C/go.util/maps/constraints"
 	"github.com/Andrew-M-C/go.util/slices"
 )
 

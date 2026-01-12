@@ -8,7 +8,7 @@ import (
 	"time"
 
 	"github.com/Andrew-M-C/go.util/channel"
-	"github.com/Andrew-M-C/go.util/constraints"
+	"github.com/Andrew-M-C/go.util/maps/constraints"
 	timeutil "github.com/Andrew-M-C/go.util/time"
 )
 

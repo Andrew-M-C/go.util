@@ -1,13 +1,9 @@
 github.com/Andrew-M-C/go.util/channel v0.0.0-20240727053329-5823c4cd76ef h1:yZvGBNptFmiZ/CIzpVoAPRUxNDvUQNuYGjdR2rdgeBc=
 github.com/Andrew-M-C/go.util/channel v0.0.0-20240727053329-5823c4cd76ef/go.mod h1:TSoSnqSU9XErQ0kuNKQBBPDfuyFvoSUyP1t7FCYRSyk=
-github.com/Andrew-M-C/go.util/constraints v0.0.0-20240920040959-400d8f87c326 h1:BXeBUoFBw7I7b2aSyohleo/EqDw8LSREonVyi5c1nBo=
-github.com/Andrew-M-C/go.util/constraints v0.0.0-20240920040959-400d8f87c326/go.mod h1:kwwhHyN9ZZcCZ9xN3KJ2nw+URJJ2JV0Jkl9WRrR4jxQ=
-github.com/Andrew-M-C/go.util/slice v0.0.0-20240221044053-8b90aa4683c0 h1:jwgZwOHC70wo0ygXPY6GQeDH2MMKrKlKldkmvV5V0UQ=
-github.com/Andrew-M-C/go.util/slice v0.0.0-20240221044053-8b90aa4683c0/go.mod h1:wIie5mijWcGESDf64bIZZmQLdmccBqh9cPTBOXmvKoU=
-github.com/Andrew-M-C/go.util/slices v0.0.0-20250530091121-67b21a300cc2 h1:jHf2Ah02MDjmOGPh/PsGi8lrwb60EZm0jNR7HZlMvG0=
-github.com/Andrew-M-C/go.util/slices v0.0.0-20250530091121-67b21a300cc2/go.mod h1:jLwfXNpXZ/aJ0rqAoqpryfnWi9CmfbeWlvS2qt5aFts=
-github.com/Andrew-M-C/go.util/time v0.0.0-20240805124806-2aee54f03558 h1:Hllu96iiZ1UxoDecS5yjfmXAmrZe3DsDoL52Mnob39k=
-github.com/Andrew-M-C/go.util/time v0.0.0-20240805124806-2aee54f03558/go.mod h1:vqw7GPxpWilhCyymU3oSlKAkQ7hIahSCXl86Sw2w7T8=
+github.com/Andrew-M-C/go.util/slices v0.0.0-20260112083926-37972c188480 h1:Mh6xQpf796uNl9o2IQ/Ht+CGDcIkGZ99hInYbqlHpMs=
+github.com/Andrew-M-C/go.util/slices v0.0.0-20260112083926-37972c188480/go.mod h1:uyhcK/X/avnwgeIJ1jnpC9aiJSTKdl+VKGPmhvm4OsU=
+github.com/Andrew-M-C/go.util/time v1.0.1-0.20260112085259-9a3054f6b882 h1:373tNPtuphX931TIqcWT2G5W/5fGLXuaCIZKZsc6Iec=
+github.com/Andrew-M-C/go.util/time v1.0.1-0.20260112085259-9a3054f6b882/go.mod h1:Ii8QIPYQyv7ELqHwznrxvRXzOnZy5UObTTyFdIK/Z9s=
 github.com/gopherjs/gopherjs v1.17.2 h1:fQnZVsXk8uxXIStYb0N4bGk7jeyTalG/wsZjQ25dO0g=
 github.com/gopherjs/gopherjs v1.17.2/go.mod h1:pRRIvn/QzFLrKfvEz3qUuEhtE/zLCWfreZ6J5gM2i+k=
 github.com/jtolds/gls v4.20.0+incompatible h1:xdiiI2gbIgH/gLH7ADydsJ1uDOEzR8yvV7C0MuV77Wo=
@@ -18,5 +14,3 @@ github.com/smartystreets/goconvey v1.8.1 h1:qGjIddxOk4grTu9JPOU31tVfq3cNdBlNa5sS
 github.com/smartystreets/goconvey v1.8.1/go.mod h1:+/u4qLyY6x1jReYOp7GOM2FSt8aP9CzCZL03bI28W60=
 go.uber.org/atomic v1.11.0 h1:ZvwS0R+56ePWxUNi+Atn9dWONBPp/AUETXlHW0DxSjE=
 go.uber.org/atomic v1.11.0/go.mod h1:LUxbIzbOniOlMKjJjyPfpl4v+PKK2cNJn91OQbhoJI0=
-golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 h1:LfspQV/FYTatPTr/3HzIcmiUFH7PGP+OQ6mgDYo3yuQ=
-golang.org/x/exp v0.0.0-20240222234643-814bf88cf225/go.mod h1:CxmFvTBINI24O/j8iY7H1xHzx2i4OsyguNBmN/uPtqc=
