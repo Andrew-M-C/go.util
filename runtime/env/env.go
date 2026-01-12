@@ -4,8 +4,6 @@ package env
 import (
 	"os"
 	"strconv"
-
-	"github.com/Andrew-M-C/go.util/constraints"
 )
 
 // GetString 获取 string 类型环境变量, 如果环境变量不存在则返回默认值
@@ -18,7 +16,7 @@ func GetString(key string, fallback string) string {
 }
 
 // GetInt 获取 int 类型环境变量, 如果环境变量不存在或非法则返回默认值
-func GetInt[T constraints.Integer](key string, fallback T) T {
+func GetInt[T Integer](key string, fallback T) T {
 	v := os.Getenv(key)
 	if v == "" {
 		return fallback
@@ -31,7 +29,7 @@ func GetInt[T constraints.Integer](key string, fallback T) T {
 }
 
 // GetUint 获取 uint 类型环境变量, 如果环境变量不存在或非法则返回默认值
-func GetUint[T constraints.Unsigned](key string, fallback T) T {
+func GetUint[T Unsigned](key string, fallback T) T {
 	v := os.Getenv(key)
 	if v == "" {
 		return fallback
