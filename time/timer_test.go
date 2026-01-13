@@ -1,11 +1,11 @@
 package time
 
 import (
+	"sync/atomic"
 	"testing"
 	"time"
 
 	"github.com/smartystreets/goconvey/convey"
-	"go.uber.org/atomic"
 )
 
 var (
@@ -68,7 +68,8 @@ func testTimer(t *testing.T) {
 	secs := 5
 
 	duration := time.Duration(secs) * time.Second
-	gotCb := atomic.NewBool(false)
+	
+	gotCb := &atomic.Bool{}
 	var start time.Time
 
 	tm := NewTimer(duration, func() {
@@ -113,7 +114,7 @@ func testTimer(t *testing.T) {
 func testTimerStop(t *testing.T) {
 	secs := 5
 	duration := time.Duration(secs) * time.Second
-	gotCb := atomic.NewBool(false)
+	gotCb := &atomic.Bool{}
 	var start time.Time
 
 	tm := NewTimer(duration, func() {
