@@ -100,7 +100,7 @@ func rawAndRead(ctx context.Context, targetURL string, o *requestOption) (*http.
 // JSON 发起一个 JSON 请求
 func JSON[T any](ctx context.Context, targetURL string, opts ...RequestOption) (*T, error) {
 	o := mergeOptions(opts, json.Marshal)
-	if o.body != nil {
+	if o.body != nil && o.header.Get("Content-Type") != "" {
 		o.header.Set("Content-Type", "application/json")
 	}
 	httpRsp, b, err := rawAndRead(ctx, targetURL, o)
