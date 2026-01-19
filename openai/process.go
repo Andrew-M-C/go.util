@@ -81,7 +81,7 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 			return fmt.Errorf("指定的远程 MCP ID 为空, 远程 URL 为 '%s'", param.baseURL)
 		}
 		if _, exist := p.mcpClientByID[param.id]; exist {
-			fmt.Errorf("MCP ID 重复 (%s)", param.id)
+			return fmt.Errorf("MCP ID 重复 (%s)", param.id)
 		}
 		cli, err := mcpclient.NewSSEMCPClient(param.baseURL, param.options...)
 		if err != nil {
@@ -258,7 +258,6 @@ type toolProcessor struct {
 func (p *toolProcessor) do(ctx context.Context) error {
 	tcList := p.lastMessage().ToolCalls
 
-	var err error
 	lck := sync.Mutex{}
 	wg := sync.WaitGroup{}
 
@@ -291,13 +290,9 @@ func (p *toolProcessor) do(ctx context.Context) error {
 			p.Opts.toolCallResponseCallback(m)
 		}(i, tc)
 	}
-
 	wg.Wait()
-	if err != nil {
-		return err
-	}
 
-	return nil
+	return nil // 暂时没有返回错误
 }
 
 func (p *toolProcessor) doToolCall(ctx context.Context, tc openai.ToolCall) (string, error) {

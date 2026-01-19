@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/Andrew-M-C/go-bytesize"
+	jsonvalue "github.com/Andrew-M-C/go.jsonvalue"
 	hutil "github.com/Andrew-M-C/go.util/net/http"
 	utils "github.com/Andrew-M-C/go.util/openai"
 	"github.com/Andrew-M-C/go.util/unsafe"
@@ -215,8 +216,29 @@ func TestAddOrSetPromptForMessages(t *testing.T) {
 }
 
 func TestProcessBasic(t *testing.T) {
-	cv("简单对话", t, func() {
-		ctx := context.Background()
+	reasoningBuilder := strings.Builder{}
+	contentBuilder := strings.Builder{}
+
+	reasoning := func(c string) {
+		fmt.Printf("%s", color.BlueString(c))
+		reasoningBuilder.WriteString(c)
+	}
+	content := func(c string) {
+		fmt.Printf("%s", c)
+		contentBuilder.WriteString(c)
+	}
+
+	finishCalled := false
+	finish := func(f openai.FinishReason) {
+		printf("结束: %v", f)
+		finishCalled = true
+	}
+
+	packReq := func() (utils.ModelConfig, []openai.ChatCompletionMessage, []utils.Option) {
+		reasoningBuilder.Reset()
+		contentBuilder.Reset()
+		finishCalled = false
+
 		config := utils.ModelConfig{
 			Model:   deepseekModel,
 			BaseURL: deepseekBaseURL,
@@ -230,30 +252,46 @@ func TestProcessBasic(t *testing.T) {
 			Content: "你好",
 		}}
 
-		reasoningBuilder := strings.Builder{}
-		contentBuilder := strings.Builder{}
-
-		reasoning := func(c string) {
-			fmt.Printf("%s", color.BlueString(c))
-			reasoningBuilder.WriteString(c)
-		}
-		content := func(c string) {
-			fmt.Printf("%s", c)
-			contentBuilder.WriteString(c)
-		}
-
-		finishCalled := false
-		finish := func(f openai.FinishReason) {
-			printf("结束: %v", f)
-			finishCalled = true
-		}
-
-		rsp, err := utils.Process(ctx, config, req,
+		return config, req, []utils.Option{
 			utils.WithDebugger(printf),
 			utils.WithContentCallback(content),
 			utils.WithReasoningCallback(reasoning),
 			utils.WithFinishCallback(finish),
-		)
+		}
+	}
+
+	cv("简单对话", t, func() {
+		ctx := context.Background()
+
+		config, req, options := packReq()
+		rsp, err := utils.Process(ctx, config, req, options...)
+		if err != nil {
+			e, _ := hutil.UnwrapError(err)
+			t.Logf("response: %s", e.Detail().Body)
+		}
+		so(err, isNil)
+		so(rsp, notNil)
+		so(len(rsp.Messages), eq, 3)
+		printf("获得思考: %v", rsp.Messages[2].ReasoningContent)
+		printf("获得响应: %v", rsp.Messages[2].Content)
+		so(reasoningBuilder.String(), eq, rsp.Messages[2].ReasoningContent)
+		so(contentBuilder.String(), eq, rsp.Messages[2].Content)
+		so(finishCalled, eq, true)
+	})
+
+	cv("DeepSeek-V3.2 推理模式", t, func() {
+		ctx := context.Background()
+
+		config, req, options := packReq()
+		ext := jsonvalue.NewObject()
+		ext.At("thinking", "type").Set("enabled")
+		options = append(options, utils.WithExtraFields(ext))
+
+		rsp, err := utils.Process(ctx, config, req, options...)
+		if err != nil {
+			e, _ := hutil.UnwrapError(err)
+			t.Logf("response: %s", e.Detail().Body)
+		}
 		so(err, isNil)
 		so(rsp, notNil)
 		so(len(rsp.Messages), eq, 3)
@@ -523,6 +561,7 @@ func TestInitializedMCP(t *testing.T) {
 
 		guangzhouTime := timeMCP.Time.Add(8 * time.Hour).UTC().Format("15:04") // 似乎需要 deepseek-r1 才知道要进行时区转换
 		printf("预期获得广州时间: %s", guangzhouTime)
+		printf("实际获得响应: <last_msg>%s</last_msg>", s)
 		so(strings.Contains(s, guangzhouTime), eq, true)
 	})
 }

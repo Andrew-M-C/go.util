@@ -3,6 +3,7 @@ package openai
 import (
 	"strings"
 
+	jsonvalue "github.com/Andrew-M-C/go.jsonvalue"
 	"github.com/mark3labs/mcp-go/client/transport"
 	"github.com/sashabaranov/go-openai"
 )
@@ -21,6 +22,9 @@ type options struct {
 	// 工具调用回调
 	toolCallRequestCallback  func(openai.ToolCall)
 	toolCallResponseCallback func(openai.ChatCompletionMessage)
+
+	// 额外参数
+	extraFields *jsonvalue.V
 }
 
 type initializedMCPParams struct {
@@ -37,6 +41,9 @@ type remoteMCPParams struct {
 func mergeOptions(opts []Option) *options {
 	o := &options{}
 	for _, f := range opts {
+		if f == nil {
+			continue
+		}
 		f(o)
 	}
 	// 兜底值配置
@@ -151,4 +158,26 @@ func stripMcpID(id string) string {
 	id = strings.Replace(id, " ", "-", -1)
 	id = strings.Replace(id, mcpClientNameSeparator, "-", -1)
 	return id
+}
+
+// WithExtraFields 设置请求 completion 的额外参数。后设置的会覆盖前面设置的 key。
+// 如果传入的参数不是一个有效的 JSON object, 则不进行设置
+func WithExtraFields(fields any) Option {
+	if fields == nil {
+		return nil
+	}
+	j, err := jsonvalue.Import(fields)
+	if err != nil {
+		return nil
+	}
+	return func(o *options) {
+		if o.extraFields == nil {
+			o.extraFields = j
+			return
+		}
+		j.RangeObjects(func(key string, value *jsonvalue.V) bool {
+			o.extraFields.At(key).Set(value)
+			return true
+		})
+	}
 }
