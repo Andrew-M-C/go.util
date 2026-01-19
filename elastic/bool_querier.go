@@ -195,7 +195,7 @@ func (q *BoolQuerier) packQuery() *es.BoolQuery {
 	return query
 }
 
-func (q *BoolQuerier) Do(ctx context.Context, cli *es.Client) (*es.SearchResult, error) {
+func (q *BoolQuerier) Do(ctx context.Context, cli ESClient) (*es.SearchResult, error) {
 	q.lazyInit()
 	if len(q.errs) > 0 {
 		return nil, errors.Join(q.errs...)
@@ -253,20 +253,4 @@ type stringer struct {
 	DSL   struct {
 		Query any `json:"query"`
 	} `json:"dsl"`
-}
-
-type jsonWrapper struct {
-	v any
-}
-
-func (j jsonWrapper) String() string {
-	b, err := json.Marshal(j.v)
-	if err != nil {
-		return fmt.Sprint(j.v)
-	}
-	return string(b)
-}
-
-func toJSON(v any) fmt.Stringer {
-	return jsonWrapper{v: v}
 }
