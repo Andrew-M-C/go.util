@@ -1,8 +1,10 @@
 package http_test
 
 import (
+	"bytes"
 	"context"
 	"encoding/xml"
+	"fmt"
 	"os"
 	"path"
 	"testing"
@@ -48,8 +50,14 @@ func TestJSON(t *testing.T) {
 		so(err, isNil)
 		t.Log(rsp.MustMarshalString(jsonvalue.OptSetSequence()))
 
-		body, err := rsp.Get("parsedBody")
+		body, err := rsp.Get("rawBody")
 		so(err, isNil)
+
+		if body.IsString() {
+			body, err = jsonvalue.UnmarshalString(body.String())
+			so(err, isNil)
+		}
+
 		so(jsonvalue.New(req).Equal(body), eq, true)
 	})
 }
@@ -89,6 +97,38 @@ func TestDownload(t *testing.T) {
 			t.Log("文件大小", bytesize.Base10(len(content)))
 			so(len(content), gt, 0)
 			so(path.Ext(fileName), eq, ".deb")
+		})
+	})
+}
+
+func TestError(t *testing.T) {
+	cv("Error", t, func() {
+		cv("请求一个不存在的内容", func() {
+			const target = "https://raw.githubusercontent.com/golang/go/refs/heads/master/src/net/http/not-exist"
+
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			defer cancel()
+
+			_, err := http.JSON[jsonvalue.V](ctx, target)
+			so(err, isErr)
+			t.Logf("expected '%v'", err)
+
+			_, ok := err.(*http.Error)
+			so(ok, eq, true)
+
+			_, ok = http.UnwrapError(err)
+			so(ok, eq, true)
+
+			// wrap 一层之后再解
+			err = fmt.Errorf("wrap: %w", err)
+			_, ok = err.(*http.Error)
+			so(ok, eq, false)
+
+			httpErr, ok := http.UnwrapError(err)
+			so(ok, eq, true)
+
+			so(bytes.Contains(httpErr.Detail().Body, []byte("404")), eq, true)
+			so(httpErr.Detail().StatusCode, eq, 404)
 		})
 	})
 }

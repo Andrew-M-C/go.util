@@ -63,7 +63,7 @@ func raw(ctx context.Context, targetURL string, o *requestOption) (*http.Respons
 	httpRsp, err := cli.Do(httpReq)
 	ela := time.Since(start)
 	if err != nil {
-		return nil, fmt.Errorf("cli.Do error (%w)", err)
+		return httpRsp, fmt.Errorf("cli.Do error (%w)", err)
 	}
 
 	if o.progress != nil {
@@ -73,7 +73,7 @@ func raw(ctx context.Context, targetURL string, o *requestOption) (*http.Respons
 	o.debugf("request done, ela %v, status %v", ela, httpRsp.Status)
 
 	if httpRsp.StatusCode != http.StatusOK {
-		return nil, errors.New(httpRsp.Status)
+		return httpRsp, errors.New(httpRsp.Status)
 	}
 	return httpRsp, nil
 }
@@ -82,6 +82,10 @@ func raw(ctx context.Context, targetURL string, o *requestOption) (*http.Respons
 func rawAndRead(ctx context.Context, targetURL string, o *requestOption) (*http.Response, []byte, error) {
 	rsp, err := raw(ctx, targetURL, o)
 	if err != nil {
+		if rsp != nil && rsp.StatusCode != http.StatusOK {
+			b, _ := io.ReadAll(rsp.Body)
+			return rsp, b, err
+		}
 		return rsp, nil, err
 	}
 	defer rsp.Body.Close()
@@ -105,7 +109,7 @@ func JSON[T any](ctx context.Context, targetURL string, opts ...RequestOption) (
 	}
 	httpRsp, b, err := rawAndRead(ctx, targetURL, o)
 	if err != nil {
-		return nil, err
+		return nil, packError(httpRsp, b, err)
 	}
 	if len(b) == 0 {
 		return nil, errors.New("empty body from remote server")
@@ -130,7 +134,7 @@ func XMLGetRspBody(ctx context.Context, targetURL string, opts ...RequestOption)
 	}
 	httpRsp, b, err := rawAndRead(ctx, targetURL, o)
 	if err != nil {
-		return nil, err
+		return nil, packError(httpRsp, b, err)
 	}
 	if len(b) == 0 {
 		return nil, errors.New("empty body from remote server")
