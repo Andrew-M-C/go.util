@@ -63,6 +63,17 @@ func (m *OrderedMap[K, V]) Delete(k K) {
 	m.t.Remove(k)
 }
 
+// Range 遍历 map, 如果 f 返回 false, 则停止遍历
+func (m *OrderedMap[K, V]) Range(f func(k K, v V) bool) {
+	m.initialize()
+	if f == nil {
+		return
+	}
+	m.t.Iterate(func(k K, v V) bool {
+		return f(k, v)
+	})
+}
+
 // All 返回一个迭代器, 用于遍历所有的键值对, 按照 key 的升序排列
 // 用法示例:
 //
@@ -70,8 +81,8 @@ func (m *OrderedMap[K, V]) Delete(k K) {
 //		// 处理 k 和 v
 //	}
 func (m *OrderedMap[K, V]) All() iter.Seq2[K, V] {
+	m.initialize()
 	return func(yield func(K, V) bool) {
-		m.initialize()
 		m.t.Iterate(func(k K, v V) bool {
 			return yield(k, v)
 		})
@@ -85,8 +96,8 @@ func (m *OrderedMap[K, V]) All() iter.Seq2[K, V] {
 //		// 处理 k
 //	}
 func (m *OrderedMap[K, V]) Keys() iter.Seq[K] {
+	m.initialize()
 	return func(yield func(K) bool) {
-		m.initialize()
 		m.t.Iterate(func(k K, v V) bool {
 			return yield(k)
 		})
