@@ -110,7 +110,16 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 			return fmt.Errorf("初始化 MCP '%s' 失败 (%w)", param.baseURL, err)
 		}
 
-		p.mcpClientByID[param.id] = cli
+		// 是否限制工具
+		if len(param.includeTools) == 0 {
+			p.mcpClientByID[param.id] = cli
+		} else {
+			cli := &mcpClientWithSpecifiedTools{
+				client:       cli,
+				includeTools: param.includeTools,
+			}
+			p.mcpClientByID[param.id] = cli
+		}
 
 		p.Opts.debugf(
 			"连接 MCP '%s' 并初始化成功, name '%s', id: %s, version '%s'",
@@ -135,7 +144,15 @@ func (p *processor) addCustomizedMCPs(ctx context.Context) error {
 		if _, exist := p.mcpClientByID[cli.id]; exist {
 			return fmt.Errorf("MCP ID 重复 (%s)", cli.id)
 		}
-		p.mcpClientByID[cli.id] = cli.client
+		if len(cli.includeTools) == 0 {
+			p.mcpClientByID[cli.id] = cli.client
+		} else {
+			wrapped := &mcpClientWithSpecifiedTools{
+				client:       cli.client,
+				includeTools: cli.includeTools,
+			}
+			p.mcpClientByID[cli.id] = wrapped
+		}
 	}
 	return nil
 }

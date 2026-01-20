@@ -30,12 +30,16 @@ type options struct {
 type initializedMCPParams struct {
 	id     string
 	client InitializedMCPClient
+
+	includeTools map[string]struct{}
 }
 
 type remoteMCPParams struct {
 	id      string
 	baseURL string
 	options []transport.ClientOption
+
+	includeTools map[string]struct{}
 }
 
 func mergeOptions(opts []Option) *options {
@@ -84,13 +88,46 @@ func WithDebugger(d func(string, ...any)) Option {
 // 参数 id 可以是任意不含空格和毛好的字符串, 多个 MCP 之间不得重复
 func WithRemoteMCP(baseURL string, id string, opts ...transport.ClientOption) Option {
 	return func(o *options) {
-		if baseURL != "" {
-			o.remoteMCPs = append(o.remoteMCPs, remoteMCPParams{
-				id:      stripMcpID(id),
-				baseURL: baseURL,
-				options: opts,
-			})
+		if baseURL == "" {
+			return
 		}
+		o.remoteMCPs = append(o.remoteMCPs, remoteMCPParams{
+			id:      stripMcpID(id),
+			baseURL: baseURL,
+			options: opts,
+		})
+	}
+}
+
+// WithRemoteMCPAndSpecifyTools 的功能等同于 WithRemoteMCP, 但明确指定只引用其中的某些工具。
+func WithRemoteMCPAndSpecifyTools(baseURL string, id string, toolsAndOpts ...any) Option {
+	return func(o *options) {
+		if baseURL == "" {
+			return
+		}
+		opts := make([]transport.ClientOption, 0, len(toolsAndOpts))
+		includeTools := make(map[string]struct{}, len(toolsAndOpts))
+
+		for _, arg := range toolsAndOpts {
+			if arg == nil {
+				continue
+			}
+			switch v := arg.(type) {
+			case string:
+				includeTools[v] = struct{}{}
+			case transport.ClientOption:
+				opts = append(opts, v)
+			default:
+				// 不支持的类型
+			}
+		}
+
+		o.remoteMCPs = append(o.remoteMCPs, remoteMCPParams{
+			id:           stripMcpID(id),
+			baseURL:      baseURL,
+			options:      opts,
+			includeTools: includeTools,
+		})
 	}
 }
 
@@ -153,11 +190,34 @@ func WithInitializedMCP(c InitializedMCPClient, id string) Option {
 	}
 }
 
+// WithInitializedMCPAndSpecifyTools 同 WithInitializedMCP, 但明确指定只引用其中的某些工具。
+func WithInitializedMCPAndSpecifyTools(c InitializedMCPClient, id string, tools ...string) Option {
+	return func(o *options) {
+		if c == nil {
+			return
+		}
+		m := initializedMCPParams{
+			id:           stripMcpID(id),
+			client:       c,
+			includeTools: sliceToCollection(tools),
+		}
+		o.customizeMCPs = append(o.customizeMCPs, m)
+	}
+}
+
 func stripMcpID(id string) string {
 	id = strings.TrimSpace(id)
 	id = strings.Replace(id, " ", "-", -1)
 	id = strings.Replace(id, mcpClientNameSeparator, "-", -1)
 	return id
+}
+
+func sliceToCollection[T comparable](sli []T) map[T]struct{} {
+	res := make(map[T]struct{}, len(sli))
+	for _, v := range sli {
+		res[v] = struct{}{}
+	}
+	return res
 }
 
 // WithExtraFields 设置请求 completion 的额外参数。后设置的会覆盖前面设置的 key。

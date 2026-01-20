@@ -304,6 +304,68 @@ func TestProcessBasic(t *testing.T) {
 }
 
 func TestProcessMCP(t *testing.T) {
+	cv("带完整的 MCP 询问", t, func() {
+		ctx := context.Background()
+		config := utils.ModelConfig{
+			Model:   deepseekModel,
+			BaseURL: deepseekBaseURL,
+			APIKey:  deepseekAPIKey,
+		}
+		req := []openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleUser,
+			Content: "你能使用哪些 MCP 工具? 请列表列出工具 ID 和说明",
+		}}
+
+		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
+		content := func(c string) { fmt.Printf("%s", c) }
+
+		rsp, err := utils.Process(ctx, config, req,
+			// utils.WithDebugger(printf),
+			utils.WithContentCallback(content),
+			utils.WithReasoningCallback(reasoning),
+			utils.WithRemoteMCP(deepseekMCPURL, "deepseek-mcp"),
+		)
+		so(err, isNil)
+		so(rsp, notNil)
+		so(len(rsp.Messages), ge, 1)
+
+		answer := rsp.Messages[len(rsp.Messages)-1].Content
+		so(strings.Contains(answer, "时间"), eq, true)
+		so(strings.Contains(answer, "天气"), eq, true)
+		so(strings.Contains(answer, "网页"), eq, true)
+	})
+
+	cv("只有时间查询和天气查询", t, func() {
+		ctx := context.Background()
+		config := utils.ModelConfig{
+			Model:   deepseekModel,
+			BaseURL: deepseekBaseURL,
+			APIKey:  deepseekAPIKey,
+		}
+		req := []openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleUser,
+			Content: "你能使用哪些 MCP 工具? 请列表列出工具 ID 和说明",
+		}}
+
+		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
+		content := func(c string) { fmt.Printf("%s", c) }
+
+		rsp, err := utils.Process(ctx, config, req,
+			// utils.WithDebugger(printf),
+			utils.WithContentCallback(content),
+			utils.WithReasoningCallback(reasoning),
+			utils.WithRemoteMCPAndSpecifyTools(deepseekMCPURL, "deepseek-mcp", "time_query", "weather_query"),
+		)
+		so(err, isNil)
+		so(rsp, notNil)
+		so(len(rsp.Messages), ge, 1)
+
+		answer := rsp.Messages[len(rsp.Messages)-1].Content
+		so(strings.Contains(answer, "时间"), eq, true)
+		so(strings.Contains(answer, "天气"), eq, true)
+		so(strings.Contains(answer, "网页"), eq, false)
+	})
+
 	cv("带两次 MCP 的请求", t, func() {
 		ctx := context.Background()
 		config := utils.ModelConfig{
