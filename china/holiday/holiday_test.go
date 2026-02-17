@@ -23,19 +23,20 @@ func TestMain(m *testing.M) {
 }
 
 func Test2024(t *testing.T) {
-	cv("2024", t, func() {
-		for i := 1; i <= 12; i++ {
-			m := newMonthCalendar(2024, i)
-			t.Logf("<< %v >>\n%v", time.Month(i), m)
-		}
-	})
 
-	cv("2025", t, func() {
+	doYear := func(year int) {
 		for i := 1; i <= 12; i++ {
-			m := newMonthCalendar(2025, i)
+			m := newMonthCalendar(year, i)
 			t.Logf("<< %v >>\n%v", time.Month(i), m)
 		}
-	})
+	}
+
+	y := time.Now().Year()
+	for i := 2024; i <= y; i++ {
+		cv(fmt.Sprintf("%d", i), t, func() {
+			doYear(i)
+		})
+	}
 
 	cv("自定义类型", t, func() {
 		const vocation = holiday.DayType(holiday.ShiftedWorkday + 1)
