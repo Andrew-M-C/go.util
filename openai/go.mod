@@ -9,6 +9,7 @@ require (
 	github.com/Andrew-M-C/go.jsonvalue v1.4.2
 	github.com/Andrew-M-C/go.util/net v0.0.0-20260119092309-47eb9e92542f
 	github.com/Andrew-M-C/go.util/unsafe v0.0.0-20260119092309-47eb9e92542f
+	github.com/adrg/frontmatter v0.2.0
 	github.com/fatih/color v1.18.0
 	github.com/h2non/filetype v1.1.3
 	github.com/mark3labs/mcp-go v0.43.2
@@ -17,6 +18,7 @@ require (
 )
 
 require (
+	github.com/BurntSushi/toml v0.3.1 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
 	github.com/buger/jsonparser v1.1.1 // indirect
 	github.com/google/go-cmp v0.6.0 // indirect
@@ -36,5 +38,6 @@ require (
 	golang.org/x/sys v0.29.0 // indirect
 	golang.org/x/text v0.21.0 // indirect
 	gopkg.in/check.v1 v1.0.0-20180628173108-788fd7840127 // indirect
+	gopkg.in/yaml.v2 v2.3.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
