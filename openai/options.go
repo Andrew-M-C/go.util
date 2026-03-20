@@ -190,6 +190,11 @@ func WithInitializedMCP(c InitializedMCPClient, id string) Option {
 	}
 }
 
+// WithTools 设置可调用的工具
+func WithTools(tools ToolManager, id string) Option {
+	return WithInitializedMCP(tools, id)
+}
+
 // WithInitializedMCPAndSpecifyTools 同 WithInitializedMCP, 但明确指定只引用其中的某些工具。
 func WithInitializedMCPAndSpecifyTools(c InitializedMCPClient, id string, tools ...string) Option {
 	return func(o *options) {

@@ -40,3 +40,6 @@ type InitializedMCPClient interface {
 	ListTools(ctx context.Context, request mcp.ListToolsRequest) (*mcp.ListToolsResult, error)
 	CallTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error)
 }
+
+// ToolManager 表示一个工具管理器。实际上 MCP 也只不过是 tool call 的封装，这里只是借用 mcp package 来包装一些字段
+type ToolManager InitializedMCPClient
