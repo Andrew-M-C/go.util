@@ -1,0 +1,280 @@
+# golangci-lint configuration file
+# Documentation: https://golangci-lint.run/usage/configuration/
+
+run:
+  timeout: 10m
+  tests: false
+  modules-download-mode: readonly
+  go: "1.24"
+
+linters-settings:
+  gci:
+    sections:
+      - standard
+      - default
+      - prefix(github.com/Andrew-M-C/trpc-go-server)
+      - prefix(github.com/Andrew-M-C/trpc-go-utils)
+    custom-order: true
+  
+  govet:
+    check-shadowing: true
+    
+  gocyclo:
+    min-complexity: 20
+    
+  gocognit:
+    min-complexity: 20
+    
+  funlen:
+    lines: 120
+    statements: 60
+    
+  lll:
+    line-length: 120
+    
+  misspell:
+    locale: US
+    
+  unused:
+    check-exported: false
+    
+  depguard:
+    rules:
+      main:
+        deny:
+          - pkg: io/ioutil
+            desc: "ioutil is deprecated, use io and os packages instead"
+            
+  errcheck:
+    check-type-assertions: true
+    check-blank: true
+    
+  staticcheck:
+    go: "1.24"
+    
+  stylecheck:
+    go: "1.24"
+    
+  gosimple:
+    go: "1.24"
+
+linters:
+  enable:
+    # Essential linters
+    - errcheck
+    - gosimple
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    
+    # Code formatting
+    - gci
+    - gofmt
+    - goimports
+    
+    # Code quality
+    - goconst
+    - gocritic
+    - gosec
+    - misspell
+    - nakedret
+    - prealloc
+    - unconvert
+    - unparam
+    - whitespace
+    
+    # Error handling
+    - errorlint
+    - nilerr
+    
+    # Style checks
+    - stylecheck
+    - revive
+    
+    # Resource management
+    - bodyclose
+    - rowserrcheck
+    - sqlclosecheck
+    
+    # Security
+    - bidichk
+    
+    # Common issues
+    - dupl
+    - durationcheck
+    - forcetypeassert
+    - nestif
+    - noctx
+    - nolintlint
+    - wastedassign
+    
+    # Import management
+    - depguard
+    - importas
+    
+    # Complexity
+    - gocyclo
+    - gocognit
+    - funlen
+    - lll
+
+  disable:
+    # Deprecated linters
+    - gomnd
+    - exhaustivestruct
+    - maligned
+    - interfacer
+    - scopelint
+    - varcheck
+    - structcheck
+    - deadcode
+    - golint
+    - ifshort
+    - nosnakecase
+    - exportloopref
+    - tenv
+    
+    # Too strict or noisy linters
+    - godox
+    - gochecknoglobals
+    - gochecknoinits
+    - exhaustive
+    - exhaustruct
+    - forbidigo
+    - ginkgolinter
+    - gocheckcompilerdirectives
+    - goheader
+    - gomoddirectives
+    - gomodguard
+    - goprintffuncname
+    - grouper
+    - interfacebloat
+    - ireturn
+    - maintidx
+    - makezero
+    - musttag
+    - nilnil
+    - nlreturn
+    - nonamedreturns
+    - nosprintfhostport
+    - paralleltest
+    - predeclared
+    - promlinter
+    - reassign
+    - tagalign
+    - tagliatelle
+    - testifylint
+    - tparallel
+    - varnamelen
+    - wrapcheck
+    - wsl
+    - containedctx
+    - contextcheck
+    - cyclop
+    - decorder
+    - errchkjson
+    - errname
+    - testpackage
+    - thelper
+
+issues:
+  exclude-use-default: true
+  exclude-rules:
+    # Exclude test files from many linters
+    - path: _test\.go
+      linters:
+        - errcheck
+        - dupl
+        - gosec
+        - goconst
+        - funlen
+        - gocyclo
+        - gocognit
+        - bodyclose
+        - noctx
+        - lll
+        - nolintlint
+        - gocritic
+        - nestif
+        - prealloc
+        - revive
+        - unconvert
+        - unparam
+        - wastedassign
+        - whitespace
+        - forcetypeassert
+        - nakedret
+        - misspell
+        - staticcheck
+        - stylecheck
+        - gosimple
+        - govet
+        - ineffassign
+        - unused
+        - errorlint
+        - nilerr
+        - rowserrcheck
+        - sqlclosecheck
+        - bidichk
+        - durationcheck
+        - depguard
+        - importas
+        
+    # Exclude protobuf generated files
+    - path: \.pb\.go$
+      linters:
+        - lll
+        - gocritic
+        - gocyclo
+        - gocognit
+        - funlen
+        - unused
+        - staticcheck
+        - gosimple
+        - govet
+        - ineffassign
+        - errcheck
+        - stylecheck
+        - revive
+        - misspell
+        - nakedret
+        - prealloc
+        - unconvert
+        - unparam
+        - whitespace
+        - dupl
+        - bodyclose
+        - depguard
+        - durationcheck
+        - errorlint
+        - forcetypeassert
+        - nestif
+        - nilerr
+        - noctx
+        - nolintlint
+        - rowserrcheck
+        - sqlclosecheck
+        - wastedassign
+        - bidichk
+        - goconst
+        - gosec
+        - gci
+        - gofmt
+        - goimports
+        - importas
+        
+    # Exclude certain errors for specific patterns
+    - text: "SA1019.*deprecated"
+      linters:
+        - staticcheck
+      path: _test\.go
+    
+    # Allow long lines in comments
+    - text: "Line is \\d+ characters"
+      linters:
+        - lll
+      source: "^\\s*//.*$"
+
+  max-issues-per-linter: 0
+  max-same-issues: 0 
