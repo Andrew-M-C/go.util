@@ -40,5 +40,6 @@ use (
 	./time
 	./unicode
 	./unsafe
+	./wechat
 	./xlsx
 )
