@@ -4,12 +4,12 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
 	"github.com/Andrew-M-C/go.util/wechat/clawbot"
 	qrcode "github.com/yeqown/go-qrcode/v2"
-	"github.com/yeqown/go-qrcode/writer/terminal"
 )
 
 func TestMain(m *testing.M) {
@@ -73,6 +73,10 @@ func TestClawBotSequential(t *testing.T) {
 		t.Fatalf("获取二维码失败: %v", err)
 	}
 	t.Logf("二维码 URL: %s", qr.QRCodeImgContent)
+	if qr.QRCodeImgContent == "" {
+		t.Errorf("二维码 URL 为空")
+		return
+	}
 	printQRCodeToConsole(t, qr.QRCodeImgContent)
 
 	t.Logf("请在 30 秒内打开上述 URL 并扫码")
@@ -198,7 +202,8 @@ func TestClawBotSequential(t *testing.T) {
 	t.Log("SendText 圆周率输出完毕！测试通过。")
 }
 
-// printQRCodeToConsole 将 content 编码为二维码并通过 terminal writer 打印到控制台。
+// printQRCodeToConsole 将 content 编码为二维码并打印到控制台。
+// 深色模块用 █，浅色模块用全角空格　，最外围包一圈 █ 边框。
 func printQRCodeToConsole(t *testing.T, content string) {
 	t.Helper()
 
@@ -211,8 +216,53 @@ func printQRCodeToConsole(t *testing.T, content string) {
 		return
 	}
 
-	w := terminal.New()
-	if err := q.Save(w); err != nil {
+	if err := q.Save(&qrTermWriter{}); err != nil {
 		t.Logf("向终端输出二维码失败（ASCII-art 展示跳过）: %v", err)
 	}
 }
+
+// qrTermWriter 实现 qrcode.Writer，将 QR 矩阵以字符画形式输出到 stdout。
+type qrTermWriter struct{}
+
+func (qrTermWriter) Write(mat qrcode.Matrix) error {
+	const dark = "██"
+	const light = "▔▔"
+	const border = light
+
+	w := mat.Width()
+	h := mat.Height()
+
+	// 逐行收集格子状态：IsSet()==true 为深色模块。
+	rows := make([][]bool, h)
+	for i := range rows {
+		rows[i] = make([]bool, w)
+	}
+	mat.Iterate(qrcode.IterDirection_ROW, func(x, y int, v qrcode.QRValue) {
+		rows[y][x] = v.IsSet()
+	})
+
+	// 上边框：宽度 = 内容列数 + 左右各 1 格边框
+	borderWidth := w + 2
+	borderLine := strings.Repeat(border, borderWidth)
+	fmt.Println(borderLine)
+
+	for _, row := range rows {
+		var sb strings.Builder
+		sb.WriteString(border)
+		for _, cell := range row {
+			if cell {
+				sb.WriteString(dark)
+			} else {
+				sb.WriteString(light)
+			}
+		}
+		sb.WriteString(border)
+		fmt.Println(sb.String())
+	}
+
+	// 下边框
+	fmt.Println(border)
+	return nil
+}
+
+func (qrTermWriter) Close() error { return nil }

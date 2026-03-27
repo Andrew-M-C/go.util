@@ -92,7 +92,7 @@ func apiPost(
 // generateClientID 生成一个 32 字符的随机 hex 字符串，作为消息的 client_id。
 func generateClientID() string {
 	b := make([]byte, 16)
-	_, _ = rand.Read(b)
+	_, _ = rand.Read(b) //nolint:errcheck
 	return hex.EncodeToString(b)
 }
 
@@ -310,17 +310,17 @@ func uploadFileToCDN(
 	// 2. 生成随机 filekey（16 bytes → 32 hex chars）和 AES 密钥（16 bytes）
 	fileKeyBytes := make([]byte, 16)
 	aesKey := make([]byte, 16)
-	if _, err := rand.Read(fileKeyBytes); err != nil {
+	if _, err := rand.Read(fileKeyBytes); err != nil { //nolint:govet
 		return uploadedFileInfo{}, fmt.Errorf("generate filekey: %w", err)
 	}
-	if _, err := rand.Read(aesKey); err != nil {
+	if _, err := rand.Read(aesKey); err != nil { //nolint:govet
 		return uploadedFileInfo{}, fmt.Errorf("generate aes key: %w", err)
 	}
 	fileKey := hex.EncodeToString(fileKeyBytes)
 	aesKeyHex := hex.EncodeToString(aesKey)
 
 	// 3. 计算明文 MD5 和 AES-ECB 加密
-	rawMD5 := fmt.Sprintf("%x", md5.Sum(plaintext))
+	rawMD5 := fmt.Sprintf("%x", md5.Sum(plaintext)) //nolint:gosec
 	ciphertext, err := encryptAESECB(plaintext, aesKey)
 	if err != nil {
 		return uploadedFileInfo{}, err
@@ -335,7 +335,7 @@ func uploadFileToCDN(
 	}
 
 	// 5. POST 密文到 CDN
-	downloadParam, err := postToCDN(cdnBaseURL, uploadParam, fileKey, ciphertext)
+	downloadParam, err := postToCDN(ctx, cdnBaseURL, uploadParam, fileKey, ciphertext)
 	if err != nil {
 		return uploadedFileInfo{}, err
 	}
@@ -382,17 +382,24 @@ func requestUploadParam(
 
 // postToCDN 将加密后的文件内容 POST 到 CDN，返回 download 用的 encrypted_query_param。
 func postToCDN(
-	cdnBaseURL, uploadParam, fileKey string, ciphertext []byte,
+	ctx context.Context, cdnBaseURL, uploadParam, fileKey string, ciphertext []byte,
 ) (string, error) {
 	cdnURL := buildCDNUploadURL(cdnBaseURL, uploadParam, fileKey)
 
-	resp, err := http.Post(cdnURL, "application/octet-stream",
-		bytes.NewReader(ciphertext))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, cdnURL, bytes.NewReader(ciphertext))
+	if err != nil {
+		return "", fmt.Errorf("CDN upload build request error: %w", err)
+	}
+	req.Header.Set("Content-Type", "application/octet-stream")
+
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", fmt.Errorf("CDN upload HTTP error: %w", err)
 	}
 	defer resp.Body.Close()
-	_, _ = io.ReadAll(resp.Body) // drain body
+
+	// drain body, not important
+	_, _ = io.ReadAll(resp.Body) //nolint:errcheck
 
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		errMsg := resp.Header.Get("x-error-message")
@@ -571,7 +578,7 @@ func (s *streamSender) WriteChunk(text string) {
 	s.resetIdleTimerLocked()
 
 	if s.buf.Len() >= s.charThreshold {
-		_ = s.flushLocked()
+		_ = s.flushLocked() //nolint:errcheck
 	}
 }
 
@@ -652,8 +659,7 @@ func (s *streamSender) startTypingLoop() {
 	if s.typingTicket == "" {
 		return
 	}
-	_ = sendTypingWithStatus(
-		s.ctx, s.creds, s.target.ToUserID, s.typingTicket, typingStatusTyping)
+	_ = sendTypingWithStatus(s.ctx, s.creds, s.target.ToUserID, s.typingTicket, typingStatusTyping) //nolint:errcheck
 
 	go func() {
 		ticker := time.NewTicker(typingKeepaliveInterval)
@@ -666,9 +672,9 @@ func (s *streamSender) startTypingLoop() {
 			case <-s.doneCh:
 				return
 			case <-ticker.C:
-				_ = sendTypingWithStatus(
-					s.ctx, s.creds, s.target.ToUserID,
-					s.typingTicket, typingStatusTyping)
+				_ = sendTypingWithStatus( //nolint:errcheck
+					s.ctx, s.creds, s.target.ToUserID, s.typingTicket, typingStatusTyping,
+				)
 			}
 		}
 	}()
@@ -682,6 +688,7 @@ func (s *streamSender) stopTypingIndicator() {
 	}
 	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
 	defer cancel()
-	_ = sendTypingWithStatus(
-		ctx, s.creds, s.target.ToUserID, s.typingTicket, typingStatusCancel)
+	_ = sendTypingWithStatus( //nolint:errcheck
+		ctx, s.creds, s.target.ToUserID, s.typingTicket, typingStatusCancel,
+	)
 }

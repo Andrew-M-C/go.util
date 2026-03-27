@@ -62,31 +62,30 @@ func FetchQRCode(ctx context.Context, baseURL string) (QRCodeResult, error) {
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, endpoint, nil)
 	if err != nil {
-		return QRCodeResult{}, fmt.Errorf("create QR request: %w", err)
+		return QRCodeResult{}, fmt.Errorf("create QR request error: %w", err)
 	}
 	req.Header.Set("iLink-App-ClientVersion", "1")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return QRCodeResult{}, fmt.Errorf("fetch QR code: %w", err)
+		return QRCodeResult{}, fmt.Errorf("fetch QR code error: %w", err)
 	}
 	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return QRCodeResult{}, fmt.Errorf("read QR code response error: %w", err)
+	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return QRCodeResult{}, fmt.Errorf(
-			"QR code API HTTP %d: %s", resp.StatusCode, string(body))
+			"QR code API HTTP %d error: '%s'", resp.StatusCode, body)
 	}
 
-	var result qrCodeResponse
+	var result QRCodeResult
 	if err := json.Unmarshal(body, &result); err != nil {
-		return QRCodeResult{}, fmt.Errorf("decode QR response: %w", err)
+		return QRCodeResult{}, fmt.Errorf("decode QR response error: %w", err)
 	}
-
-	return QRCodeResult{
-		QRCode:           result.QRCode,
-		QRCodeImgContent: result.QRCodeImgContent,
-	}, nil
+	return result, nil
 }
 
 // ===========================
@@ -135,7 +134,7 @@ func WaitForLogin(
 		case "wait":
 			// 用户尚未扫码，继续等待
 
-		case "scaned":
+		case "scaned", "scanned": // 微信的错别字
 			// 用户已扫码但未确认
 			if !scannedNotified && cb.OnScanned != nil {
 				cb.OnScanned()
@@ -164,7 +163,7 @@ func WaitForLogin(
 		select {
 		case <-ctx.Done():
 			return Credentials{}, fmt.Errorf(
-				"login cancelled or timed out: %w", ctx.Err())
+				"login canceled or timed out: %w", ctx.Err())
 		case <-time.After(qrPollInterval):
 		}
 	}
@@ -234,10 +233,13 @@ func pollQRStatus(
 	}
 	defer resp.Body.Close()
 
-	body, _ := io.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return statusResponse{}, fmt.Errorf("read QR status response: %w", err)
+	}
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return statusResponse{}, fmt.Errorf(
-			"QR status API HTTP %d: %s", resp.StatusCode, string(body))
+			"QR status API HTTP %d: %s", resp.StatusCode, body)
 	}
 
 	var result statusResponse

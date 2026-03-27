@@ -220,7 +220,7 @@ issues:
         - durationcheck
         - depguard
         - importas
-        
+
     # Exclude protobuf generated files
     - path: \.pb\.go$
       linters:

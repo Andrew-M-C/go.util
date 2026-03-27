@@ -67,19 +67,19 @@ const channelVersion = "2.0.1-go"
 type Credentials struct {
 	// BotToken 是 Bearer 鉴权令牌，用于所有后续 API 请求的 Authorization 头。
 	// 来自微信返回的 bot_token 字段。
-	BotToken string
+	BotToken string `json:"bot_token"`
 
 	// BaseURL 是 API 根地址（如 "https://ilinkai.weixin.qq.com"）。
 	// 微信在登录确认时可能返回一个与登录发起时不同的 BaseURL，以此为准。
-	BaseURL string
+	BaseURL string `json:"base_url"`
 
 	// BotID 是 Bot 的唯一标识，来自微信返回的 ilink_bot_id 字段。
 	// 已经过归一化处理：@ → -, . → -（如 "a1b2@im.bot" → "a1b2-im-bot"）。
-	BotID string
+	BotID string `json:"bot_id"`
 
 	// UserID 是扫码微信用户的 ID，来自微信返回的 ilink_user_id 字段。
 	// 格式如 "wxid_abc@im.wechat"，同一微信用户始终不变。
-	UserID string
+	UserID string `json:"user_id"`
 }
 
 // ===========================
@@ -90,11 +90,11 @@ type Credentials struct {
 type QRCodeResult struct {
 	// QRCode 是二维码的唯一 key，用于后续调用 WaitForLogin 轮询扫码状态。
 	// 此值不需要展示给用户，仅作为内部标识。
-	QRCode string
+	QRCode string `json:"qrcode"`
 
 	// QRCodeImgContent 是二维码图片的 URL，供展示给用户扫描。
 	// 来自微信返回的 qrcode_img_content 字段。
-	QRCodeImgContent string
+	QRCodeImgContent string `json:"qrcode_img_content"`
 }
 
 // LoginCallbacks 是登录等待过程中的可选事件回调。
@@ -121,11 +121,11 @@ type LoginCallbacks struct {
 //	}
 type ReplyTarget struct {
 	// ToUserID 是回复目标用户的 ID（即入站消息的 FromUserID）。
-	ToUserID string
+	ToUserID string `json:"to_user_id"`
 
 	// ContextToken 是对话上下文令牌（即入站消息的 ContextToken）。
 	// 回复时原样传回，微信用它关联上下文。
-	ContextToken string
+	ContextToken string `json:"context_token,omitempty"`
 }
 
 // TypingAction 是 SendTyping 的参数，包含目标用户和 typing 凭证。
@@ -133,10 +133,10 @@ type ReplyTarget struct {
 // TypingTicket 通过 GetTypingTicket 获取。
 type TypingAction struct {
 	// ToUserID 是 typing 指示器的目标用户 ID。
-	ToUserID string
+	ToUserID string `json:"to_user_id"`
 
 	// TypingTicket 是通过 GetTypingTicket 获取的临时凭证。
-	TypingTicket string
+	TypingTicket string `json:"typing_ticket"`
 }
 
 // ===========================
@@ -164,17 +164,17 @@ type StreamSender interface {
 
 // StreamSenderOpts 是 NewStreamSender 的配置。
 type StreamSenderOpts struct {
-	Creds  Credentials
-	Target ReplyTarget
+	Creds  Credentials `json:"creds"`
+	Target ReplyTarget `json:"target"`
 
 	// TypingTicket 可选；非空时自动维护 typing 指示器的 start/keepalive/stop。
-	TypingTicket string
+	TypingTicket string `json:"typing_ticket,omitempty"`
 
 	// CharThreshold 是缓冲区字符数阈值，达到后自动 flush。默认 200。
-	CharThreshold int
+	CharThreshold int `json:"char_threshold,omitempty"`
 
 	// IdleTimeout 是最后一次 WriteChunk 后多久自动 flush。默认 3s。
-	IdleTimeout time.Duration
+	IdleTimeout time.Duration `json:"idle_timeout,omitempty"`
 }
 
 // ===========================
@@ -184,13 +184,13 @@ type StreamSenderOpts struct {
 // MediaOpts 是 SendImage / SendVideo / SendFile / SendMediaByPath 的公共媒体参数。
 type MediaOpts struct {
 	// FilePath 是本地文件路径（如 "/tmp/photo.jpg"）。
-	FilePath string
+	FilePath string `json:"file_path"`
 
 	// Caption 是随媒体附带的文字说明。为空则不附带文字。
-	Caption string
+	Caption string `json:"caption,omitempty"`
 
 	// CDNBaseURL 是 CDN 上传地址。为空时自动使用 DefaultCDNBaseURL。
-	CDNBaseURL string
+	CDNBaseURL string `json:"cdn_base_url,omitempty"`
 }
 
 // ===========================
@@ -201,11 +201,11 @@ type MediaOpts struct {
 type PollResult struct {
 	// Messages 是本次轮询收到的消息列表。
 	// 可能为空切片——表示本次长轮询超时，没有新消息。
-	Messages []*WeixinMessage
+	Messages []*WeixinMessage `json:"messages,omitempty"`
 
 	// GetUpdatesBuf 是下一次调用 Poll 时应传入的游标（翻页令牌）。
 	// 首次调用 Poll 时传空字符串 ""，之后始终使用上一次 PollResult 返回的值。
-	GetUpdatesBuf string
+	GetUpdatesBuf string `json:"get_updates_buf"`
 }
 
 // ===========================

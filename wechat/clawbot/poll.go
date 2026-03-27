@@ -9,22 +9,6 @@ import (
 	"io"
 	"net/http"
 	"strings"
-	"time"
-)
-
-// ===========================
-//  轮询相关常量
-// ===========================
-
-const (
-	// defaultLongPollTimeout 是单次 getUpdates 请求的 HTTP 超时。
-	//
-	// iLink 服务端的长轮询超时约为 30s（由 longpolling_timeout_ms 控制），
-	// 客户端超时额外加 5s 作为网络余量，防止在服务端正常返回前就断连。
-	defaultLongPollTimeout = 35 * time.Second
-
-	// longPollExtraMargin 是在服务端长轮询超时基础上额外增加的 HTTP 超时余量。
-	longPollExtraMargin = 5 * time.Second
 )
 
 // ===========================
@@ -114,15 +98,9 @@ func doGetUpdates(
 		return nil, fmt.Errorf("marshal getUpdates request: %w", err)
 	}
 
-	// 3. 创建带超时的 HTTP 请求
-	//    超时 = 默认长轮询超时（35s）；若服务端返回了 longpolling_timeout_ms
-	//    则后续可动态调整，但首次使用默认值即可。
-	reqCtx, cancel := context.WithTimeout(
-		ctx, defaultLongPollTimeout+longPollExtraMargin)
-	defer cancel()
+	// 3. 创建 HTTP 请求
 
-	req, err := http.NewRequestWithContext(
-		reqCtx, http.MethodPost, endpoint, bytes.NewReader(jsonBody))
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, endpoint, bytes.NewReader(jsonBody))
 	if err != nil {
 		return nil, fmt.Errorf("create getUpdates request: %w", err)
 	}
@@ -130,12 +108,13 @@ func doGetUpdates(
 	// 4. 设置必要的请求头
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("AuthorizationType", "ilink_bot_token")
+	req.Header.Set("X-WECHAT-UIN", randomWechatUIN())
+	req.Header.Set("iLink-App-ClientVersion", "1")
+
 	token := strings.TrimSpace(creds.BotToken)
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
-	req.Header.Set("X-WECHAT-UIN", randomWechatUIN())
-	req.Header.Set("iLink-App-ClientVersion", "1")
 
 	// 5. 执行请求
 	resp, err := http.DefaultClient.Do(req)
@@ -200,5 +179,6 @@ func checkGetUpdatesError(resp getUpdatesResp) error {
 
 // IsSessionExpired 是 errors.Is(err, ErrSessionExpired) 的便捷别名。
 func IsSessionExpired(err error) bool {
-	return errors.Is(err, ErrSessionExpired)
+	return errors.Is(err, ErrSessionExpired) ||
+		errors.Is(err, context.DeadlineExceeded)
 }
