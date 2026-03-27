@@ -8,6 +8,8 @@ import (
 	"time"
 
 	"github.com/Andrew-M-C/go.util/wechat/clawbot"
+	qrcode "github.com/yeqown/go-qrcode/v2"
+	"github.com/yeqown/go-qrcode/writer/terminal"
 )
 
 func TestMain(m *testing.M) {
@@ -70,7 +72,9 @@ func TestClawBotSequential(t *testing.T) {
 	if err != nil {
 		t.Fatalf("获取二维码失败: %v", err)
 	}
-	t.Logf("二维码 URL: %s", qr.QRCodeURL)
+	t.Logf("二维码 URL: %s", qr.QRCodeImgContent)
+	printQRCodeToConsole(t, qr.QRCodeImgContent)
+
 	t.Logf("请在 30 秒内打开上述 URL 并扫码")
 
 	// -------- 步骤 2: 等待扫码登录 --------
@@ -87,10 +91,10 @@ func TestClawBotSequential(t *testing.T) {
 		t.Fatalf("登录失败: %v", err)
 	}
 	t.Logf("登录成功！微信返回参数:")
-	t.Logf("  Token:     %s", creds.Token[:min(len(creds.Token), 20)]+"...")
-	t.Logf("  BaseURL:   %s", creds.BaseURL)
-	t.Logf("  AccountID: %s", creds.AccountID)
-	t.Logf("  UserID:    %s", creds.UserID)
+	t.Logf("  BotToken: %s", creds.BotToken[:min(len(creds.BotToken), 20)]+"...")
+	t.Logf("  BaseURL:  %s", creds.BaseURL)
+	t.Logf("  BotID:    %s", creds.BotID)
+	t.Logf("  UserID:   %s", creds.UserID)
 
 	buf := ""
 
@@ -192,4 +196,23 @@ func TestClawBotSequential(t *testing.T) {
 		time.Sleep(100 * time.Millisecond)
 	}
 	t.Log("SendText 圆周率输出完毕！测试通过。")
+}
+
+// printQRCodeToConsole 将 content 编码为二维码并通过 terminal writer 打印到控制台。
+func printQRCodeToConsole(t *testing.T, content string) {
+	t.Helper()
+
+	q, err := qrcode.NewWith(
+		content,
+		qrcode.WithErrorCorrectionLevel(qrcode.ErrorCorrectionHighest),
+	)
+	if err != nil {
+		t.Logf("生成二维码失败（ASCII-art 展示跳过）: %v", err)
+		return
+	}
+
+	w := terminal.New()
+	if err := q.Save(w); err != nil {
+		t.Logf("向终端输出二维码失败（ASCII-art 展示跳过）: %v", err)
+	}
 }

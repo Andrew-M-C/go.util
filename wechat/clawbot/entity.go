@@ -65,16 +65,17 @@ const channelVersion = "2.0.1-go"
 // 四个字段全部来自微信 get_qrcode_status API 的响应，不是调用方生成的。
 // 调用方拿到后自行决定如何持久化（文件、数据库、环境变量等）。
 type Credentials struct {
-	// Token 是 Bearer 鉴权令牌，用于所有后续 API 请求的 Authorization 头。
-	Token string
+	// BotToken 是 Bearer 鉴权令牌，用于所有后续 API 请求的 Authorization 头。
+	// 来自微信返回的 bot_token 字段。
+	BotToken string
 
 	// BaseURL 是 API 根地址（如 "https://ilinkai.weixin.qq.com"）。
 	// 微信在登录确认时可能返回一个与登录发起时不同的 BaseURL，以此为准。
 	BaseURL string
 
-	// AccountID 是 Bot 的唯一标识，来自微信返回的 ilink_bot_id 字段。
+	// BotID 是 Bot 的唯一标识，来自微信返回的 ilink_bot_id 字段。
 	// 已经过归一化处理：@ → -, . → -（如 "a1b2@im.bot" → "a1b2-im-bot"）。
-	AccountID string
+	BotID string
 
 	// UserID 是扫码微信用户的 ID，来自微信返回的 ilink_user_id 字段。
 	// 格式如 "wxid_abc@im.wechat"，同一微信用户始终不变。
@@ -91,8 +92,9 @@ type QRCodeResult struct {
 	// 此值不需要展示给用户，仅作为内部标识。
 	QRCode string
 
-	// QRCodeURL 是二维码图片的 URL，供展示给用户扫描。
-	QRCodeURL string
+	// QRCodeImgContent 是二维码图片的 URL，供展示给用户扫描。
+	// 来自微信返回的 qrcode_img_content 字段。
+	QRCodeImgContent string
 }
 
 // LoginCallbacks 是登录等待过程中的可选事件回调。
@@ -240,7 +242,7 @@ var ErrSessionExpired = errors.New("weixin session expired (errcode -14)")
 //
 // 入站消息中:
 //   - FromUserID = 发消息的微信用户
-//   - ToUserID   = 接收消息的 Bot（即 Credentials.AccountID 对应的原始值）
+//   - ToUserID   = 接收消息的 Bot（即 Credentials.BotID 对应的原始值）
 //   - ContextToken 应缓存下来，回复时原样传回
 //
 // 出站消息中:
@@ -494,9 +496,9 @@ func newBaseInfo() *baseInfo {
 	return &baseInfo{ChannelVersion: channelVersion}
 }
 
-// normalizeAccountID 将微信原始 ilink_bot_id（如 "hex@im.bot"）
+// normalizeBotID 将微信原始 ilink_bot_id（如 "hex@im.bot"）
 // 转换为文件系统和 URL 安全的格式（如 "hex-im-bot"）。
-func normalizeAccountID(raw string) string {
+func normalizeBotID(raw string) string {
 	s := strings.TrimSpace(raw)
 	s = strings.ReplaceAll(s, "@", "-")
 	s = strings.ReplaceAll(s, ".", "-")

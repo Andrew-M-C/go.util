@@ -40,7 +40,7 @@ const (
 //	Headers: Authorization: Bearer <token>, X-WECHAT-UIN: <random>, ...
 //
 // 参数:
-//   - creds: 登录成功后获得的凭据（Token + BaseURL）
+//   - creds: 登录成功后获得的凭据（BotToken + BaseURL）
 //   - getUpdatesBuf: 上次 Poll 返回的游标；首次调用传空字符串 ""
 //
 // 返回:
@@ -130,7 +130,7 @@ func doGetUpdates(
 	// 4. 设置必要的请求头
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("AuthorizationType", "ilink_bot_token")
-	token := strings.TrimSpace(creds.Token)
+	token := strings.TrimSpace(creds.BotToken)
 	if token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}

@@ -64,7 +64,7 @@ func apiPost(
 
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("AuthorizationType", "ilink_bot_token")
-	if token := strings.TrimSpace(creds.Token); token != "" {
+	if token := strings.TrimSpace(creds.BotToken); token != "" {
 		req.Header.Set("Authorization", "Bearer "+token)
 	}
 	req.Header.Set("X-WECHAT-UIN", randomWechatUIN())

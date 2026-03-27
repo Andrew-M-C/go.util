@@ -50,7 +50,7 @@ const (
 // 重新登录时可传入之前 Credentials.BaseURL 保存的地址。
 //
 // 返回值:
-//   - QRCodeResult.QRCodeURL: 二维码图片地址，展示给用户扫描
+//   - QRCodeResult.QRCodeImgContent: 二维码图片地址，展示给用户扫描
 //   - QRCodeResult.QRCode: 二维码唯一 key，传给 WaitForLogin 使用
 func FetchQRCode(ctx context.Context, baseURL string) (QRCodeResult, error) {
 	if baseURL == "" {
@@ -84,8 +84,8 @@ func FetchQRCode(ctx context.Context, baseURL string) (QRCodeResult, error) {
 	}
 
 	return QRCodeResult{
-		QRCode:    result.QRCode,
-		QRCodeURL: result.QRCodeImgContent,
+		QRCode:           result.QRCode,
+		QRCodeImgContent: result.QRCodeImgContent,
 	}, nil
 }
 
@@ -193,7 +193,7 @@ func refreshQRCode(
 
 	// 通知调用方新的二维码 URL，以便更新 UI
 	if cb.OnQRRefreshed != nil {
-		cb.OnQRRefreshed(newQR.QRCodeURL)
+		cb.OnQRRefreshed(newQR.QRCodeImgContent)
 	}
 	return newQR, nil
 }
@@ -261,9 +261,9 @@ func buildCredentials(status statusResponse) (Credentials, error) {
 	}
 
 	return Credentials{
-		Token:     status.BotToken,
-		BaseURL:   status.BaseURL,
-		AccountID: normalizeAccountID(status.ILinkBotID),
-		UserID:    status.ILinkUserID,
+		BotToken: status.BotToken,
+		BaseURL:  status.BaseURL,
+		BotID:    normalizeBotID(status.ILinkBotID),
+		UserID:   status.ILinkUserID,
 	}, nil
 }

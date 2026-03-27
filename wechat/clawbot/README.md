@@ -3,7 +3,7 @@
 - [clawbot — 微信 iLink Bot 工具库设计](#clawbot--微信-ilink-bot-工具库设计)
   - [定位](#定位)
   - [核心概念](#核心概念)
-    - [`accountID` 与 `userID` — 两个身份标识](#accountid-与-userid--两个身份标识)
+    - [`botID` 与 `userID` — 两个身份标识](#botid-与-userid--两个身份标识)
     - [`contextToken` — 对话上下文令牌](#contexttoken--对话上下文令牌)
     - [`typingTicket` — 打字指示器凭证](#typingticket--打字指示器凭证)
     - [概念关系总览](#概念关系总览)
@@ -23,11 +23,11 @@
 
 在阅读后续 API 设计之前，需要先理解 iLink 协议中的几个关键概念。
 
-### `accountID` 与 `userID` — 两个身份标识
+### `botID` 与 `userID` — 两个身份标识
 
 iLink 协议中有两个身份：**Bot 自己**和**跟 Bot 聊天的微信用户**。
 
-| | `accountID` | `userID` |
+| | `botID` | `userID` |
 |---|---|---|
 | 代表谁 | Bot 自身 | 微信用户 |
 | 来源 | 登录成功后微信返回的 `ilink_bot_id` | 登录时微信返回的 `ilink_user_id`，以及每条入站消息的 `from_user_id` |
@@ -35,7 +35,7 @@ iLink 协议中有两个身份：**Bot 自己**和**跟 Bot 聊天的微信用�
 | 生命周期 | 每次 QR 登录微信分配一个新的，重新登录会变 | 固定不变，同一微信用户始终相同 |
 | 在消息中的角色 | 入站消息的 `to_user_id` | 入站消息的 `from_user_id` |
 
-**重要澄清：`accountID` 是微信返回的，不是 Bot 自行生成的。** 四个凭据字段（Token、BaseURL、AccountID、UserID）全部来自 QR 登录成功后 `get_qrcode_status` API 的响应：
+**重要澄清：`botID` 是微信返回的，不是 Bot 自行生成的。** 四个凭据字段（BotToken、BaseURL、BotID、UserID）全部来自 QR 登录成功后 `get_qrcode_status` API 的响应：
 
 ```text
 GET /ilink/bot/get_qrcode_status?qrcode=xxx
@@ -43,8 +43,8 @@ GET /ilink/bot/get_qrcode_status?qrcode=xxx
 ← 200 OK
 {
   "status":        "confirmed",
-  "bot_token":     "eyJhbG...",                      → Credentials.Token
-  "ilink_bot_id":  "a1b2c3d4@im.bot",               → Credentials.AccountID
+  "bot_token":     "eyJhbG...",                      → Credentials.BotToken
+  "ilink_bot_id":  "a1b2c3d4@im.bot",               → Credentials.BotID
   "baseurl":       "https://ilinkai.weixin.qq.com",  → Credentials.BaseURL
   "ilink_user_id": "wxid_abc@im.wechat"              → Credentials.UserID
 }
@@ -55,14 +55,14 @@ GET /ilink/bot/get_qrcode_status?qrcode=xxx
 ```text
 用户给 Bot 发消息（入站）:
   { "from_user_id": "wxid_abc@im.wechat",  ← userID（用户）
-    "to_user_id":   "a1b2c3d4@im.bot" }    ← accountID（Bot）
+    "to_user_id":   "a1b2c3d4@im.bot" }    ← botID（Bot）
 
 Bot 回复用户（出站）:
   { "from_user_id": "",                     ← Bot 发送时留空
     "to_user_id":   "wxid_abc@im.wechat" }  ← userID（用户）
 ```
 
-对 clawbot 包的影响：`accountID` 在登录时获得一次，已包含在 `Credentials` 中，后续不需要单独传递。调用方真正高频使用的是每条入站消息的 `FromUserID`——它就是回复目标。
+对 clawbot 包的影响：`botID` 在登录时获得一次，已包含在 `Credentials` 中，后续不需要单独传递。调用方真正高频使用的是每条入站消息的 `FromUserID`——它就是回复目标。
 
 ### `contextToken` — 对话上下文令牌
 
@@ -119,12 +119,12 @@ status=2 → 停止显示
 
 ```text
 QR 登录成功
-  → 微信返回 Credentials {Token, BaseURL, AccountID, UserID}
-                                         ↓
-收到用户消息（Poll）                      ↓
-  → WeixinMessage                        ↓
-     ├── FromUserID ← 谁发的（= userID） ↓
-     ├── ToUserID   ← 发给谁（= accountID）
+  → 微信返回 Credentials {BotToken, BaseURL, BotID, UserID}
+                                          ↓
+收到用户消息（Poll）                       ↓
+  → WeixinMessage                         ↓
+     ├── FromUserID ← 谁发的（= userID）  ↓
+     ├── ToUserID   ← 发给谁（= botID）
      └── ContextToken ← 对话上下文令牌
 
 回复用户（SendText 等）
@@ -132,7 +132,7 @@ QR 登录成功
   │       ToUserID:     msg.FromUserID,      ← 回复目标
   │       ContextToken: msg.ContextToken,    ← 原样回传
   │   }
-  └── creds.Token                            ← HTTP Authorization 头
+  └── creds.BotToken                         ← HTTP Authorization 头
 
 （可选）发送 typing 指示器
   ├── ticket, _ := GetTypingTicket(creds, target)
@@ -146,7 +146,7 @@ QR 登录成功
 定义 `clawbot` 包所有公开和内部使用的数据结构，包括：
 
 - **常量**：`DefaultBaseURL` / `DefaultCDNBaseURL`，以及 `MessageType`、`MessageItemType`、`MessageState` 三组枚举类型
-- **凭据**：`Credentials`（Token / BaseURL / AccountID / UserID）
+- **凭据**：`Credentials`（BotToken / BaseURL / BotID / UserID）
 - **登录类型**：`QRCodeResult`、`LoginCallbacks`
 - **轮询类型**：`PollResult`
 - **消息协议**：`WeixinMessage` → `MessageItem` → `TextItem` / `ImageItem` / `VoiceItem` / `FileItem` / `VideoItem`，以及 `CDNMedia`、`RefMessage`
@@ -178,7 +178,7 @@ creds, _ := clawbot.WaitForLogin(ctx, "", qr, clawbot.LoginCallbacks{
     OnScanned:     func() { fmt.Println("已扫码，等待确认...") },
     OnQRRefreshed: func(url string) { fmt.Println("新二维码:", url) },
 })
-// creds.Token / creds.BaseURL / creds.AccountID / creds.UserID 全部来自微信返回
+// creds.BotToken / creds.BaseURL / creds.BotID / creds.UserID 全部来自微信返回
 ```
 
 详见 [`login.go`](login.go)。
