@@ -123,8 +123,7 @@ func WaitForLogin(
 	for {
 		// 检查上下文是否已被取消或超时
 		if err := ctx.Err(); err != nil {
-			return Credentials{}, fmt.Errorf(
-				"login cancelled or timed out: %w", err)
+			return Credentials{}, fmt.Errorf("login canceled or timed out: %w", err)
 		}
 
 		status, err := pollQRStatus(ctx, baseURL, currentQR.QRCode)

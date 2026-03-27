@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"context"
 	"crypto/aes"
-	"crypto/md5"
+	"crypto/md5" //nolint:gosec
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/hex"
