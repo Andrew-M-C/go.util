@@ -225,8 +225,8 @@ func printQRCodeToConsole(t *testing.T, content string) {
 type qrTermWriter struct{}
 
 func (qrTermWriter) Write(mat qrcode.Matrix) error {
-	const dark = "██"
-	const light = "▔▔"
+	const dark = "⬛"
+	const light = "⬜"
 	const border = light
 
 	w := mat.Width()
@@ -261,7 +261,7 @@ func (qrTermWriter) Write(mat qrcode.Matrix) error {
 	}
 
 	// 下边框
-	fmt.Println(border)
+	fmt.Println(borderLine)
 	return nil
 }
 
