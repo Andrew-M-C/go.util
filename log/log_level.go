@@ -76,9 +76,10 @@ func SetConsoleDyeingLevel(lv Level) {
 }
 
 // SetSkipCaller 当外部封装本 logger 时, 可以设置该值, 那么 logger 在输出调用信息的时候
-// 可以跳过指定的层数。
+// 可以跳过指定的层数。修改后会触发内部 zap logger 重建。
 func SetSkipCaller(skip int) {
 	if skip >= 0 {
 		internal.caller.skip = skip
+		rebuildLoggers()
 	}
 }

@@ -18,7 +18,10 @@ type jsonWrapper struct {
 }
 
 func (j jsonWrapper) String() string {
-	b, _ := json.Marshal(j.v)
+	b, err := json.Marshal(j.v)
+	if err != nil {
+		b, _ = json.Marshal(fmt.Sprint(j.v)) //nolint:errcheck
+	}
 	return bToS(b)
 }
 

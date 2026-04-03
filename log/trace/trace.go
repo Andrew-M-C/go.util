@@ -10,7 +10,7 @@ import (
 
 // TraceIDContextKey 返回 trace ID 的 context key, 用于一些外部需要复制 context 的
 // key / value 的场景
-func TraceIDContextKey() any {
+func TraceIDContextKey() any { //nolint:revive
 	return traceIDKey{}
 }
 
@@ -54,27 +54,27 @@ func traceIDStack(ctx context.Context) traceIDStackyValue {
 	if v == nil {
 		return traceIDStackyValue{}
 	}
-	st, _ := v.(traceIDStackyValue)
+	st, _ := v.(traceIDStackyValue) //nolint:errcheck
 	return st
 }
 
 // TraceID 从 context 中读取 trace ID
-func TraceID(ctx context.Context) string {
+func TraceID(ctx context.Context) string { //nolint:revive
 	v := ctx.Value(traceIDKey{})
 	if v == nil {
 		return ""
 	}
-	s, _ := v.(traceIDStackyValue)
+	s, _ := v.(traceIDStackyValue) //nolint:errcheck
 	return s.id()
 }
 
 // TraceIDStack 从 context 中读取历史 trace ID 栈
-func TraceIDStack(ctx context.Context) []string {
+func TraceIDStack(ctx context.Context) []string { //nolint:revive
 	v := ctx.Value(traceIDKey{})
 	if v == nil {
 		return nil
 	}
-	s, _ := v.(traceIDStackyValue)
+	s, _ := v.(traceIDStackyValue) //nolint:errcheck
 	return slices.Clone(s)
 }
 

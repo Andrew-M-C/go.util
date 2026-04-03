@@ -3,25 +3,20 @@ package log
 
 import (
 	"context"
-	"fmt"
 	"os"
-	"strings"
-	"time"
 
 	"github.com/Andrew-M-C/go.util/log/dyeing"
-	"github.com/Andrew-M-C/go.util/runtime/caller"
-	timeutil "github.com/Andrew-M-C/go.util/time"
 )
 
 // -------- log without context --------
 
-// Tracef 底层跟踪日志
+// Tracef 底层跟踪日志（内部映射到 Debug 级别）
 func Tracef(f string, a ...any) {
 	l := getNonCtxLoggers(TraceLevel)
 	doNonCtxLogf(l, f, a...)
 }
 
-// Trace 底层跟踪日志
+// Trace 底层跟踪日志（内部映射到 Debug 级别）
 func Trace(a ...any) {
 	l := getNonCtxLoggers(TraceLevel)
 	doNonCtxLog(l, a...)
@@ -115,25 +110,15 @@ func doNonCtxLog(loggers []nonCtxLogger, a ...any) {
 	}
 }
 
-func callerDesc(ca caller.Caller) string {
-	funcBase := ca.Func.Base()
-	prefix := strings.TrimRight(string(ca.Func), funcBase)
-	return fmt.Sprintf("%s%s, Line %d, %s()", prefix, ca.File.Base(), ca.Line, funcBase)
-}
-
-func timeDesc() string {
-	return time.Now().In(timeutil.Beijing).Format("2006-01-02 15:04:05.000")
-}
-
 // -------- log with context --------
 
-// TraceContextf 底层跟踪日志
+// Deprecated: TraceContextf 底层跟踪日志（内部映射到 Debug 级别）
 func TraceContextf(ctx context.Context, f string, a ...any) {
 	l := getCtxLoggers(ctx, TraceLevel)
 	doCtxLogf(ctx, l, f, a...)
 }
 
-// TraceContext 底层跟踪日志
+// Deprecated: TraceContext 底层跟踪日志（内部映射到 Debug 级别）
 func TraceContext(ctx context.Context, a ...any) {
 	l := getCtxLoggers(ctx, TraceLevel)
 	doCtxLog(ctx, l, a...)
@@ -202,12 +187,12 @@ func FatalContext(ctx context.Context, a ...any) {
 }
 
 func getCtxLoggers(ctx context.Context, level Level) (loggers []ctxLogger) {
-	dyeing := dyeing.Dyeing(ctx)
+	isDyeing := dyeing.Dyeing(ctx)
 
 	// console
 	if level >= internal.level.normal.console {
 		loggers = append(loggers, consoleLog(level))
-	} else if dyeing && level >= internal.level.dyeing.console {
+	} else if isDyeing && level >= internal.level.dyeing.console {
 		internal.debugf("dyeing with console")
 		loggers = append(loggers, consoleLog(level))
 	}
@@ -215,7 +200,7 @@ func getCtxLoggers(ctx context.Context, level Level) (loggers []ctxLogger) {
 	// file logger
 	if level >= internal.level.normal.file {
 		loggers = append(loggers, fileLog(level))
-	} else if dyeing && level >= internal.level.dyeing.file {
+	} else if isDyeing && level >= internal.level.dyeing.file {
 		internal.debugf("dyeing with file")
 		loggers = append(loggers, fileLog(level))
 	}

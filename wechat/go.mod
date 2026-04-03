@@ -6,4 +6,7 @@ toolchain go1.23.1
 
 require github.com/yeqown/go-qrcode/v2 v2.2.4
 
-require github.com/yeqown/reedsolomon v1.0.0 // indirect
+require (
+	github.com/stretchr/testify v1.9.0 // indirect
+	github.com/yeqown/reedsolomon v1.0.0 // indirect
+)
