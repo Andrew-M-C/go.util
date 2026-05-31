@@ -1,6 +1,7 @@
 package openai
 
 import (
+	"net/http"
 	"strings"
 
 	jsonvalue "github.com/Andrew-M-C/go.jsonvalue"
@@ -24,7 +25,11 @@ type options struct {
 	toolCallResponseCallback func(openai.ChatCompletionMessage)
 
 	// 额外参数
-	extraFields *jsonvalue.V
+	extraFields  *jsonvalue.V
+	extraHeaders http.Header
+
+	// Anthropic 协议转换模式
+	useAnthropic bool
 }
 
 type initializedMCPParams struct {
@@ -244,5 +249,33 @@ func WithExtraFields(fields any) Option {
 			o.extraFields.At(key).Set(value)
 			return true
 		})
+	}
+}
+
+// WithAnthropic 在请求时转换为 Anthropic 协议并发往 /v1/messages 端点，拿到响应后转换回
+// OpenAI 协议。ModelConfig.BaseURL 应设置为完整的 Anthropic 端点 URL，例如
+// "https://api.anthropic.com/v1/messages"。
+//
+// 注意事项：
+//   - extra fields 中的字段会直接注入到 Anthropic 请求 JSON 中，其中 stop → stop_sequences 会自动映射
+//   - 若需要设置 anthropic-beta 等 header，请使用 WithHeader()
+//   - 建议不要通过 WithExtraFields 设置 tool_choice，库会自动处理工具调用格式
+func WithAnthropic() Option {
+	return func(o *options) {
+		o.useAnthropic = true
+	}
+}
+
+// WithHeader 设置自定义 HTTP header，会覆盖默认 header 中的同名字段。
+// 常用于设置 anthropic-version、anthropic-beta 等 Anthropic 专用 header。
+func WithHeader(h http.Header) Option {
+	return func(o *options) {
+		if o.extraHeaders == nil {
+			o.extraHeaders = h.Clone()
+			return
+		}
+		for key, vals := range h {
+			o.extraHeaders[key] = vals
+		}
 	}
 }

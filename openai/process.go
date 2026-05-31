@@ -252,7 +252,11 @@ func (p *oneTimeProcessor) do(ctx context.Context) (openai.ChatCompletionStreamR
 	emptyRsp := openai.ChatCompletionStreamResponse{}
 
 	// 首先发起请求, 获取响应
-	rsp, err := connect(ctx, p.Conf, p.Messages, p.mcpTools, p.Opts)
+	connectFn := connect
+	if p.Opts.useAnthropic {
+		connectFn = connectAnthropic
+	}
+	rsp, err := connectFn(ctx, p.Conf, p.Messages, p.mcpTools, p.Opts)
 	if err != nil {
 		return emptyRsp, fmt.Errorf("发起请求失败 (%w)", err)
 	}
