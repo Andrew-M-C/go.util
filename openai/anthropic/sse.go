@@ -290,18 +290,12 @@ func (t *sseTranslator) onMessageDelta(pw *io.PipeWriter, data string) error {
 	return t.writeChunk(pw, chunk)
 }
 
-func (t *sseTranslator) onError(pw *io.PipeWriter, data string) error {
+func (t *sseTranslator) onError(_ *io.PipeWriter, data string) error {
 	var ev ErrorEvent
 	if err := json.Unmarshal([]byte(data), &ev); err != nil {
-		return t.writeLine(pw, "data: {\"error\":{\"message\":\"unknown error\"}}\n\n")
+		return fmt.Errorf("anthropic API error: unknown")
 	}
-	// 转换为 OpenAI 格式的错误 chunk 后结束流
-	msg := fmt.Sprintf(`data: {"error":{"type":%q,"message":%q}}`+"\n\n",
-		ev.Error.Type, ev.Error.Message)
-	if err := t.writeLine(pw, msg); err != nil {
-		return err
-	}
-	return t.writeLine(pw, "data: [DONE]\n\n")
+	return fmt.Errorf("anthropic API error: %s: %s", ev.Error.Type, ev.Error.Message)
 }
 
 // mapStopReason 将 Anthropic stop_reason 映射为 OpenAI finish_reason

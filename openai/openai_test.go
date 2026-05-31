@@ -78,6 +78,30 @@ func readHunyuanVisionConfig() (utils.ModelConfig, bool) {
 	}, true
 }
 
+func readAnthropicConfig() (utils.ModelConfig, bool) {
+	res := utils.ModelConfig{}
+	apiKey := os.Getenv("ANTHROPIC_API_KEY")
+	if apiKey == "" {
+		return res, false
+	}
+
+	baseURL := os.Getenv("ANTHROPIC_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://api.anthropic.com/v1/messages"
+	}
+
+	model := os.Getenv("ANTHROPIC_MODEL")
+	if model == "" {
+		return res, false
+	}
+
+	return utils.ModelConfig{
+		Model:   model,
+		BaseURL: baseURL,
+		APIKey:  apiKey,
+	}, true
+}
+
 func printf(s string, a ...any) {
 	_, _ = fmt.Printf(s+"\n", a...)
 }
@@ -667,4 +691,58 @@ func (t *timeMCP) CallTool(context.Context, mcp.CallToolRequest) (*mcp.CallToolR
 	t.Time = time.Now().UTC()
 	desc := t.Time.Format(time.DateTime)
 	return utils.NewMCPCallToolResultWithString(fmt.Sprintf("伦敦时间 %s", desc))
+}
+
+func TestAnthropicBasic(t *testing.T) {
+	cfg, ok := readAnthropicConfig()
+	if !ok {
+		t.Log("不予测试")
+		return
+	}
+
+	cv("问 Anthropic 模型 who are you，开启 thinking", t, func() {
+		ctx := context.Background()
+
+		reasoningBuilder := strings.Builder{}
+		contentBuilder := strings.Builder{}
+
+		reasoning := func(c string) {
+			fmt.Printf("%s", color.BlueString(c))
+			reasoningBuilder.WriteString(c)
+		}
+		content := func(c string) {
+			fmt.Printf("%s", c)
+			contentBuilder.WriteString(c)
+		}
+
+		req := []openai.ChatCompletionMessage{{
+			Role:    openai.ChatMessageRoleUser,
+			Content: "Who are you?",
+		}}
+
+		ext := jsonvalue.NewObject()
+		ext.MustSet(jsonvalue.NewObject()).At("thinking")
+		ext.MustSet("enabled").At("thinking", "type")
+		ext.MustSet(1024).At("thinking", "budget_tokens")
+		ext.MustSet(2048).At("max_tokens")
+
+		rsp, err := utils.Process(ctx, cfg, req,
+			utils.WithAnthropic(),
+			utils.WithContentCallback(content),
+			utils.WithReasoningCallback(reasoning),
+			utils.WithExtraFields(ext),
+		)
+		if err != nil {
+			e, _ := hutil.UnwrapError(err)
+			t.Logf("response: %s", e.Detail().Body)
+		}
+		so(err, isNil)
+		so(rsp, notNil)
+		so(len(rsp.Messages), eq, 2)
+		printf("获得思考: %v", rsp.Messages[1].ReasoningContent)
+		printf("获得响应: %v", rsp.Messages[1].Content)
+		so(reasoningBuilder.String(), eq, rsp.Messages[1].ReasoningContent)
+		so(contentBuilder.String(), eq, rsp.Messages[1].Content)
+		so(len(rsp.Messages[1].Content), ge, 1)
+	})
 }

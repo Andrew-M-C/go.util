@@ -20,6 +20,7 @@ var (
 	eq = convey.ShouldEqual
 
 	isNil  = convey.ShouldBeNil
+	notNil = convey.ShouldNotBeNil
 	isTrue = convey.ShouldBeTrue
 )
 
@@ -97,6 +98,7 @@ type sseResult struct {
 	Chunks   []openai.ChatCompletionStreamResponse
 	Done     bool     // 是否收到 data: [DONE]
 	RawLines []string // 所有 data: 行的原始 payload（不含 "data: " 前缀）
+	Err      error    // 管道传递的错误（Anthropic error 事件）
 }
 
 // readSSE 从 io.ReadCloser（NewSSEReader 的输出）读取所有 OpenAI SSE chunks
@@ -120,6 +122,7 @@ func readSSE(r io.ReadCloser) sseResult {
 			res.Chunks = append(res.Chunks, chunk)
 		}
 	}
+	res.Err = scanner.Err()
 	return res
 }
 
@@ -864,7 +867,7 @@ func TestSSEReader(t *testing.T) {
 		})
 
 		// ---- §25 error event ----------------------------------------------
-		cv("§25: Anthropic error event → 错误行 + [DONE]", func() {
+		cv("§25: Anthropic error event → 通过 pipe 传递错误", func() {
 			result := translateSSE(
 				sseEvent("error", map[string]any{
 					"type": "error",
@@ -874,16 +877,11 @@ func TestSSEReader(t *testing.T) {
 					},
 				}),
 			)
-			so(result.Done, isTrue)
-			// RawLines 中应包含 overloaded_error 信息
-			found := false
-			for _, line := range result.RawLines {
-				if strings.Contains(line, "overloaded_error") {
-					found = true
-					break
-				}
-			}
-			so(found, isTrue)
+			// 错误通过 pipe CloseWithError 传递，Done 不会被置位
+			so(result.Done, eq, false)
+			// scanner.Err() 应包含 overloaded_error 信息
+			so(result.Err, notNil)
+			so(strings.Contains(result.Err.Error(), "overloaded_error"), isTrue)
 		})
 
 		// ---- ping 被忽略 --------------------------------------------------

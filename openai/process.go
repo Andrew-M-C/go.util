@@ -197,6 +197,9 @@ func (p *processor) iteration(ctx context.Context) error {
 		if err != nil {
 			return fmt.Errorf("问答错误 (%w)", err)
 		}
+		if len(rsp.Choices) == 0 {
+			return fmt.Errorf("问答错误 (响应 choices 为空)")
+		}
 
 		p.Messages = append(p.Messages, openai.ChatCompletionMessage{
 			Role:             openai.ChatMessageRoleAssistant,
