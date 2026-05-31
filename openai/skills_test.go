@@ -80,6 +80,12 @@ func TestListAllSkills(t *testing.T) {
 }
 
 func TestToolsForSkill(t *testing.T) {
+	cfg, ok := readDeepSeekConfig()
+	if !ok {
+		t.Log("不予测试")
+		return
+	}
+
 	cv("通过 SKILL 调用 date 命令询问当前时间", t, func() {
 		ctx := context.Background()
 
@@ -91,11 +97,6 @@ func TestToolsForSkill(t *testing.T) {
 
 		systemPrompt := buildSkillSystemPrompt(skills)
 
-		config := utils.ModelConfig{
-			Model:   deepseekModel,
-			BaseURL: deepseekBaseURL,
-			APIKey:  deepseekAPIKey,
-		}
 		messages := []openai.ChatCompletionMessage{
 			{Role: openai.ChatMessageRoleSystem, Content: systemPrompt},
 			{Role: openai.ChatMessageRoleUser, Content: "现在几点了？"},
@@ -105,7 +106,7 @@ func TestToolsForSkill(t *testing.T) {
 		tcReq := func(tc openai.ToolCall) { printf("工具调用: %s %s", tc.Function.Name, tc.Function.Arguments) }
 		tcRsp := func(m openai.ChatCompletionMessage) { printf("工具结果: %s", m.Content) }
 
-		rsp, err := utils.Process(ctx, config, messages,
+		rsp, err := utils.Process(ctx, cfg, messages,
 			utils.WithContentCallback(content),
 			utils.WithToolCallRequestCallback(tcReq),
 			utils.WithToolCallResponseCallback(tcRsp),

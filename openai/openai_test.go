@@ -29,43 +29,53 @@ var (
 
 	isNil  = convey.ShouldBeNil
 	notNil = convey.ShouldNotBeNil
-
-	// 测试环境变量
-	deepseekModel   = ""
-	deepseekBaseURL = ""
-	deepseekAPIKey  = ""
-	deepseekMCPURL  = ""
-	hunyuanAPIKey   = ""
 )
 
 //go:embed test_image.png
 var testPNG []byte
 
 func TestMain(m *testing.M) {
-	if !readEnv() {
-		fmt.Println("测试环境变量未设置, 不进行测试")
-		os.Exit(0)
-	}
 	os.Exit(m.Run())
 }
 
-func readEnv() bool {
-	if deepseekBaseURL = os.Getenv("DEEPSEEK_BASE_URL"); deepseekBaseURL == "" {
-		return false
+// readDeepSeekConfig 读取 deepseek 的配置
+func readDeepSeekConfig() (utils.ModelConfig, bool) {
+	res := utils.ModelConfig{}
+	deepseekBaseURL := os.Getenv("DEEPSEEK_BASE_URL")
+	if deepseekBaseURL == "" {
+		return res, false
 	}
-	if deepseekAPIKey = os.Getenv("DEEPSEEK_API_KEY"); deepseekAPIKey == "" {
-		return false
+
+	deepseekAPIKey := os.Getenv("DEEPSEEK_API_KEY")
+	if deepseekAPIKey == "" {
+		return res, false
 	}
-	if deepseekModel = os.Getenv("DEEPSEEK_MODEL"); deepseekModel == "" {
+
+	deepseekModel := os.Getenv("DEEPSEEK_MODEL")
+	if deepseekModel == "" {
 		deepseekModel = "deepseek-reasoning"
 	}
-	if deepseekMCPURL = os.Getenv("DEEPSEEK_MCP_URL"); deepseekMCPURL == "" {
-		return false
+
+	res.BaseURL = deepseekBaseURL
+	res.APIKey = deepseekAPIKey
+	res.Model = deepseekModel
+
+	return res, true
+}
+
+// readHunyuanVisionConfig 读取 hunyuan 的配置
+func readHunyuanVisionConfig() (utils.ModelConfig, bool) {
+	res := utils.ModelConfig{}
+	hunyuanAPIKey := os.Getenv("HUNYUAN_API_KEY")
+	if hunyuanAPIKey == "" {
+		return res, false
 	}
-	if hunyuanAPIKey = os.Getenv("HUNYUAN_API_KEY"); hunyuanAPIKey == "" {
-		return false
-	}
-	return true
+
+	return utils.ModelConfig{
+		Model:   "hunyuan-vision",
+		BaseURL: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
+		APIKey:  hunyuanAPIKey,
+	}, true
 }
 
 func printf(s string, a ...any) {
@@ -216,6 +226,12 @@ func TestAddOrSetPromptForMessages(t *testing.T) {
 }
 
 func TestProcessBasic(t *testing.T) {
+	cfg, ok := readDeepSeekConfig()
+	if !ok {
+		t.Log("不予测试")
+		return
+	}
+
 	reasoningBuilder := strings.Builder{}
 	contentBuilder := strings.Builder{}
 
@@ -239,11 +255,6 @@ func TestProcessBasic(t *testing.T) {
 		contentBuilder.Reset()
 		finishCalled = false
 
-		config := utils.ModelConfig{
-			Model:   deepseekModel,
-			BaseURL: deepseekBaseURL,
-			APIKey:  deepseekAPIKey,
-		}
 		req := []openai.ChatCompletionMessage{{
 			Role:    openai.ChatMessageRoleSystem,
 			Content: "你喜欢简短地回答, 稳重、不废话",
@@ -252,7 +263,7 @@ func TestProcessBasic(t *testing.T) {
 			Content: "你好",
 		}}
 
-		return config, req, []utils.Option{
+		return cfg, req, []utils.Option{
 			utils.WithDebugger(printf),
 			utils.WithContentCallback(content),
 			utils.WithReasoningCallback(reasoning),
@@ -304,13 +315,19 @@ func TestProcessBasic(t *testing.T) {
 }
 
 func TestProcessMCP(t *testing.T) {
+	cfg, ok := readDeepSeekConfig()
+	if !ok {
+		t.Log("不予测试")
+		return
+	}
+	mcpURL := os.Getenv("DEEPSEEK_MCP_URL")
+	if mcpURL == "" {
+		t.Log("不予测试")
+		return
+	}
+
 	cv("带完整的 MCP 询问", t, func() {
 		ctx := context.Background()
-		config := utils.ModelConfig{
-			Model:   deepseekModel,
-			BaseURL: deepseekBaseURL,
-			APIKey:  deepseekAPIKey,
-		}
 		req := []openai.ChatCompletionMessage{{
 			Role:    openai.ChatMessageRoleUser,
 			Content: "你能使用哪些 MCP 工具? 请列表列出工具 ID 和说明",
@@ -319,11 +336,11 @@ func TestProcessMCP(t *testing.T) {
 		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
 		content := func(c string) { fmt.Printf("%s", c) }
 
-		rsp, err := utils.Process(ctx, config, req,
+		rsp, err := utils.Process(ctx, cfg, req,
 			// utils.WithDebugger(printf),
 			utils.WithContentCallback(content),
 			utils.WithReasoningCallback(reasoning),
-			utils.WithRemoteMCP(deepseekMCPURL, "deepseek-mcp"),
+			utils.WithRemoteMCP(mcpURL, "deepseek-mcp"),
 		)
 		so(err, isNil)
 		so(rsp, notNil)
@@ -337,11 +354,6 @@ func TestProcessMCP(t *testing.T) {
 
 	cv("只有时间查询和天气查询", t, func() {
 		ctx := context.Background()
-		config := utils.ModelConfig{
-			Model:   deepseekModel,
-			BaseURL: deepseekBaseURL,
-			APIKey:  deepseekAPIKey,
-		}
 		req := []openai.ChatCompletionMessage{{
 			Role:    openai.ChatMessageRoleUser,
 			Content: "你能使用哪些 MCP 工具? 请列表列出工具 ID 和说明",
@@ -350,11 +362,11 @@ func TestProcessMCP(t *testing.T) {
 		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
 		content := func(c string) { fmt.Printf("%s", c) }
 
-		rsp, err := utils.Process(ctx, config, req,
+		rsp, err := utils.Process(ctx, cfg, req,
 			// utils.WithDebugger(printf),
 			utils.WithContentCallback(content),
 			utils.WithReasoningCallback(reasoning),
-			utils.WithRemoteMCPAndSpecifyTools(deepseekMCPURL, "deepseek-mcp", "time_query", "weather_query"),
+			utils.WithRemoteMCPAndSpecifyTools(mcpURL, "deepseek-mcp", "time_query", "weather_query"),
 		)
 		so(err, isNil)
 		so(rsp, notNil)
@@ -368,11 +380,6 @@ func TestProcessMCP(t *testing.T) {
 
 	cv("带两次 MCP 的请求", t, func() {
 		ctx := context.Background()
-		config := utils.ModelConfig{
-			Model:   deepseekModel,
-			BaseURL: deepseekBaseURL,
-			APIKey:  deepseekAPIKey,
-		}
 		req := []openai.ChatCompletionMessage{{
 			Role:    openai.ChatMessageRoleUser,
 			Content: "请告诉我现在几点以及广州市今天的天气",
@@ -390,14 +397,14 @@ func TestProcessMCP(t *testing.T) {
 			printf("%s\n", color.GreenString("工具调用结束: %s", m.Content))
 		}
 
-		rsp, err := utils.Process(ctx, config, req,
+		rsp, err := utils.Process(ctx, cfg, req,
 			// utils.WithDebugger(printf),
 			utils.WithContentCallback(content),
 			utils.WithReasoningCallback(reasoning),
 			utils.WithFinishCallback(finish),
 			utils.WithToolCallRequestCallback(tcStart),
 			utils.WithToolCallResponseCallback(tcEnds),
-			utils.WithRemoteMCP(deepseekMCPURL, "deepseek-mcp"),
+			utils.WithRemoteMCP(mcpURL, "deepseek-mcp"),
 		)
 		so(err, isNil)
 		so(rsp, notNil)
@@ -410,11 +417,6 @@ func TestProcessMCP(t *testing.T) {
 			return
 		}
 		ctx := context.Background()
-		config := utils.ModelConfig{
-			Model:   deepseekModel,
-			BaseURL: deepseekBaseURL,
-			APIKey:  deepseekAPIKey,
-		}
 		data, err := hutil.Raw(ctx, "https://www.gutenberg.org/cache/epub/1184/pg1184.txt")
 		so(err, isNil)
 		text := unsafe.BtoS(data)
@@ -429,7 +431,7 @@ func TestProcessMCP(t *testing.T) {
 		content := func(c string) { fmt.Printf("%s", c) }
 		finish := func(f openai.FinishReason) { printf("结束: %v", f) }
 
-		_, err = utils.Process(ctx, config, req,
+		_, err = utils.Process(ctx, cfg, req,
 			utils.WithContentCallback(content),
 			utils.WithReasoningCallback(reasoning),
 			utils.WithFinishCallback(finish),
@@ -439,14 +441,16 @@ func TestProcessMCP(t *testing.T) {
 }
 
 func TestProcessMultiModal(t *testing.T) {
+	cfg, ok := readHunyuanVisionConfig()
+	if !ok {
+		t.Log("不予测试")
+		return
+	}
+
 	cv("带图片请求, 混元图生文, 网络链接", t, func() {
 		// Reference: https://cloud.tencent.com/document/product/1729/111007
 		ctx := context.Background()
-		config := utils.ModelConfig{
-			Model:   "hunyuan-vision",
-			BaseURL: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
-			APIKey:  hunyuanAPIKey,
-		}
+		config := cfg
 		req := []openai.ChatCompletionMessage{
 			{
 				Role: openai.ChatMessageRoleUser,
@@ -502,11 +506,7 @@ func TestProcessMultiModal(t *testing.T) {
 	cv("带图片请求, 混元图生文, 图片二进制数据", t, func() {
 		// Reference: https://cloud.tencent.com/document/product/1729/111007
 		ctx := context.Background()
-		config := utils.ModelConfig{
-			Model:   "hunyuan-vision",
-			BaseURL: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
-			APIKey:  hunyuanAPIKey,
-		}
+		config := cfg
 		req := []openai.ChatCompletionMessage{
 			{
 				Role: openai.ChatMessageRoleUser,
@@ -538,11 +538,7 @@ func TestProcessMultiModal(t *testing.T) {
 	cv("带图片请求, 混元图生文,多张图片", t, func() {
 		// Reference: https://cloud.tencent.com/document/product/1729/111007
 		ctx := context.Background()
-		config := utils.ModelConfig{
-			Model:   "hunyuan-vision",
-			BaseURL: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
-			APIKey:  hunyuanAPIKey,
-		}
+		config := cfg
 		req := []openai.ChatCompletionMessage{
 			{
 				Role: openai.ChatMessageRoleUser,
@@ -585,13 +581,14 @@ func TestProcessMultiModal(t *testing.T) {
 }
 
 func TestInitializedMCP(t *testing.T) {
+	cfg, ok := readDeepSeekConfig()
+	if !ok {
+		t.Log("不予测试")
+		return
+	}
+
 	cv("时间 + 天气两个 MCP", t, func() {
 		ctx := context.Background()
-		config := utils.ModelConfig{
-			Model:   deepseekModel,
-			BaseURL: deepseekBaseURL,
-			APIKey:  deepseekAPIKey,
-		}
 		req := []openai.ChatCompletionMessage{{
 			Role:    openai.ChatMessageRoleUser,
 			Content: "请告诉我现在广州24小时制的 HH:MM 格式时间, 以及天气",
@@ -604,7 +601,7 @@ func TestInitializedMCP(t *testing.T) {
 		weatherMCP := &weatherMCP{}
 		timeMCP := &timeMCP{}
 
-		rsp, err := utils.Process(ctx, config, req,
+		rsp, err := utils.Process(ctx, cfg, req,
 			// utils.WithDebugger(printf),
 			utils.WithContentCallback(content),
 			utils.WithReasoningCallback(reasoning),
