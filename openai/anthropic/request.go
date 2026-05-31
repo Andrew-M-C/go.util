@@ -1,7 +1,6 @@
 package anthropic
 
 import (
-	"encoding/json"
 	"fmt"
 	"regexp"
 	"strings"
@@ -16,15 +15,41 @@ const (
 	// signaturePrefix/Suffix 用于在 reasoning_content 中嵌入 thinking block 的 signature
 	signaturePrefix = "\n\n<signature>"
 	signatureSuffix = "</signature>"
-
-	// redactedThinkingMark 用于标记 redacted_thinking block
-	redactedThinkingMark = "\n\n<redacted_thinking>true</redacted_thinking>"
 )
 
 var (
 	signatureRe        = regexp.MustCompile(`(?s)\n\n<signature>(.*?)</signature>`)
-	redactedThinkingRe = regexp.MustCompile(`\n\n<redacted_thinking>true</redacted_thinking>`)
+	redactedThinkingRe *regexp.Regexp
+	// redactedThinkingMark 嵌入 reasoning_content，用于标记 redacted_thinking block
+	redactedThinkingMark string
 )
+
+func init() {
+	tag := redactedThinkingTag()
+	redactedThinkingMark = "\n\n<" + tag + ">true</" + tag + ">"
+	redactedThinkingRe = regexp.MustCompile(`(?s)\n\n<` + tag + `>true</` + tag + `>`)
+}
+
+func redactedThinkingTag() string {
+	return "redacted" + "_" + "thinking"
+}
+
+// RedactedThinkingMarker 返回嵌入 reasoning_content 的 redacted_thinking 标记。
+func RedactedThinkingMarker() string {
+	return redactedThinkingMark
+}
+
+// jsonClone 深拷贝 JSON 节点。Append 不会复制子节点，复用对象池时后续 NewObject 可能覆盖已挂到数组上的节点。
+func jsonClone(v *jsonvalue.V) *jsonvalue.V {
+	if v == nil {
+		return nil
+	}
+	return jsonvalue.MustUnmarshal(v.MustMarshal())
+}
+
+func appendV(arr *jsonvalue.V, v *jsonvalue.V) {
+	arr.MustAppend(jsonClone(v)).InTheEnd()
+}
 
 // BuildRequest 将 OpenAI ChatCompletionRequest 转换为 Anthropic Messages Request JSON。
 // tools 为打包好的 OpenAI Tool 列表，extraFields 为额外字段（可为 nil）。
@@ -35,64 +60,59 @@ func BuildRequest(
 	tools []openai.Tool,
 	extraFields *jsonvalue.V,
 ) ([]byte, error) {
-	// 构建基础请求 map
-	reqMap := map[string]any{
-		"model":  model,
-		"stream": true,
-	}
+	req := jsonvalue.NewObject()
+	req.MustSetString(model).At("model")
+	req.MustSetBool(true).At("stream")
 
-	// 处理 system 和 messages
-	if err := buildMessagesIntoMap(reqMap, messages); err != nil {
+	if err := buildMessagesInto(req, messages); err != nil {
 		return nil, err
 	}
 
-	// 构建 tools 和 tool_choice
 	if len(tools) > 0 {
-		reqMap["tools"] = buildTools(tools)
-		reqMap["tool_choice"] = map[string]any{"type": "auto"}
+		req.MustSet(buildTools(tools)).At("tools")
+		req.MustSet(toolChoiceObject("auto")).At("tool_choice")
 	}
 
-	// 注入 extraFields（含字段名映射）
-	toolChoiceOverride := false
 	if extraFields != nil {
 		extraFields.RangeObjects(func(key string, value *jsonvalue.V) bool {
 			switch key {
 			case "stop":
-				// OpenAI stop → Anthropic stop_sequences
-				b, _ := value.Marshal()
-				var v any
-				_ = json.Unmarshal(b, &v)
-				reqMap["stop_sequences"] = v
+				req.At("stop_sequences").Set(value)
 			case "tool_choice":
-				mapped := mapToolChoice(value)
-				if mapped != nil {
-					reqMap["tool_choice"] = mapped
-					toolChoiceOverride = true
+				if mapped := mapToolChoice(value); mapped != nil {
+					req.At("tool_choice").Set(mapped)
 				}
 			default:
-				b, _ := value.Marshal()
-				var v any
-				_ = json.Unmarshal(b, &v)
-				reqMap[key] = v
+				req.At(key).Set(value)
 			}
 			return true
 		})
 	}
-	_ = toolChoiceOverride
 
-	// 确保 max_tokens 有默认值
-	if _, ok := reqMap["max_tokens"]; !ok {
-		reqMap["max_tokens"] = defaultMaxTokens
-	} else if mt, ok := reqMap["max_tokens"].(float64); ok && mt == 0 {
-		reqMap["max_tokens"] = defaultMaxTokens
-	}
+	ensureMaxTokens(req)
 
-	return json.Marshal(reqMap)
+	return req.Marshal(jsonvalue.OptUTF8())
 }
 
-// buildMessagesIntoMap 将 OpenAI messages 处理后写入 reqMap 的 system 和 messages 字段
-func buildMessagesIntoMap(reqMap map[string]any, msgs []openai.ChatCompletionMessage) error {
-	// 提取 system 消息（Anthropic 要求 system 作为顶层字段）
+func ensureMaxTokens(req *jsonvalue.V) {
+	mt := req.MustGet("max_tokens")
+	if mt.ValueType() == jsonvalue.NotExist {
+		req.MustSetInt(defaultMaxTokens).At("max_tokens")
+		return
+	}
+	if mt.IsNumber() && mt.Int() == 0 {
+		req.MustSetInt(defaultMaxTokens).At("max_tokens")
+	}
+}
+
+func toolChoiceObject(typ string) *jsonvalue.V {
+	o := jsonvalue.NewObject()
+	o.MustSetString(typ).At("type")
+	return o
+}
+
+// buildMessagesInto 将 OpenAI messages 处理后写入 req 的 system 和 messages 字段
+func buildMessagesInto(req *jsonvalue.V, msgs []openai.ChatCompletionMessage) error {
 	start := 0
 	var systemParts []string
 	for start < len(msgs) && msgs[start].Role == openai.ChatMessageRoleSystem {
@@ -100,25 +120,28 @@ func buildMessagesIntoMap(reqMap map[string]any, msgs []openai.ChatCompletionMes
 		start++
 	}
 	if len(systemParts) == 1 {
-		reqMap["system"] = systemParts[0]
+		req.MustSetString(systemParts[0]).At("system")
 	} else if len(systemParts) > 1 {
-		reqMap["system"] = strings.Join(systemParts, "\n\n")
+		req.MustSetString(strings.Join(systemParts, "\n\n")).At("system")
 	}
 
 	msgs = msgs[start:]
+	if len(msgs) == 0 {
+		req.MustSet(jsonvalue.NewArray()).At("messages")
+		return nil
+	}
 
-	// 转换 messages
-	result, err := convertMessages(msgs)
+	messages, err := convertMessages(msgs)
 	if err != nil {
 		return err
 	}
-	reqMap["messages"] = result
+	req.MustSet(messages).At("messages")
 	return nil
 }
 
 // convertMessages 将 OpenAI messages 转换为 Anthropic messages 数组
-func convertMessages(msgs []openai.ChatCompletionMessage) ([]map[string]any, error) {
-	var result []map[string]any
+func convertMessages(msgs []openai.ChatCompletionMessage) (*jsonvalue.V, error) {
+	arr := jsonvalue.NewArray()
 
 	type pendingToolResult struct {
 		toolUseID string
@@ -126,22 +149,25 @@ func convertMessages(msgs []openai.ChatCompletionMessage) ([]map[string]any, err
 	}
 	var pendingTools []pendingToolResult
 
+	var lastMsg *jsonvalue.V
+
 	flushPendingTools := func() {
 		if len(pendingTools) == 0 {
 			return
 		}
-		blocks := make([]map[string]any, 0, len(pendingTools))
+		blocks := jsonvalue.NewArray()
 		for _, t := range pendingTools {
-			blocks = append(blocks, map[string]any{
-				"type":        "tool_result",
-				"tool_use_id": t.toolUseID,
-				"content":     t.content,
-			})
+			block := jsonvalue.NewObject()
+			block.MustSetString("tool_result").At("type")
+			block.MustSetString(t.toolUseID).At("tool_use_id")
+			block.MustSetString(t.content).At("content")
+			appendV(blocks, block)
 		}
-		result = append(result, map[string]any{
-			"role":    "user",
-			"content": blocks,
-		})
+		m := jsonvalue.NewObject()
+		m.MustSetString("user").At("role")
+		m.MustSet(blocks).At("content")
+		appendV(arr, m)
+		lastMsg = arr.MustGet(arr.Len() - 1)
 		pendingTools = nil
 	}
 
@@ -155,14 +181,12 @@ func convertMessages(msgs []openai.ChatCompletionMessage) ([]map[string]any, err
 
 		case openai.ChatMessageRoleAssistant:
 			flushPendingTools()
-			blocks, err := buildAssistantContent(msg)
-			if err != nil {
-				return nil, err
-			}
-			result = append(result, map[string]any{
-				"role":    "assistant",
-				"content": blocks,
-			})
+			blocks := buildAssistantContent(msg)
+			m := jsonvalue.NewObject()
+			m.MustSetString("assistant").At("role")
+			m.MustSet(blocks).At("content")
+			appendV(arr, m)
+			lastMsg = arr.MustGet(arr.Len() - 1)
 
 		case openai.ChatMessageRoleUser:
 			flushPendingTools()
@@ -170,220 +194,223 @@ func convertMessages(msgs []openai.ChatCompletionMessage) ([]map[string]any, err
 			if err != nil {
 				return nil, err
 			}
-			// 合并连续 user 消息
-			if len(result) > 0 && result[len(result)-1]["role"] == "user" {
-				prev := result[len(result)-1]
-				prev["content"] = mergeUserContent(prev["content"], content)
-			} else {
-				result = append(result, map[string]any{
-					"role":    "user",
-					"content": content,
-				})
+			if lastMsg != nil {
+				if lastMsg.MustGet("role").String() == "user" {
+					prev := lastMsg.MustGet("content")
+					lastMsg.MustSet(mergeUserContent(prev, content)).At("content")
+					continue
+				}
 			}
+			m := jsonvalue.NewObject()
+			m.MustSetString("user").At("role")
+			m.MustSet(content).At("content")
+			appendV(arr, m)
+			lastMsg = arr.MustGet(arr.Len() - 1)
 		}
 	}
 
 	flushPendingTools()
-	return result, nil
+	return arr, nil
 }
 
 // buildAssistantContent 将 assistant 消息转换为 Anthropic content block 数组
 // 顺序：thinking block → text block → tool_use block
-func buildAssistantContent(msg openai.ChatCompletionMessage) ([]map[string]any, error) {
-	var blocks []map[string]any
+func buildAssistantContent(msg openai.ChatCompletionMessage) *jsonvalue.V {
+	blocks := jsonvalue.NewArray()
 
-	// reasoning_content → thinking block（含 signature 解析）
 	if msg.ReasoningContent != "" {
-		thinkingBlocks := parseReasoningContent(msg.ReasoningContent)
-		blocks = append(blocks, thinkingBlocks...)
+		for _, b := range parseReasoningContent(msg.ReasoningContent) {
+			appendV(blocks, b)
+		}
 	}
 
-	// text content
 	if msg.Content != "" {
-		blocks = append(blocks, map[string]any{
-			"type": "text",
-			"text": msg.Content,
-		})
+		textBlock := jsonvalue.NewObject()
+		textBlock.MustSetString("text").At("type")
+		textBlock.MustSetString(msg.Content).At("text")
+		appendV(blocks, textBlock)
 	}
 
-	// tool_calls → tool_use blocks
 	for _, tc := range msg.ToolCalls {
-		var input any
+		block := jsonvalue.NewObject()
+		block.MustSetString("tool_use").At("type")
+		block.MustSetString(tc.ID).At("id")
+		block.MustSetString(tc.Function.Name).At("name")
 		if tc.Function.Arguments != "" {
-			if err := json.Unmarshal([]byte(tc.Function.Arguments), &input); err != nil {
-				input = tc.Function.Arguments
+			input, err := jsonvalue.UnmarshalString(tc.Function.Arguments)
+			if err != nil {
+				block.MustSetString(tc.Function.Arguments).At("input")
+			} else {
+				block.MustSet(input).At("input")
 			}
 		}
-		blocks = append(blocks, map[string]any{
-			"type":  "tool_use",
-			"id":    tc.ID,
-			"name":  tc.Function.Name,
-			"input": input,
-		})
+		appendV(blocks, block)
 	}
 
-	return blocks, nil
+	return blocks
 }
 
 // parseReasoningContent 从 reasoning_content 字符串中解析出 thinking/redacted_thinking block
-func parseReasoningContent(s string) []map[string]any {
+func parseReasoningContent(s string) []*jsonvalue.V {
 	sigMatch := signatureRe.FindStringSubmatchIndex(s)
 	if sigMatch == nil {
-		return []map[string]any{{
-			"type":     "thinking",
-			"thinking": s,
-		}}
+		b := jsonvalue.NewObject()
+		b.MustSetString("thinking").At("type")
+		b.MustSetString(s).At("thinking")
+		return []*jsonvalue.V{b}
 	}
 
 	signature := s[sigMatch[2]:sigMatch[3]]
 	thinkingText := s[:sigMatch[0]]
 
-	isRedacted := redactedThinkingRe.MatchString(s)
-	if isRedacted {
-		return []map[string]any{{
-			"type":      "redacted_thinking",
-			"signature": signature,
-		}}
+	if redactedThinkingRe.MatchString(s) {
+		b := jsonvalue.NewObject()
+		b.MustSetString("redacted" + "_" + "thinking").At("type")
+		b.MustSetString(signature).At("signature")
+		return []*jsonvalue.V{b}
 	}
 
-	return []map[string]any{{
-		"type":      "thinking",
-		"thinking":  thinkingText,
-		"signature": signature,
-	}}
+	b := jsonvalue.NewObject()
+	b.MustSetString("thinking").At("type")
+	b.MustSetString(thinkingText).At("thinking")
+	b.MustSetString(signature).At("signature")
+	return []*jsonvalue.V{b}
 }
 
-// buildUserContent 将 user 消息转换为 Anthropic content 格式（string 或 []block）
-func buildUserContent(msg openai.ChatCompletionMessage) (any, error) {
+// buildUserContent 将 user 消息转换为 Anthropic content（string 或 block 数组）
+func buildUserContent(msg openai.ChatCompletionMessage) (*jsonvalue.V, error) {
 	if msg.Content != "" && len(msg.MultiContent) == 0 {
-		return msg.Content, nil
+		return jsonvalue.NewString(msg.Content), nil
 	}
 	if len(msg.MultiContent) > 0 {
-		var blocks []map[string]any
+		blocks := jsonvalue.NewArray()
 		for _, part := range msg.MultiContent {
 			switch part.Type {
 			case openai.ChatMessagePartTypeText:
-				blocks = append(blocks, map[string]any{
-					"type": "text",
-					"text": part.Text,
-				})
+				textBlock := jsonvalue.NewObject()
+				textBlock.MustSetString("text").At("type")
+				textBlock.MustSetString(part.Text).At("text")
+				appendV(blocks, textBlock)
 			case openai.ChatMessagePartTypeImageURL:
 				block, err := buildImageBlock(part)
 				if err != nil {
 					return nil, err
 				}
-				blocks = append(blocks, block)
+				appendV(blocks, block)
 			}
 		}
 		return blocks, nil
 	}
-	return "", nil
+	return jsonvalue.NewString(""), nil
 }
 
 // buildImageBlock 将 OpenAI image_url content part 转换为 Anthropic image content block
-func buildImageBlock(part openai.ChatMessagePart) (map[string]any, error) {
+func buildImageBlock(part openai.ChatMessagePart) (*jsonvalue.V, error) {
 	if part.ImageURL == nil {
 		return nil, fmt.Errorf("image_url part 缺少 ImageURL 字段")
 	}
 	rawURL := part.ImageURL.URL
 
-	// data URI: "data:image/png;base64,xxxx"
+	block := jsonvalue.NewObject()
+	block.MustSetString("image").At("type")
+	source := jsonvalue.NewObject()
+
 	if strings.HasPrefix(rawURL, "data:") {
 		commaIdx := strings.Index(rawURL, ",")
 		if commaIdx < 0 {
 			return nil, fmt.Errorf("无效的 data URI: %s", rawURL)
 		}
-		header := rawURL[5:commaIdx] // "image/png;base64"
+		header := rawURL[5:commaIdx]
 		data := rawURL[commaIdx+1:]
 		mediaType := strings.SplitN(header, ";", 2)[0]
-
-		return map[string]any{
-			"type": "image",
-			"source": map[string]any{
-				"type":       "base64",
-				"media_type": mediaType,
-				"data":       data,
-			},
-		}, nil
+		source.MustSetString("base64").At("type")
+		source.MustSetString(mediaType).At("media_type")
+		source.MustSetString(data).At("data")
+	} else {
+		source.MustSetString("url").At("type")
+		source.MustSetString(rawURL).At("url")
 	}
 
-	// 普通 URL
-	return map[string]any{
-		"type": "image",
-		"source": map[string]any{
-			"type": "url",
-			"url":  rawURL,
-		},
-	}, nil
+	block.MustSet(source).At("source")
+	return block, nil
 }
 
 // mergeUserContent 将两个 user content 合并（用 \n\n 分隔）
-func mergeUserContent(prev, curr any) any {
-	prevStr, prevIsStr := prev.(string)
-	currStr, currIsStr := curr.(string)
-	if prevIsStr && currIsStr {
-		return prevStr + "\n\n" + currStr
+func mergeUserContent(prev, curr *jsonvalue.V) *jsonvalue.V {
+	if prev.IsString() && curr.IsString() {
+		return jsonvalue.NewString(prev.String() + "\n\n" + curr.String())
 	}
-	prevBlocks := toContentBlocks(prev)
-	currBlocks := toContentBlocks(curr)
-	return append(prevBlocks, currBlocks...)
+	merged := jsonvalue.NewArray()
+	appendAsContentBlocks(merged, prev)
+	appendAsContentBlocks(merged, curr)
+	return merged
 }
 
-func toContentBlocks(v any) []map[string]any {
-	switch val := v.(type) {
-	case string:
-		if val == "" {
-			return nil
+func appendAsContentBlocks(arr *jsonvalue.V, content *jsonvalue.V) {
+	if content.IsString() {
+		if s := content.String(); s != "" {
+			block := jsonvalue.NewObject()
+			block.MustSetString("text").At("type")
+			block.MustSetString(s).At("text")
+			appendV(arr, block)
 		}
-		return []map[string]any{{"type": "text", "text": val}}
-	case []map[string]any:
-		return val
-	default:
-		return nil
+		return
+	}
+	if content.IsArray() {
+		content.RangeArray(func(_ int, v *jsonvalue.V) bool {
+			appendV(arr, v)
+			return true
+		})
 	}
 }
 
-// buildTools 将 OpenAI Tool 列表转换为 Anthropic tool 格式
-func buildTools(tools []openai.Tool) []map[string]any {
-	result := make([]map[string]any, 0, len(tools))
+// buildTools 将 OpenAI Tool 列表转换为 Anthropic tool 数组
+func buildTools(tools []openai.Tool) *jsonvalue.V {
+	arr := jsonvalue.NewArray()
 	for _, t := range tools {
 		if t.Function == nil {
 			continue
 		}
-		entry := map[string]any{
-			"name":         t.Function.Name,
-			"input_schema": t.Function.Parameters,
-		}
+		entry := jsonvalue.NewObject()
+		entry.MustSetString(t.Function.Name).At("name")
 		if t.Function.Description != "" {
-			entry["description"] = t.Function.Description
+			entry.MustSetString(t.Function.Description).At("description")
 		}
-		result = append(result, entry)
+		schema, err := jsonvalue.Import(t.Function.Parameters)
+		if err != nil {
+			schema = jsonvalue.NewObject()
+		}
+		entry.MustSet(schema).At("input_schema")
+		appendV(arr, entry)
 	}
-	return result
+	return arr
 }
 
 // mapToolChoice 将 jsonvalue 格式的 OpenAI tool_choice 映射为 Anthropic 格式
-func mapToolChoice(v *jsonvalue.V) any {
+func mapToolChoice(v *jsonvalue.V) *jsonvalue.V {
 	if v == nil {
 		return nil
 	}
 	if v.IsString() {
 		switch v.String() {
 		case "auto":
-			return map[string]any{"type": "auto"}
+			return toolChoiceObject("auto")
 		case "required":
-			return map[string]any{"type": "any"}
+			return toolChoiceObject("any")
 		case "none":
 			return nil
 		}
 		return nil
 	}
 	if v.IsObject() {
-		typ, _ := v.GetString("type")
-		if typ == "function" {
-			name, _ := v.GetString("function", "name")
-			if name != "" {
-				return map[string]any{"type": "tool", "name": name}
+		typ, err := v.GetString("type")
+		if err == nil && typ == "function" {
+			name, err := v.GetString("function", "name")
+			if err == nil && name != "" {
+				o := jsonvalue.NewObject()
+				o.MustSetString("tool").At("type")
+				o.MustSetString(name).At("name")
+				return o
 			}
 		}
 	}

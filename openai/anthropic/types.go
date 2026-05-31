@@ -8,19 +8,19 @@ package anthropic
 
 // Request 是发往 Anthropic /v1/messages 的请求体
 type Request struct {
-	Model     string          `json:"model"`
-	System    any             `json:"system,omitempty"` // string 或 []ContentBlock
-	Messages  []Message       `json:"messages"`
-	MaxTokens int             `json:"max_tokens"`
-	Stream    bool            `json:"stream"`
-	Tools     []Tool          `json:"tools,omitempty"`
-	ToolChoice any            `json:"tool_choice,omitempty"`
+	Model      string    `json:"model"`
+	System     any       `json:"system,omitempty"` // string 或 []ContentBlock
+	Messages   []Message `json:"messages"`
+	MaxTokens  int       `json:"max_tokens"`
+	Stream     bool      `json:"stream"`
+	Tools      []Tool    `json:"tools,omitempty"`
+	ToolChoice any       `json:"tool_choice,omitempty"`
 	// 其余字段 (temperature, top_p, top_k, stop_sequences 等) 由 extraFields 注入
 }
 
 // Message 是 Anthropic 的消息结构
 type Message struct {
-	Role    string `json:"role"` // "user" | "assistant"
+	Role    string `json:"role"`    // "user" | "assistant"
 	Content any    `json:"content"` // string 或 []ContentBlock
 }
 

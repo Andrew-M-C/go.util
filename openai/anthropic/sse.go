@@ -38,14 +38,14 @@ type sseTranslator struct {
 }
 
 type blockState struct {
-	blockType   string // "text" | "thinking" | "tool_use" | "redacted_thinking"
-	text        strings.Builder
-	thinking    strings.Builder
-	signature   strings.Builder
-	toolID      string
-	toolName    string
-	toolArgs    strings.Builder
-	isRedacted  bool
+	blockType  string // "text" | "thinking" | "tool_use" | "redacted_thinking"
+	text       strings.Builder
+	thinking   strings.Builder
+	signature  strings.Builder
+	toolID     string
+	toolName   string
+	toolArgs   strings.Builder
+	isRedacted bool
 }
 
 func (t *sseTranslator) run(pw *io.PipeWriter) {
@@ -60,19 +60,17 @@ func (t *sseTranslator) run(pw *io.PipeWriter) {
 		line, err := t.reader.ReadString('\n')
 		line = strings.TrimRight(line, "\r\n")
 
-		if line == "" && (eventType != "" || dataLine != "") {
-			// 一个完整的 SSE 事件结束
-			if eventType != "" && dataLine != "" {
-				if writeErr := t.handleEvent(pw, eventType, dataLine); writeErr != nil {
-					pw.CloseWithError(writeErr)
-					return
-				}
+		switch {
+		case line == "" && (eventType != "" || dataLine != ""):
+			if finishErr := t.finishSSEEvent(pw, eventType, dataLine); finishErr != nil {
+				pw.CloseWithError(finishErr)
+				return
 			}
 			eventType = ""
 			dataLine = ""
-		} else if strings.HasPrefix(line, "event:") {
+		case strings.HasPrefix(line, "event:"):
 			eventType = strings.TrimSpace(strings.TrimPrefix(line, "event:"))
-		} else if strings.HasPrefix(line, "data:") {
+		case strings.HasPrefix(line, "data:"):
 			dataLine = strings.TrimSpace(strings.TrimPrefix(line, "data:"))
 		}
 
@@ -85,6 +83,13 @@ func (t *sseTranslator) run(pw *io.PipeWriter) {
 			return
 		}
 	}
+}
+
+func (t *sseTranslator) finishSSEEvent(pw *io.PipeWriter, eventType, dataLine string) error {
+	if eventType == "" || dataLine == "" {
+		return nil
+	}
+	return t.handleEvent(pw, eventType, dataLine)
 }
 
 // handleEvent 将一个 Anthropic SSE 事件转换为零个或多个 OpenAI SSE 行，写入 pw
@@ -111,9 +116,9 @@ func (t *sseTranslator) handleEvent(pw *io.PipeWriter, eventType, data string) e
 }
 
 func (t *sseTranslator) onMessageStart(pw *io.PipeWriter, data string) error {
-	var ev MessageStartEvent
-	if err := json.Unmarshal([]byte(data), &ev); err != nil {
-		return nil // 容错
+	ev, ok := unmarshalSSEEvent[MessageStartEvent](data)
+	if !ok {
+		return nil // 跳过格式错误的 event，不中断流
 	}
 	t.msgID = ev.Message.ID
 	t.msgModel = ev.Message.Model
@@ -133,8 +138,8 @@ func (t *sseTranslator) onMessageStart(pw *io.PipeWriter, data string) error {
 }
 
 func (t *sseTranslator) onContentBlockStart(pw *io.PipeWriter, data string) error {
-	var ev ContentBlockStartEvent
-	if err := json.Unmarshal([]byte(data), &ev); err != nil {
+	ev, ok := unmarshalSSEEvent[ContentBlockStartEvent](data)
+	if !ok {
 		return nil
 	}
 
@@ -175,8 +180,8 @@ func (t *sseTranslator) onContentBlockStart(pw *io.PipeWriter, data string) erro
 }
 
 func (t *sseTranslator) onContentBlockDelta(pw *io.PipeWriter, data string) error {
-	var ev ContentBlockDeltaEvent
-	if err := json.Unmarshal([]byte(data), &ev); err != nil {
+	ev, ok := unmarshalSSEEvent[ContentBlockDeltaEvent](data)
+	if !ok {
 		return nil
 	}
 
@@ -217,7 +222,7 @@ func (t *sseTranslator) onContentBlockDelta(pw *io.PipeWriter, data string) erro
 		// signature 嵌入 reasoning_content 末尾，格式：\n\n<signature>SIG</signature>
 		// 如果是 redacted_thinking，额外附加 redacted 标记
 		sigText := signaturePrefix + ev.Delta.Signature + signatureSuffix
-		if bs.isRedacted {
+		if bs.isRedacted || bs.blockType == "redacted_thinking" {
 			sigText += redactedThinkingMark
 		}
 		chunk := openai.ChatCompletionStreamResponse{
@@ -254,14 +259,14 @@ func (t *sseTranslator) onContentBlockDelta(pw *io.PipeWriter, data string) erro
 	return nil
 }
 
-func (t *sseTranslator) onContentBlockStop(_ *io.PipeWriter, data string) error {
+func (t *sseTranslator) onContentBlockStop(_ *io.PipeWriter, _ string) error {
 	// 不需要输出任何 chunk，状态已在 delta 阶段维护
 	return nil
 }
 
 func (t *sseTranslator) onMessageDelta(pw *io.PipeWriter, data string) error {
-	var ev MessageDeltaEvent
-	if err := json.Unmarshal([]byte(data), &ev); err != nil {
+	ev, ok := unmarshalSSEEvent[MessageDeltaEvent](data)
+	if !ok {
 		return nil
 	}
 
@@ -296,6 +301,14 @@ func (t *sseTranslator) onError(_ *io.PipeWriter, data string) error {
 		return fmt.Errorf("anthropic API error: unknown")
 	}
 	return fmt.Errorf("anthropic API error: %s: %s", ev.Error.Type, ev.Error.Message)
+}
+
+func unmarshalSSEEvent[T any](data string) (T, bool) {
+	var ev T
+	if err := json.Unmarshal([]byte(data), &ev); err != nil {
+		return ev, false
+	}
+	return ev, true
 }
 
 // mapStopReason 将 Anthropic stop_reason 映射为 OpenAI finish_reason

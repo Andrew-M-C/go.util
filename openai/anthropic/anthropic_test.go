@@ -24,6 +24,22 @@ var (
 	isTrue = convey.ShouldBeTrue
 )
 
+// redactedBlockType 返回 Anthropic redacted_thinking block 的 type 字段值。
+func redactedBlockType() string {
+	return "redacted" + "_" + "thinking"
+}
+
+// reasoningFromChunks 拼接流式响应中所有 reasoning_content delta。
+func reasoningFromChunks(chunks []openai.ChatCompletionStreamResponse) string {
+	var parts []string
+	for _, c := range chunks {
+		if len(c.Choices) > 0 && c.Choices[0].Delta.ReasoningContent != "" {
+			parts = append(parts, c.Choices[0].Delta.ReasoningContent)
+		}
+	}
+	return strings.Join(parts, "")
+}
+
 // ================== 请求转换辅助函数 ==================
 
 // buildReqJSON 调用 BuildRequest 并将结果解析为 map[string]any
@@ -65,8 +81,8 @@ func nav(v any, keys ...string) any {
 	return v
 }
 
-func navStr(v any, keys ...string) string  { s, _ := nav(v, keys...).(string); return s }
-func navBool(v any, keys ...string) bool   { b, _ := nav(v, keys...).(bool); return b }
+func navStr(v any, keys ...string) string { s, _ := nav(v, keys...).(string); return s }
+func navBool(v any, keys ...string) bool  { b, _ := nav(v, keys...).(bool); return b }
 func navFloat(v any, keys ...string) float64 {
 	f, _ := nav(v, keys...).(float64)
 	return f
@@ -501,7 +517,7 @@ func TestBuildRequest(t *testing.T) {
 		})
 
 		cv("§22: redacted_thinking 块的还原", func() {
-			rc := "\n\n<signature>ErUBREDACTEDSIG</signature>\n\n<redacted_thinking>true</redacted_thinking>"
+			rc := "\n\n<signature>ErUBREDACTEDSIG</signature>" + anthropic.RedactedThinkingMarker()
 			msgs := []openai.ChatCompletionMessage{
 				{Role: openai.ChatMessageRoleUser, Content: "think"},
 				{
@@ -515,8 +531,10 @@ func TestBuildRequest(t *testing.T) {
 			so(err, isNil)
 			messages := navSlice(req, "messages")
 			content := navSlice(messages[1], "content")
-			so(navStr(content[0], "type"), eq, "redacted_thinking")
+			so(len(content), eq, 2) // redacted_thinking + text，appendV 不得覆盖前者
+			so(navStr(content[0], "type"), eq, redactedBlockType())
 			so(navStr(content[0], "signature"), eq, "ErUBREDACTEDSIG")
+			so(navStr(content[1], "type"), eq, "text")
 		})
 
 		// ---- §26 thinking block 顺序 --------------------------------------------
@@ -529,8 +547,8 @@ func TestBuildRequest(t *testing.T) {
 					ReasoningContent: rc,
 					Content:          "中间文本",
 					ToolCalls: []openai.ToolCall{{
-						ID:   "c1",
-						Type: openai.ToolTypeFunction,
+						ID:       "c1",
+						Type:     openai.ToolTypeFunction,
 						Function: openai.FunctionCall{Name: "fn", Arguments: `{}`},
 					}},
 				},
@@ -731,23 +749,17 @@ func TestSSEReader(t *testing.T) {
 			)
 			so(result.Done, isTrue)
 
-			var reasoning []string
-			for _, c := range result.Chunks {
-				if len(c.Choices) > 0 && c.Choices[0].Delta.ReasoningContent != "" {
-					reasoning = append(reasoning, c.Choices[0].Delta.ReasoningContent)
-				}
-			}
-			combined := strings.Join(reasoning, "")
+			combined := reasoningFromChunks(result.Chunks)
 			so(strings.Contains(combined, "\n\n<signature>SIGVAL123</signature>"), isTrue)
 			// 非 redacted_thinking 不应含 redacted 标记
-			so(strings.Contains(combined, "<redacted_thinking>"), eq, false)
+			so(strings.Contains(combined, anthropic.RedactedThinkingMarker()), eq, false)
 		})
 
 		// ---- §22 signature_delta (redacted_thinking) -----------------------
-		cv("§22: redacted_thinking signature_delta → reasoning_content 附加 <redacted_thinking> 标记", func() {
+		cv("§22: redacted_thinking signature_delta → reasoning_content 附加 redacted 标记", func() {
 			result := translateSSE(
 				messageStart("msg_red", "claude"),
-				cbStart(0, "redacted_thinking", nil),
+				cbStart(0, redactedBlockType(), nil),
 				cbDelta(0, "signature_delta", map[string]any{"signature": "REDACTED_SIG"}),
 				cbStop(0),
 				msgDelta("end_turn", nil),
@@ -755,15 +767,23 @@ func TestSSEReader(t *testing.T) {
 			)
 			so(result.Done, isTrue)
 
-			var reasoning []string
-			for _, c := range result.Chunks {
-				if len(c.Choices) > 0 && c.Choices[0].Delta.ReasoningContent != "" {
-					reasoning = append(reasoning, c.Choices[0].Delta.ReasoningContent)
-				}
-			}
-			combined := strings.Join(reasoning, "")
+			combined := reasoningFromChunks(result.Chunks)
 			so(strings.Contains(combined, "<signature>REDACTED_SIG</signature>"), isTrue)
-			so(strings.Contains(combined, "<redacted_thinking>true</redacted_thinking>"), isTrue)
+			so(strings.Contains(combined, anthropic.RedactedThinkingMarker()), isTrue)
+		})
+
+		cv("§22: reasoning_content 经 OpenAI struct JSON 序列化后仍含 redacted 标记", func() {
+			sigText := "\n\n<signature>REDACTED_SIG</signature>" + anthropic.RedactedThinkingMarker()
+			chunk := openai.ChatCompletionStreamResponse{
+				Choices: []openai.ChatCompletionStreamChoice{{
+					Delta: openai.ChatCompletionStreamChoiceDelta{
+						ReasoningContent: sigText,
+					},
+				}},
+			}
+			b, err := json.Marshal(chunk)
+			so(err, isNil)
+			so(strings.Contains(string(b), redactedBlockType()), isTrue)
 		})
 
 		// ---- §6 tool_use content_block_start / input_json_delta -----------
@@ -888,7 +908,7 @@ func TestSSEReader(t *testing.T) {
 		cv("ping 事件被忽略，不产生任何 chunk", func() {
 			result := translateSSE(
 				messageStart("msg_ping", "claude"),
-				fmt.Sprintf("event: ping\ndata: {}\n\n"),
+				"event: ping\ndata: {}\n\n",
 				msgDelta("end_turn", nil),
 				messageStop(),
 			)
