@@ -4,6 +4,7 @@ import (
 	"context"
 	_ "embed"
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -299,6 +300,7 @@ func TestProcessBasic(t *testing.T) {
 		ctx := context.Background()
 
 		config, req, options := packReq()
+		options = append(options, utils.WithIncludeUsage())
 		rsp, err := utils.Process(ctx, config, req, options...)
 		if err != nil {
 			e, _ := hutil.UnwrapError(err)
@@ -312,6 +314,9 @@ func TestProcessBasic(t *testing.T) {
 		so(reasoningBuilder.String(), eq, rsp.Messages[2].ReasoningContent)
 		so(contentBuilder.String(), eq, rsp.Messages[2].Content)
 		so(finishCalled, eq, true)
+
+		b, _ := json.Marshal(rsp.FullConversation[len(rsp.FullConversation)-1])
+		printf("FullConversation JSON: %s", b)
 	})
 
 	cv("DeepSeek-V3.2 推理模式", t, func() {
@@ -429,10 +434,14 @@ func TestProcessMCP(t *testing.T) {
 			utils.WithToolCallRequestCallback(tcStart),
 			utils.WithToolCallResponseCallback(tcEnds),
 			utils.WithRemoteMCP(mcpURL, "deepseek-mcp"),
+			utils.WithIncludeUsage(),
 		)
 		so(err, isNil)
 		so(rsp, notNil)
 		so(len(rsp.Messages), ge, 5) // 1问、1答、2工具调用、1答
+
+		b, _ := json.Marshal(rsp.FullConversation[len(rsp.FullConversation)-1])
+		printf("FullConversation JSON: %s", b)
 	})
 
 	cv("下载长篇文章, 测试大模型 token 超限", t, func() {
@@ -632,6 +641,7 @@ func TestInitializedMCP(t *testing.T) {
 			utils.WithFinishCallback(finish),
 			utils.WithInitializedMCP(weatherMCP, "tool-weather"),
 			utils.WithInitializedMCP(timeMCP, "tool-time"),
+			utils.WithIncludeUsage(),
 		)
 		so(err, isNil)
 		so(rsp, notNil)
@@ -646,6 +656,9 @@ func TestInitializedMCP(t *testing.T) {
 		printf("预期获得广州时间: %s", guangzhouTime)
 		printf("实际获得响应: <last_msg>%s</last_msg>", s)
 		so(strings.Contains(s, guangzhouTime), eq, true)
+
+		b, _ := json.Marshal(rsp.FullConversation[len(rsp.FullConversation)-1])
+		printf("FullConversation JSON: %s", b)
 	})
 }
 

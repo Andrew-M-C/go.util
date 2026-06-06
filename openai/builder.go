@@ -90,6 +90,40 @@ func (b *streamBuilder) AddResponse(from openai.ChatCompletionStreamResponse) {
 	}
 }
 
+// streamResponseToResponse 将流式响应转换为非流式响应格式
+func streamResponseToResponse(streamRsp openai.ChatCompletionStreamResponse) openai.ChatCompletionResponse {
+	rsp := openai.ChatCompletionResponse{
+		ID:                streamRsp.ID,
+		Object:            streamRsp.Object,
+		Created:           streamRsp.Created,
+		Model:             streamRsp.Model,
+		SystemFingerprint: streamRsp.SystemFingerprint,
+	}
+	if streamRsp.Usage != nil {
+		rsp.Usage = *streamRsp.Usage
+	}
+	if len(streamRsp.Choices) == 0 {
+		return rsp
+	}
+	choice := streamRsp.Choices[0]
+	rsp.Choices = []openai.ChatCompletionChoice{
+		{
+			Index: choice.Index,
+			Message: openai.ChatCompletionMessage{
+				Role:             choice.Delta.Role,
+				Content:          choice.Delta.Content,
+				ReasoningContent: choice.Delta.ReasoningContent,
+				Refusal:          choice.Delta.Refusal,
+				FunctionCall:     choice.Delta.FunctionCall,
+				ToolCalls:        choice.Delta.ToolCalls,
+			},
+			FinishReason:         choice.FinishReason,
+			ContentFilterResults: choice.ContentFilterResults,
+		},
+	}
+	return rsp
+}
+
 // Done 完成构建
 func (b *streamBuilder) Done() openai.ChatCompletionStreamResponse {
 	if len(b.rsp.Choices) == 0 {

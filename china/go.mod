@@ -1,8 +1,6 @@
 module github.com/Andrew-M-C/go.util/china
 
-go 1.22.0
-
-toolchain go1.23.1
+go 1.25.0
 
 require (
 	github.com/Andrew-M-C/go.util/slices v0.0.0-20260112083547-2bd245af81b5
@@ -18,5 +16,5 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/petermattis/goid v0.0.0-20250319124200-ccd6737f222a // indirect
 	github.com/smarty/assertions v1.15.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 )

@@ -1,15 +1,13 @@
 module github.com/Andrew-M-C/go.util/net
 
-go 1.22.0
-
-toolchain go1.23.1
+go 1.25.0
 
 require (
 	github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3
-	github.com/Andrew-M-C/go.jsonvalue v1.4.2
+	github.com/Andrew-M-C/go.jsonvalue v1.4.3
 	github.com/smartystreets/goconvey v1.8.1
-	golang.org/x/net v0.34.0
-	golang.org/x/text v0.21.0
+	golang.org/x/net v0.55.0
+	golang.org/x/text v0.37.0
 )
 
 require (

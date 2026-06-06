@@ -1,8 +1,6 @@
 module github.com/Andrew-M-C/go.util/log
 
-go 1.22.0
-
-toolchain go1.23.1
+go 1.25.0
 
 require (
 	github.com/Andrew-M-C/go.objectid v1.0.3
@@ -19,9 +17,9 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/smarty/assertions v1.15.0 // indirect
-	github.com/stretchr/testify v1.9.0 // indirect
+	github.com/stretchr/testify v1.11.1 // indirect
 	github.com/valyala/fastrand v1.1.0 // indirect
 	go.mongodb.org/mongo-driver v1.17.1 // indirect
 	go.uber.org/multierr v1.10.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 )

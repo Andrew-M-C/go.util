@@ -33,6 +33,14 @@ func Process(
 type ProcessResponse struct {
 	Messages     []openai.ChatCompletionMessage
 	FinishReason openai.FinishReason
+
+	FullConversation []ConversationRound
+}
+
+// ConversationRound 表示一轮对话请求和响应
+type ConversationRound struct {
+	Request  openai.ChatCompletionRequest  `json:"request,omitempty"`
+	Response openai.ChatCompletionResponse `json:"response,omitempty"`
 }
 
 // InitializedMCPClient 表示一个已经初始化完毕的 MCP 客户端

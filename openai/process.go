@@ -30,6 +30,7 @@ type processor struct {
 	mcpTools      []openai.Tool
 
 	lastFinishReason openai.FinishReason
+	fullConversation []ConversationRound
 }
 
 func (p *processor) do(ctx context.Context) (ProcessResponse, error) {
@@ -54,8 +55,9 @@ func (p *processor) do(ctx context.Context) (ProcessResponse, error) {
 	}
 	// 打包返回
 	rsp := ProcessResponse{
-		Messages:     p.Messages,
-		FinishReason: p.lastFinishReason,
+		Messages:         p.Messages,
+		FinishReason:     p.lastFinishReason,
+		FullConversation: p.fullConversation,
 	}
 	return rsp, nil
 }
@@ -193,7 +195,7 @@ func (p *processor) iteration(ctx context.Context) error {
 		oneTimeProcessor := &oneTimeProcessor{
 			processor: p,
 		}
-		rsp, err := oneTimeProcessor.do(ctx)
+		req, rsp, err := oneTimeProcessor.do(ctx)
 		if err != nil {
 			return fmt.Errorf("问答错误 (%w)", err)
 		}
@@ -208,6 +210,11 @@ func (p *processor) iteration(ctx context.Context) error {
 			ToolCalls:        rsp.Choices[0].Delta.ToolCalls,
 		})
 		p.lastFinishReason = rsp.Choices[0].FinishReason
+
+		p.fullConversation = append(p.fullConversation, ConversationRound{
+			Request:  req,
+			Response: streamResponseToResponse(rsp),
+		})
 		return nil
 	}
 
@@ -249,7 +256,9 @@ type oneTimeProcessor struct {
 	*processor
 }
 
-func (p *oneTimeProcessor) do(ctx context.Context) (openai.ChatCompletionStreamResponse, error) {
+func (p *oneTimeProcessor) do(
+	ctx context.Context,
+) (openai.ChatCompletionRequest, openai.ChatCompletionStreamResponse, error) {
 	emptyRsp := openai.ChatCompletionStreamResponse{}
 
 	// 首先发起请求, 获取响应
@@ -257,18 +266,18 @@ func (p *oneTimeProcessor) do(ctx context.Context) (openai.ChatCompletionStreamR
 	if p.Opts.useAnthropic {
 		connectFn = connectAnthropic
 	}
-	rsp, err := connectFn(ctx, p.Conf, p.Messages, p.mcpTools, p.Opts)
+	req, rsp, err := connectFn(ctx, p.Conf, p.Messages, p.mcpTools, p.Opts)
 	if err != nil {
-		return emptyRsp, fmt.Errorf("发起请求失败 (%w)", err)
+		return req, emptyRsp, fmt.Errorf("发起请求失败 (%w)", err)
 	}
 	defer rsp.Body.Close()
 
 	// 逐步接收响应
 	builder := &streamBuilder{opts: p.Opts}
 	if err := hutil.ReadSSEJsonData(ctx, rsp.Body, builder.AddResponse, ignoreNonJSON()); err != nil {
-		return emptyRsp, fmt.Errorf("读取 SSE 数据失败 (%w)", err)
+		return req, emptyRsp, fmt.Errorf("读取 SSE 数据失败 (%w)", err)
 	}
-	return builder.Done(), nil
+	return req, builder.Done(), nil
 }
 
 // -------- 工具调用 --------

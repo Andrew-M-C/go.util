@@ -1,14 +1,12 @@
 module github.com/Andrew-M-C/go.util/crawler
 
-go 1.23
-
-toolchain go1.23.5
+go 1.25.0
 
 require (
 	github.com/chromedp/cdproto v0.0.0-20250509201441-70372ae9ef75
 	github.com/chromedp/chromedp v0.13.6
 	github.com/smartystreets/goconvey v1.8.1
-	golang.org/x/net v0.34.0
+	golang.org/x/net v0.55.0
 )
 
 require (
@@ -20,5 +18,5 @@ require (
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
 	github.com/smarty/assertions v1.15.0 // indirect
-	golang.org/x/sys v0.29.0 // indirect
+	golang.org/x/sys v0.45.0 // indirect
 )

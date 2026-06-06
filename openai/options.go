@@ -279,3 +279,13 @@ func WithHeader(h http.Header) Option {
 		}
 	}
 }
+
+// WithIncludeUsage 设置是否包含 usage 字段
+func WithIncludeUsage() Option {
+	return func(o *options) {
+		if o.extraFields == nil {
+			o.extraFields = jsonvalue.NewObject()
+		}
+		o.extraFields.At("stream_options", "include_usage").Set(true)
+	}
+}

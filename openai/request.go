@@ -14,7 +14,7 @@ func connect(
 	messages []openai.ChatCompletionMessage,
 	tools []openai.Tool,
 	opt *options,
-) (*http.Response, error) {
+) (openai.ChatCompletionRequest, *http.Response, error) {
 	h := http.Header{
 		"Content-Type":  {"application/json"},
 		"Authorization": {"Bearer " + config.APIKey},
@@ -48,13 +48,6 @@ func connect(
 		options = append(options, hutil.WithRequestBody(b))
 	}
 
-	// if opt.extraFields == nil {
-	// 	j := jsonvalue.New(req)
-	// 	j.At("thinking", "type").Set("enabled")
-	// 	b, _ := j.Marshal(jsonvalue.OptUTF8())
-	// 	body = b
-	// }
-
 	rsp, err := hutil.Request(ctx, config.BaseURL, options...)
-	return rsp, err
+	return req, rsp, err
 }

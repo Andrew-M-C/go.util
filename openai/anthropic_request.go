@@ -14,11 +14,21 @@ func connectAnthropic(
 	messages []openai.ChatCompletionMessage,
 	tools []openai.Tool,
 	opt *options,
-) (*http.Response, error) {
+) (openai.ChatCompletionRequest, *http.Response, error) {
+	req := openai.ChatCompletionRequest{
+		Model:    config.Model,
+		Messages: messages,
+		Stream:   true,
+	}
+	if len(tools) > 0 {
+		req.Tools = tools
+		req.ToolChoice = "auto"
+	}
+
 	// 构建 Anthropic 格式的请求 body
 	body, err := anthropic.BuildRequest(config.Model, messages, tools, opt.extraFields)
 	if err != nil {
-		return nil, err
+		return req, nil, err
 	}
 
 	// 构建 header：Anthropic 使用 x-api-key，而非 Authorization: Bearer
@@ -41,10 +51,10 @@ func connectAnthropic(
 
 	rsp, err := hutil.Request(ctx, config.BaseURL, reqOpts...)
 	if err != nil {
-		return nil, err
+		return req, nil, err
 	}
 
 	// 用 SSE 中间层包装 Body，使其输出 OpenAI 格式的 SSE
 	rsp.Body = anthropic.NewSSEReader(rsp.Body)
-	return rsp, nil
+	return req, rsp, nil
 }
