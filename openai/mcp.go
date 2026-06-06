@@ -11,7 +11,9 @@ type mcpClientWithSpecifiedTools struct {
 	includeTools map[string]struct{}
 }
 
-func (c *mcpClientWithSpecifiedTools) ListTools(ctx context.Context, request mcp.ListToolsRequest) (*mcp.ListToolsResult, error) {
+func (c *mcpClientWithSpecifiedTools) ListTools(
+	ctx context.Context, request mcp.ListToolsRequest,
+) (*mcp.ListToolsResult, error) {
 	orig, err := c.client.ListTools(ctx, request)
 	if err != nil {
 		return nil, err
@@ -29,6 +31,8 @@ func (c *mcpClientWithSpecifiedTools) ListTools(ctx context.Context, request mcp
 	return res, nil
 }
 
-func (c *mcpClientWithSpecifiedTools) CallTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+func (c *mcpClientWithSpecifiedTools) CallTool(
+	ctx context.Context, request mcp.CallToolRequest,
+) (*mcp.CallToolResult, error) {
 	return c.client.CallTool(ctx, request)
 }

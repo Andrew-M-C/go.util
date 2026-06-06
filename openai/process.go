@@ -67,7 +67,7 @@ func (p *processor) callDefers(ctx context.Context) {
 	}
 }
 
-func (p *processor) copyMessages(ctx context.Context) error {
+func (p *processor) copyMessages(_ context.Context) error {
 	if len(p.Messages) == 0 {
 		return errors.New("没有待请求的消息")
 	}
@@ -89,12 +89,12 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 		}
 
 		// 添加关闭操作
-		p.deferFuncs = append(p.deferFuncs, func(ctx context.Context) {
+		p.deferFuncs = append(p.deferFuncs, func(_ context.Context) {
 			cli.Close()
 		})
 
 		// 启动客户端，获取endpoint
-		if err := cli.Start(ctx); err != nil {
+		if err = cli.Start(ctx); err != nil {
 			return fmt.Errorf("启动 MCP 客户端 '%s' 失败 (%w)", param.baseURL, err)
 		}
 
@@ -136,7 +136,7 @@ func (p *processor) connectRemoteMCP(ctx context.Context) error {
 	return nil
 }
 
-func (p *processor) addCustomizedMCPs(ctx context.Context) error {
+func (p *processor) addCustomizedMCPs(_ context.Context) error {
 	for _, cli := range p.Opts.customizeMCPs {
 		if cli.id == "" {
 			return errors.New("MCP ID 为空")
@@ -227,9 +227,7 @@ func (p *processor) iteration(ctx context.Context) error {
 				return nil
 			}
 			tcP := &toolProcessor{processor: p}
-			if err := tcP.do(ctx); err != nil {
-				return fmt.Errorf("工具调用错误 (%w)", err)
-			}
+			tcP.do(ctx)
 			// continue to next iteration
 
 		case openai.FinishReasonFunctionCall:
@@ -279,19 +277,19 @@ type toolProcessor struct {
 	*processor
 }
 
-func (p *toolProcessor) do(ctx context.Context) error {
+func (p *toolProcessor) do(ctx context.Context) {
 	tcList := p.lastMessage().ToolCalls
 
 	lck := sync.Mutex{}
 	wg := sync.WaitGroup{}
 
 	// 并发调用
-	for i, tc := range tcList {
+	for _, tc := range tcList {
 		p.Opts.debugf("需要调用工具: %v", tc.Function.Name)
 		p.Opts.toolCallRequestCallback(tc)
 
 		wg.Add(1)
-		go func(i int, tc openai.ToolCall) {
+		go func(tc openai.ToolCall) {
 			defer wg.Done()
 
 			res, e := p.doToolCall(ctx, tc)
@@ -312,11 +310,9 @@ func (p *toolProcessor) do(ctx context.Context) error {
 
 			p.Messages = append(p.Messages, m)
 			p.Opts.toolCallResponseCallback(m)
-		}(i, tc)
+		}(tc)
 	}
 	wg.Wait()
-
-	return nil // 暂时没有返回错误
 }
 
 func (p *toolProcessor) doToolCall(ctx context.Context, tc openai.ToolCall) (string, error) {
@@ -369,10 +365,13 @@ type toJSON struct {
 }
 
 func (t toJSON) String() string {
-	b, _ := json.Marshal(t.v)
+	b, err := json.Marshal(t.v)
+	if err != nil {
+		return fmt.Sprint(t.v)
+	}
 	return string(b)
 }
 
 func ignoreNonJSON() hutil.RequestOption {
-	return hutil.WithSSEUnmarshalErrorCallback(func(err error, data string) {})
+	return hutil.WithSSEUnmarshalErrorCallback(func(error, string) {})
 }

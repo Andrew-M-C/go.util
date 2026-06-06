@@ -44,7 +44,7 @@ func connect(
 			j.At(key).Set(value)
 			return true
 		})
-		b, _ := j.Marshal(jsonvalue.OptUTF8())
+		b := j.MustMarshal(jsonvalue.OptUTF8())
 		options = append(options, hutil.WithRequestBody(b))
 	}
 

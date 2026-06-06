@@ -129,7 +129,7 @@ func (readAndBashTools) CallTool(ctx context.Context, req mcp.CallToolRequest) (
 }
 
 func callSkillRead(args map[string]any) (*mcp.CallToolResult, error) {
-	path, _ := args["path"].(string)
+	path, _ := args["path"].(string) //nolint:errcheck
 	if path == "" {
 		return mcp.NewToolResultError("path is required"), nil
 	}
@@ -165,18 +165,18 @@ func callSkillRead(args map[string]any) (*mcp.CallToolResult, error) {
 
 	var sb strings.Builder
 	for i, line := range lines[offset:end] {
-		fmt.Fprintf(&sb, "%6d|%s\n", offset+uint64(i)+1, line)
+		fmt.Fprintf(&sb, "%6d|%s\n", offset+uint64(i)+1, line) //nolint:gosec
 	}
 	return mcp.NewToolResultText(sb.String()), nil
 }
 
 func callSkillBash(_ context.Context, args map[string]any) (*mcp.CallToolResult, error) {
-	command, _ := args["command"].(string)
+	command, _ := args["command"].(string) //nolint:errcheck
 	if command == "" {
 		return mcp.NewToolResultError("command is required"), nil
 	}
 
-	workDir, _ := args["working_directory"].(string)
+	workDir, _ := args["working_directory"].(string) //nolint:errcheck
 
 	cmd := exec.Command("bash", "-c", command)
 	if workDir != "" {
@@ -221,7 +221,7 @@ func anyToInt(v any) (uint64, bool) {
 	switch val.Type().Kind() {
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		i := val.Int()
-		return uint64(i), i >= 0
+		return uint64(i), i >= 0 //nolint:gosec
 
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return val.Uint(), true
