@@ -1,6 +1,7 @@
 package openai
 
 import (
+	"context"
 	"net/http"
 	"strings"
 
@@ -30,6 +31,9 @@ type options struct {
 
 	// Anthropic 协议转换模式
 	useAnthropic bool
+
+	// preRequestCallback 发送请求之前的回调, nilable
+	preRequestCallback PreRequestCallback
 }
 
 type initializedMCPParams struct {
@@ -287,5 +291,28 @@ func WithIncludeUsage() Option {
 			o.extraFields = jsonvalue.NewObject()
 		}
 		o.extraFields.At("stream_options", "include_usage").Set(true)
+	}
+}
+
+// PreRequestCallback 表示准备发出请求之前的回调函数, 支持调用方直接改写底层 messages。
+// 每次向模型发起请求前都会调用（含工具调用后的后续轮次）。最终发出的消息是否正确由回调方自行负责。
+type PreRequestCallback func(
+	ctx context.Context,
+	params *PreRequestContext,
+) error
+
+// PreRequestContext 表示准备发出请求之前的参数。
+// RequestMessages 即处理器当前持有的消息切片，回调可原地修改元素，也可整体替换该切片。
+type PreRequestContext struct {
+	RequestMessages []openai.ChatCompletionMessage
+}
+
+// WithPreRequestCallback 设置准备发出请求之前的回调函数, 支持调用方直接改写底层 messages。
+// 传入 nil 时不覆盖已有回调。
+func WithPreRequestCallback(c PreRequestCallback) Option {
+	return func(o *options) {
+		if c != nil {
+			o.preRequestCallback = c
+		}
 	}
 }

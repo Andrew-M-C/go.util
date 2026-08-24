@@ -79,6 +79,7 @@ func (p *processor) copyMessages(_ context.Context) error {
 
 func (p *processor) connectRemoteMCP(ctx context.Context) error {
 	iterateURL := func(index int, param remoteMCPParams) error {
+		_ = index
 		if param.id == "" {
 			return fmt.Errorf("指定的远程 MCP ID 为空, 远程 URL 为 '%s'", param.baseURL)
 		}
@@ -259,7 +260,21 @@ type oneTimeProcessor struct {
 func (p *oneTimeProcessor) do(
 	ctx context.Context,
 ) (openai.ChatCompletionRequest, openai.ChatCompletionStreamResponse, error) {
+	emptyReq := openai.ChatCompletionRequest{}
 	emptyRsp := openai.ChatCompletionStreamResponse{}
+
+	// 发送前回调：每次向模型发起请求前都会调用（含工具调用后的后续轮次）。
+	// RequestMessages 直接指向处理器内部 messages，回调可原地修改；
+	// 若回调整体替换了切片，这里写回。最终发出的内容由回调方负责。
+	if p.Opts.preRequestCallback != nil {
+		params := &PreRequestContext{
+			RequestMessages: p.Messages,
+		}
+		if err := p.Opts.preRequestCallback(ctx, params); err != nil {
+			return emptyReq, emptyRsp, fmt.Errorf("发送请求前回调失败 (%w)", err)
+		}
+		p.Messages = params.RequestMessages
+	}
 
 	// 首先发起请求, 获取响应
 	connectFn := connect
