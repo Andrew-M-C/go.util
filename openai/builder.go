@@ -126,6 +126,10 @@ func streamResponseToResponse(streamRsp openai.ChatCompletionStreamResponse) ope
 
 // Done 完成构建
 func (b *streamBuilder) Done() openai.ChatCompletionStreamResponse {
+	if b.rsp == nil {
+		b.opts.debugf("rsp is nil")
+		return openai.ChatCompletionStreamResponse{}
+	}
 	if len(b.rsp.Choices) == 0 {
 		return *b.rsp
 	}
