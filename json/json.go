@@ -44,9 +44,13 @@ func MustGetJSONFromFile(fileName string, args ...any) *jsonvalue.V {
 
 // SetJSONToFile 将 JSON 数据写入文件。但需要注意的是, 第一级 key 必须是 string, 否则会报错。
 // 请注意，这是一个浅合并逻辑，功能还没那么强大。这个计划在 jsonvalue 中实现 Merge 方法。
-func SetJSONToFile(fileName string, v *jsonvalue.V, args ...any) error {
-	if v == nil {
+func SetJSONToFile(fileName string, value any, args ...any) error {
+	if value == nil {
 		return errors.New("JSON value is nil")
+	}
+	v, err := jsonvalue.Import(value)
+	if err != nil {
+		return fmt.Errorf("value 不是一个可支持的 JSON 值 (%w)", err)
 	}
 
 	// 首先尝试读取原始文件
