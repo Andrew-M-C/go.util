@@ -128,7 +128,7 @@ func TestSetJSONToFile(t *testing.T) {
 			so(os.IsNotExist(statErr), isTrue)
 		})
 
-		cv("目标文件不存在时, 整文件覆盖写入", func() {
+		cv("目标文件不存在时, 不带路径则将 object 字段写入新文件", func() {
 			p := filepath.Join(t.TempDir(), "new.json")
 			src := jsonvalue.MustUnmarshalString(`{"hello":"世界","n":1}`)
 			err := json.SetJSONToFile(p, src)
@@ -136,6 +136,7 @@ func TestSetJSONToFile(t *testing.T) {
 
 			got, err := json.GetJSONFromFile(p)
 			so(err, isNil)
+			so(got.IsObject(), isTrue)
 			so(got.MustGet("hello").String(), eq, "世界")
 			so(got.MustGet("n").Int(), eq, 1)
 
@@ -168,16 +169,88 @@ func TestSetJSONToFile(t *testing.T) {
 			so(got.MustGet("keep").Bool(), isTrue)
 		})
 
-		cv("目标已存在时, 不带路径则整文件覆盖", func() {
-			p := writeTempFile(t, "overwrite.json", `{"old":1}`)
+		cv("目标已存在时, 不带路径则按第一层 key 浅合并", func() {
+			p := writeTempFile(t, "merge-root.json", `{
+				"keep": true,
+				"n": 1,
+				"user": {"name": "Bob", "age": 20},
+				"tags": ["a", "b"]
+			}`)
+			incoming := jsonvalue.MustUnmarshalString(`{
+				"n": 2,
+				"user": {"name": "Alice"},
+				"tags": ["c"],
+				"extra": "added"
+			}`)
+			err := json.SetJSONToFile(p, incoming)
+			so(err, isNil)
+
+			got, err := json.GetJSONFromFile(p)
+			so(err, isNil)
+			so(got.IsObject(), isTrue)
+
+			// 未出现在 incoming 中的第一层字段应保留
+			so(got.MustGet("keep").Bool(), isTrue)
+
+			// 同名第一层标量 / 数组被整体覆盖
+			so(got.MustGet("n").Int(), eq, 2)
+			so(got.MustGet("tags").IsArray(), isTrue)
+			so(got.MustGet("tags").Len(), eq, 1)
+			so(got.MustGet("tags", 0).String(), eq, "c")
+
+			// 同名第一层 object 是浅合并: 整个子对象被替换, 而不是递归深合并
+			so(got.MustGet("user", "name").String(), eq, "Alice")
+			_, err = got.Get("user", "age")
+			so(err, notNil)
+
+			// incoming 中的新 key 应写入
+			so(got.MustGet("extra").String(), eq, "added")
+		})
+
+		cv("目标已存在时, 不带路径多次合并会累加字段", func() {
+			p := writeTempFile(t, "merge-twice.json", `{"a":1}`)
+			err := json.SetJSONToFile(p, jsonvalue.MustUnmarshalString(`{"b":2}`))
+			so(err, isNil)
+			err = json.SetJSONToFile(p, jsonvalue.MustUnmarshalString(`{"c":3,"a":10}`))
+			so(err, isNil)
+
+			got, err := json.GetJSONFromFile(p)
+			so(err, isNil)
+			so(got.MustGet("a").Int(), eq, 10)
+			so(got.MustGet("b").Int(), eq, 2)
+			so(got.MustGet("c").Int(), eq, 3)
+			so(got.Len(), eq, 3)
+		})
+
+		cv("不带路径时若传入空 object, 则已有字段保持不变", func() {
+			p := writeTempFile(t, "merge-empty.json", `{"old":1,"keep":"yes"}`)
+			err := json.SetJSONToFile(p, jsonvalue.NewObject())
+			so(err, isNil)
+
+			got, err := json.GetJSONFromFile(p)
+			so(err, isNil)
+			so(got.MustGet("old").Int(), eq, 1)
+			so(got.MustGet("keep").String(), eq, "yes")
+			so(got.Len(), eq, 2)
+		})
+
+		cv("不带路径时若传入非 object, 则不改变已有内容", func() {
+			p := writeTempFile(t, "merge-non-object.json", `{"old":1}`)
 			err := json.SetJSONToFile(p, jsonvalue.MustUnmarshalString(`["x","y"]`))
 			so(err, isNil)
 
 			got, err := json.GetJSONFromFile(p)
 			so(err, isNil)
-			so(got.IsArray(), isTrue)
-			so(got.Len(), eq, 2)
-			so(got.MustGet(0).String(), eq, "x")
+			so(got.IsObject(), isTrue)
+			so(got.MustGet("old").Int(), eq, 1)
+			so(got.Len(), eq, 1)
+
+			err = json.SetJSONToFile(p, jsonvalue.NewString("ignored"))
+			so(err, isNil)
+			got, err = json.GetJSONFromFile(p)
+			so(err, isNil)
+			so(got.MustGet("old").Int(), eq, 1)
+			so(got.Len(), eq, 1)
 		})
 
 		cv("原文件是非法 JSON 时视为空 object 再写入", func() {

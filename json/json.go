@@ -43,6 +43,7 @@ func MustGetJSONFromFile(fileName string, args ...any) *jsonvalue.V {
 }
 
 // SetJSONToFile 将 JSON 数据写入文件。但需要注意的是, 第一级 key 必须是 string, 否则会报错。
+// 请注意，这是一个浅合并逻辑，功能还没那么强大。这个计划在 jsonvalue 中实现 Merge 方法。
 func SetJSONToFile(fileName string, v *jsonvalue.V, args ...any) error {
 	if v == nil {
 		return errors.New("JSON value is nil")
@@ -57,8 +58,11 @@ func SetJSONToFile(fileName string, v *jsonvalue.V, args ...any) error {
 
 	// 然后将 value 设置进去
 	if len(args) == 0 {
-		// 如果命令就是覆盖整个文件, 那么直接写入
-		whole = v
+		// 没有 args 的情况下，则表示将当前的 value 合并到整个现有的值中
+		v.RangeObjects(func(key string, value *jsonvalue.V) bool {
+			whole.MustSet(value).At(key)
+			return true
+		})
 	} else {
 		// 如果是带参数的, 那么 set
 		whole.MustSet(v).At(args)
