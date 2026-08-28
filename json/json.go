@@ -6,6 +6,7 @@ import (
 	"os"
 
 	jsonvalue "github.com/Andrew-M-C/go.jsonvalue"
+	"github.com/Andrew-M-C/go.jsonvalue/beta"
 )
 
 // GetJSONFromFile 从文件中获取 JSON 数据。参数 args 可以是 string 或者 int,
@@ -60,16 +61,18 @@ func SetJSONToFile(fileName string, value any, args ...any) error {
 		whole = jsonvalue.NewObject()
 	}
 
-	// 然后将 value 设置进去
+	// 然后进行合并
 	if len(args) == 0 {
-		// 没有 args 的情况下，则表示将当前的 value 合并到整个现有的值中
-		v.RangeObjects(func(key string, value *jsonvalue.V) bool {
-			whole.MustSet(value).At(key)
-			return true
-		})
+		_ = beta.Merge(&whole, v, beta.WithMergeOverrideWhenConflict())
 	} else {
-		// 如果是带参数的, 那么 set
-		whole.MustSet(v).At(args)
+		if target, err := whole.Get(args); err != nil {
+			// 没有值, 那么就直接 set
+			whole.MustSet(v).At(args)
+		} else {
+			// 有值, 那么进行合并
+			_ = beta.Merge(&target, v, beta.WithMergeOverrideWhenConflict())
+			whole.MustSet(target).At(args)
+		}
 	}
 
 	// 写入文件

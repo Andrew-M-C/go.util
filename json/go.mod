@@ -3,7 +3,7 @@ module github.com/Andrew-M-C/go.util/json
 go 1.24.0
 
 require (
-	github.com/Andrew-M-C/go.jsonvalue v1.4.3
+	github.com/Andrew-M-C/go.jsonvalue v1.4.4-0.20260828093412-2fa15a8ccd70
 	github.com/smartystreets/goconvey v1.8.1
 )
 

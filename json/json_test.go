@@ -157,7 +157,7 @@ func TestSetJSONToFile(t *testing.T) {
 			so(name.String(), eq, "Alice")
 		})
 
-		cv("目标已存在时, 按路径合并写入, 保留其它字段", func() {
+		cv("目标已存在时, 按路径合并写入, 标量冲突时以传入值为准", func() {
 			p := writeTempFile(t, "merge.json", `{"user":{"name":"Bob","age":20},"keep":true}`)
 			err := json.SetJSONToFile(p, jsonvalue.NewInt(21), "user", "age")
 			so(err, isNil)
@@ -165,11 +165,12 @@ func TestSetJSONToFile(t *testing.T) {
 			got, err := json.GetJSONFromFile(p)
 			so(err, isNil)
 			so(got.MustGet("user", "name").String(), eq, "Bob")
+			// WithMergeOverrideWhenConflict: 基础类型冲突时覆盖为传入值
 			so(got.MustGet("user", "age").Int(), eq, 21)
 			so(got.MustGet("keep").Bool(), isTrue)
 		})
 
-		cv("目标已存在时, 不带路径则按第一层 key 浅合并", func() {
+		cv("目标已存在时, 不带路径则深合并, 基础类型冲突以传入值为准", func() {
 			p := writeTempFile(t, "merge-root.json", `{
 				"keep": true,
 				"n": 1,
@@ -192,22 +193,26 @@ func TestSetJSONToFile(t *testing.T) {
 			// 未出现在 incoming 中的第一层字段应保留
 			so(got.MustGet("keep").Bool(), isTrue)
 
-			// 同名第一层标量 / 数组被整体覆盖
+			// 同名标量冲突, WithMergeOverrideWhenConflict 覆盖为传入值
 			so(got.MustGet("n").Int(), eq, 2)
-			so(got.MustGet("tags").IsArray(), isTrue)
-			so(got.MustGet("tags").Len(), eq, 1)
-			so(got.MustGet("tags", 0).String(), eq, "c")
 
-			// 同名第一层 object 是浅合并: 整个子对象被替换, 而不是递归深合并
+			// 同名数组冲突不受 Override 影响, 仍以文件已有值为准
+			so(got.MustGet("tags").IsArray(), isTrue)
+			so(got.MustGet("tags").Len(), eq, 2)
+			so(got.MustGet("tags", 0).String(), eq, "a")
+
+			// 同名 object 递归深合并: 子标量冲突覆盖为传入值,
+			// incoming 中缺失的子字段 (age) 仍然保留
 			so(got.MustGet("user", "name").String(), eq, "Alice")
-			_, err = got.Get("user", "age")
-			so(err, notNil)
+			age, err := got.Get("user", "age")
+			so(err, isNil)
+			so(age.Int(), eq, 20)
 
 			// incoming 中的新 key 应写入
 			so(got.MustGet("extra").String(), eq, "added")
 		})
 
-		cv("目标已存在时, 不带路径多次合并会累加字段", func() {
+		cv("目标已存在时, 不带路径多次合并会累加新字段, 标量冲突以传入值为准", func() {
 			p := writeTempFile(t, "merge-twice.json", `{"a":1}`)
 			err := json.SetJSONToFile(p, jsonvalue.MustUnmarshalString(`{"b":2}`))
 			so(err, isNil)
@@ -216,6 +221,7 @@ func TestSetJSONToFile(t *testing.T) {
 
 			got, err := json.GetJSONFromFile(p)
 			so(err, isNil)
+			// a 与传入值 10 冲突, Override 后采用传入值
 			so(got.MustGet("a").Int(), eq, 10)
 			so(got.MustGet("b").Int(), eq, 2)
 			so(got.MustGet("c").Int(), eq, 3)
@@ -234,7 +240,7 @@ func TestSetJSONToFile(t *testing.T) {
 			so(got.Len(), eq, 2)
 		})
 
-		cv("不带路径时若传入非 object, 则不改变已有内容", func() {
+		cv("不带路径时若传入 array, 类型冲突不受 Override 影响, 保留已有 object", func() {
 			p := writeTempFile(t, "merge-non-object.json", `{"old":1}`)
 			err := json.SetJSONToFile(p, jsonvalue.MustUnmarshalString(`["x","y"]`))
 			so(err, isNil)
@@ -244,13 +250,17 @@ func TestSetJSONToFile(t *testing.T) {
 			so(got.IsObject(), isTrue)
 			so(got.MustGet("old").Int(), eq, 1)
 			so(got.Len(), eq, 1)
+		})
 
-			err = json.SetJSONToFile(p, jsonvalue.NewString("ignored"))
+		cv("不带路径时若传入基础类型, 根节点类型冲突则覆盖整个文件", func() {
+			p := writeTempFile(t, "merge-override-root.json", `{"old":1}`)
+			err := json.SetJSONToFile(p, jsonvalue.NewString("ignored"))
 			so(err, isNil)
-			got, err = json.GetJSONFromFile(p)
+
+			got, err := json.GetJSONFromFile(p)
 			so(err, isNil)
-			so(got.MustGet("old").Int(), eq, 1)
-			so(got.Len(), eq, 1)
+			so(got.IsString(), isTrue)
+			so(got.String(), eq, "ignored")
 		})
 
 		cv("原文件是非法 JSON 时视为空 object 再写入", func() {
