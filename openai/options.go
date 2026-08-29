@@ -21,6 +21,9 @@ type options struct {
 	contentCallback   func(string)
 	finishCallback    func(openai.FinishReason)
 
+	// 一次 SSE 响应的回调
+	responseChunkCallback func(openai.ChatCompletionStreamResponse)
+
 	// 工具调用回调
 	toolCallRequestCallback  func(openai.ToolCall)
 	toolCallResponseCallback func(openai.ChatCompletionMessage)
@@ -137,6 +140,15 @@ func WithRemoteMCPAndSpecifyTools(baseURL string, id string, toolsAndOpts ...any
 			options:      opts,
 			includeTools: includeTools,
 		})
+	}
+}
+
+// WithResponseChunkCallback 设置一次 SSE 响应的回调函数
+func WithResponseChunkCallback(c func(openai.ChatCompletionStreamResponse)) Option {
+	return func(o *options) {
+		if c != nil {
+			o.responseChunkCallback = c
+		}
 	}
 }
 

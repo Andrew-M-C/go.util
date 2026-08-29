@@ -52,6 +52,10 @@ func (b *streamBuilder) AddResponse(from openai.ChatCompletionStreamResponse) {
 		return
 	}
 
+	if b.opts.responseChunkCallback != nil {
+		b.opts.responseChunkCallback(from)
+	}
+
 	choice := from.Choices[0]
 	if choice.FinishReason != "" {
 		b.finishReason = choice.FinishReason
