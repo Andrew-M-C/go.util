@@ -1,9 +1,59 @@
 package holiday
 
 func init() {
+	init2027()
 	init2026()
 	init2025()
 	init2024()
+}
+
+// reference: https://www.gov.cn/zhengce/content/202611/content_7085101.htm
+func init2027() {
+	// 元旦：1月1日（周五）至3日（周日）放假，共3天。
+	newDate(2027, 1, 1).withType(Holiday).withName("元旦节").add()
+
+	// 春节：2月5日（农历除夕、周五）至13日（农历正月初八、周六）放假调休，共9天。1月31日（周日）、2月14日（周日）上班。
+	newDate(2027, 1, 31).withType(ShiftedWorkday).withName("春节").add()
+	newDate(2027, 2, 5).withType(HolidayPeriod).withName("春节").add() // 除夕
+	newDate(2027, 2, 6).withType(Holiday).withName("春节").add()       // 正月初一，周六
+	newDate(2027, 2, 7).withType(HolidayPeriod).withName("春节").add() // 正月初二，周日
+	newDate(2027, 2, 8).withType(HolidayPeriod).withName("春节").add() // 正月初三
+	newDate(2027, 2, 9).withType(ShiftedDayOff).withName("春节").add()
+	newDate(2027, 2, 10).withType(ShiftedDayOff).withName("春节").add()
+	newDate(2027, 2, 11).withType(ShiftedDayOff).withName("春节").add()
+	newDate(2027, 2, 12).withType(ShiftedDayOff).withName("春节").add()
+	// newDate(2027, 2, 13).withType(ShiftedDayOff).withName("春节").add() // 周六
+	newDate(2027, 2, 14).withType(ShiftedWorkday).withName("春节").add()
+
+	// 清明节：4月3日（周六）至5日（周一）放假，共3天。清明当日为4月5日。
+	// newDate(2027, 4, 3).withType(HolidayPeriod).withName("清明节").add() // 周六
+	// newDate(2027, 4, 4).withType(HolidayPeriod).withName("清明节").add() // 周日
+	newDate(2027, 4, 5).withType(Holiday).withName("清明节").add()
+
+	// 劳动节：5月1日（周六）至5日（周三）放假调休，共5天。5月8日（周六）上班。
+	newDate(2027, 5, 1).withType(Holiday).withName("劳动节").add()       // 周六
+	newDate(2027, 5, 2).withType(HolidayPeriod).withName("劳动节").add() // 周日
+	newDate(2027, 5, 3).withType(ShiftedDayOff).withName("劳动节").add()
+	newDate(2027, 5, 4).withType(ShiftedDayOff).withName("劳动节").add()
+	newDate(2027, 5, 5).withType(ShiftedDayOff).withName("劳动节").add()
+	newDate(2027, 5, 8).withType(ShiftedWorkday).withName("劳动节").add()
+
+	// 端午节：6月9日（周三）放假，共1天。
+	newDate(2027, 6, 9).withType(Holiday).withName("端午节").add()
+
+	// 中秋节：9月15日（周三）放假，共1天。
+	newDate(2027, 9, 15).withType(Holiday).withName("中秋节").add()
+
+	// 国庆节：10月1日（周五）至7日（周四）放假调休，共7天。9月26日（周日）、10月9日（周六）上班。
+	newDate(2027, 9, 26).withType(ShiftedWorkday).withName("国庆节").add()
+	newDate(2027, 10, 1).withType(Holiday).withName("国庆节").add()
+	newDate(2027, 10, 2).withType(HolidayPeriod).withName("国庆节").add() // 周六
+	newDate(2027, 10, 3).withType(HolidayPeriod).withName("国庆节").add() // 周日
+	newDate(2027, 10, 4).withType(ShiftedDayOff).withName("国庆节").add()
+	newDate(2027, 10, 5).withType(ShiftedDayOff).withName("国庆节").add()
+	newDate(2027, 10, 6).withType(ShiftedDayOff).withName("国庆节").add()
+	newDate(2027, 10, 7).withType(ShiftedDayOff).withName("国庆节").add()
+	newDate(2027, 10, 9).withType(ShiftedWorkday).withName("国庆节").add()
 }
 
 // reference: https://www.gov.cn/zhengce/zhengceku/202511/content_7047091.htm
