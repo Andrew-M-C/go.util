@@ -107,7 +107,7 @@ func TestWithResponseChunkCallback(t *testing.T) {
 			var reqCount int32
 			srv := newMockChatServer(t, func(_ capturedChatRequest) string {
 				if atomic.AddInt32(&reqCount, 1) == 1 {
-					return sseToolCall("call_cb_001", "cbmcp:echo", `{}`)
+					return sseToolCall("call_cb_001", "cbmcp__echo", `{}`)
 				}
 				return sseAssistantStop("done")
 			})
@@ -150,7 +150,7 @@ func TestWithToolCallResponseCallback(t *testing.T) {
 			var reqCount int32
 			srv := newMockChatServer(t, func(_ capturedChatRequest) string {
 				if atomic.AddInt32(&reqCount, 1) == 1 {
-					return sseToolCall(toolID, "tcmcp:calc", `{"x":1}`)
+					return sseToolCall(toolID, "tcmcp__calc", `{"x":1}`)
 				}
 				return sseAssistantStop("答案是" + toolResult)
 			})
@@ -208,8 +208,8 @@ func TestWithToolCallResponseCallback(t *testing.T) {
 					// 两个工具调用拼在同一个 SSE 包里，finish_reason=tool_calls
 					return "" +
 						`data: {"id":"c","model":"m","choices":[{"index":0,"delta":{"tool_calls":[` +
-						`{"index":0,"id":"c0","type":"function","function":{"name":"multimcp:t1","arguments":"{}"}},` +
-						`{"index":1,"id":"c1","type":"function","function":{"name":"multimcp:t2","arguments":"{}"}}` +
+						`{"index":0,"id":"c0","type":"function","function":{"name":"multimcp__t1","arguments":"{}"}},` +
+						`{"index":1,"id":"c1","type":"function","function":{"name":"multimcp__t2","arguments":"{}"}}` +
 						`]},"finish_reason":"tool_calls"}]}` + "\n\n" +
 						"data: [DONE]\n\n"
 				}
@@ -292,8 +292,8 @@ func TestOpenAI_ResponseChunkCallback_Integration(t *testing.T) {
 			//   3. 至少有一段包含非空文本内容
 			remaining := chunks
 			var (
-				segments    int
-				hasContent  bool
+				segments   int
+				hasContent bool
 			)
 			for len(remaining) > 0 {
 				merged, n := utils.MergeResponseDeltaChunks(remaining...)

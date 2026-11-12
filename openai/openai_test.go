@@ -64,21 +64,6 @@ func readDeepSeekConfig() (utils.ModelConfig, bool) {
 	return res, true
 }
 
-// readHunyuanVisionConfig 读取 hunyuan 的配置
-func readHunyuanVisionConfig() (utils.ModelConfig, bool) {
-	res := utils.ModelConfig{}
-	hunyuanAPIKey := os.Getenv("HUNYUAN_API_KEY")
-	if hunyuanAPIKey == "" {
-		return res, false
-	}
-
-	return utils.ModelConfig{
-		Model:   "hunyuan-vision",
-		BaseURL: "https://api.hunyuan.cloud.tencent.com/v1/chat/completions",
-		APIKey:  hunyuanAPIKey,
-	}, true
-}
-
 func readAnthropicConfig() (utils.ModelConfig, bool) {
 	res := utils.ModelConfig{}
 	apiKey := os.Getenv("ANTHROPIC_API_KEY")
@@ -261,7 +246,7 @@ func TestProcessBasic(t *testing.T) {
 	contentBuilder := strings.Builder{}
 
 	reasoning := func(c string) {
-		fmt.Printf("%s", color.BlueString(c))
+		fmt.Printf("%s", color.YellowString(c))
 		reasoningBuilder.WriteString(c)
 	}
 	content := func(c string) {
@@ -362,7 +347,7 @@ func TestProcessMCP(t *testing.T) {
 			Content: "你能使用哪些 MCP 工具? 请列表列出工具 ID 和说明",
 		}}
 
-		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
+		reasoning := func(c string) { fmt.Printf("%s", color.YellowString(c)) }
 		content := func(c string) { fmt.Printf("%s", c) }
 
 		rsp, err := utils.Process(ctx, cfg, req,
@@ -388,7 +373,7 @@ func TestProcessMCP(t *testing.T) {
 			Content: "你能使用哪些 MCP 工具? 请列表列出工具 ID 和说明",
 		}}
 
-		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
+		reasoning := func(c string) { fmt.Printf("%s", color.YellowString(c)) }
 		content := func(c string) { fmt.Printf("%s", c) }
 
 		rsp, err := utils.Process(ctx, cfg, req,
@@ -415,12 +400,12 @@ func TestProcessMCP(t *testing.T) {
 			// Content: "现在几点了？",
 		}}
 
-		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
+		reasoning := func(c string) { fmt.Printf("%s", color.YellowString(c)) }
 		content := func(c string) { fmt.Printf("%s", c) }
 		finish := func(f openai.FinishReason) { printf("阶段性结束: %v\n\n", f) }
 
 		tcStart := func(tc openai.ToolCall) {
-			printf("%s\n", color.BlueString("工具调用: %s", tc.Function.Name))
+			printf("%s\n", color.YellowString("工具调用: %s", tc.Function.Name))
 		}
 		tcEnds := func(m openai.ChatCompletionMessage) {
 			printf("%s\n", color.GreenString("工具调用结束: %s", m.Content))
@@ -460,7 +445,7 @@ func TestProcessMCP(t *testing.T) {
 			Content: text,
 		}}
 		req = utils.AddOrSetPromptForMessages(req, "请简要介绍一下这部小说")
-		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
+		reasoning := func(c string) { fmt.Printf("%s", color.YellowString(c)) }
 		content := func(c string) { fmt.Printf("%s", c) }
 		finish := func(f openai.FinishReason) { printf("结束: %v", f) }
 
@@ -474,14 +459,13 @@ func TestProcessMCP(t *testing.T) {
 }
 
 func TestProcessMultiModal(t *testing.T) {
-	cfg, ok := readHunyuanVisionConfig()
+	cfg, ok := readDeepSeekConfig()
 	if !ok {
 		t.Log("不予测试")
 		return
 	}
 
-	cv("带图片请求, 混元图生文, 网络链接", t, func() {
-		// Reference: https://cloud.tencent.com/document/product/1729/111007
+	cv("带图片请求, 网络链接", t, func() {
 		ctx := context.Background()
 		config := cfg
 		req := []openai.ChatCompletionMessage{
@@ -506,7 +490,7 @@ func TestProcessMultiModal(t *testing.T) {
 		contentBuilder := strings.Builder{}
 
 		reasoning := func(c string) {
-			fmt.Printf("%s", color.BlueString(c))
+			fmt.Printf("%s", color.YellowString(c))
 			reasoningBuilder.WriteString(c)
 		}
 		content := func(c string) {
@@ -536,8 +520,7 @@ func TestProcessMultiModal(t *testing.T) {
 		so(finishCalled, eq, true)
 	})
 
-	cv("带图片请求, 混元图生文, 图片二进制数据", t, func() {
-		// Reference: https://cloud.tencent.com/document/product/1729/111007
+	cv("带图片请求, 图片二进制数据", t, func() {
 		ctx := context.Background()
 		config := cfg
 		req := []openai.ChatCompletionMessage{
@@ -568,8 +551,7 @@ func TestProcessMultiModal(t *testing.T) {
 		printf("获得响应: %v", rsp.Messages[1].Content)
 	})
 
-	cv("带图片请求, 混元图生文,多张图片", t, func() {
-		// Reference: https://cloud.tencent.com/document/product/1729/111007
+	cv("带图片请求, 多张图片", t, func() {
 		ctx := context.Background()
 		config := cfg
 		req := []openai.ChatCompletionMessage{
@@ -619,6 +601,11 @@ func TestInitializedMCP(t *testing.T) {
 		t.Log("不予测试")
 		return
 	}
+	mcpURL := os.Getenv("DEEPSEEK_MCP_URL")
+	if mcpURL == "" {
+		t.Log("不予测试")
+		return
+	}
 
 	cv("时间 + 天气两个 MCP", t, func() {
 		ctx := context.Background()
@@ -627,7 +614,7 @@ func TestInitializedMCP(t *testing.T) {
 			Content: "请告诉我现在广州24小时制的 HH:MM 格式时间, 以及天气",
 		}}
 
-		reasoning := func(c string) { fmt.Printf("%s", color.BlueString(c)) }
+		reasoning := func(c string) { fmt.Printf("%s", color.YellowString(c)) }
 		content := func(c string) { fmt.Printf("%s", c) }
 		finish := func(f openai.FinishReason) { printf("阶段性结束: %v\n\n", f) }
 
@@ -720,7 +707,7 @@ func TestAnthropicBasic(t *testing.T) {
 		contentBuilder := strings.Builder{}
 
 		reasoning := func(c string) {
-			fmt.Printf("%s", color.BlueString(c))
+			fmt.Printf("%s", color.YellowString(c))
 			reasoningBuilder.WriteString(c)
 		}
 		content := func(c string) {

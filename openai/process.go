@@ -16,7 +16,9 @@ import (
 	"github.com/sashabaranov/go-openai"
 )
 
-const mcpClientNameSeparator = ":"
+// mcpClientNameSeparator 连接 MCP id 与工具名。只能使用 [A-Za-z0-9_-]，
+// 冒号会被部分 MaaS 网关直接拒绝。
+const mcpClientNameSeparator = "__"
 
 type processor struct {
 	// 入参

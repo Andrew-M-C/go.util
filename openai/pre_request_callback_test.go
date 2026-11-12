@@ -300,17 +300,21 @@ func TestWithPreRequestCallback(t *testing.T) {
 
 	cv("工具调用多轮迭代时, 每一轮向模型发请求前都应触发回调", t, func() {
 		var (
-			mu       sync.Mutex
-			roundN   int
-			captured [][]openai.ChatCompletionMessage
+			mu         sync.Mutex
+			roundN     int
+			captured   [][]openai.ChatCompletionMessage
+			advertised string
 		)
 		srv := newMockChatServer(t, func(req capturedChatRequest) string {
 			mu.Lock()
 			n := roundN
 			roundN++
+			if advertised == "" && len(req.Tools) > 0 && req.Tools[0].Function != nil {
+				advertised = req.Tools[0].Function.Name
+			}
 			mu.Unlock()
 			if n == 0 {
-				return sseToolCall("call_1", "mock-echo:echo", `{"x":1}`)
+				return sseToolCall("call_1", "mock-echo__echo", `{"x":1}`)
 			}
 			return sseAssistantStop("tool-done")
 		})
@@ -341,7 +345,8 @@ func TestWithPreRequestCallback(t *testing.T) {
 		so(captured[1][0].Content, eq, "请调用工具")
 		so(captured[1][1].Role, eq, openai.ChatMessageRoleAssistant)
 		so(len(captured[1][1].ToolCalls), eq, 1)
-		so(captured[1][1].ToolCalls[0].Function.Name, eq, "mock-echo:echo")
+		so(advertised, eq, "mock-echo__echo")
+		so(captured[1][1].ToolCalls[0].Function.Name, eq, "mock-echo__echo")
 		so(captured[1][2].Role, eq, openai.ChatMessageRoleTool)
 		so(captured[1][2].Content, eq, "echo-ok")
 		so(rsp.Messages[len(rsp.Messages)-1].Content, eq, "tool-done")

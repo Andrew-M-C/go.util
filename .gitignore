@@ -17,3 +17,6 @@
 # IDE files
 .vscode
 .cursor
+
+# test sripts
+test.sh

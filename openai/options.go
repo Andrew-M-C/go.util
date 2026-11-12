@@ -97,7 +97,7 @@ func WithDebugger(d func(string, ...any)) Option {
 }
 
 // WithRemoteMCP 设置远程 MCP 的 URL, 可以设置多个。
-// 参数 id 可以是任意不含空格和毛好的字符串, 多个 MCP 之间不得重复
+// 参数 id 里的空格和 "__" 会被替换成 "-"，多个 MCP 之间不得重复
 func WithRemoteMCP(baseURL string, id string, opts ...transport.ClientOption) Option {
 	return func(o *options) {
 		if baseURL == "" {
@@ -198,7 +198,7 @@ func WithToolCallResponseCallback(c func(openai.ChatCompletionMessage)) Option {
 }
 
 // WithInitializedMCP 设置自定义的已初始化完成的 MCP 客户端, 可以设置多个
-// 参数 id 可以是任意不含空格和毛好的字符串, 多个 MCP 之间不得重复
+// 参数 id 里的空格和 "__" 会被替换成 "-"，多个 MCP 之间不得重复
 func WithInitializedMCP(c InitializedMCPClient, id string) Option {
 	return func(o *options) {
 		if c != nil {
