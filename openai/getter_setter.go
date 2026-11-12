@@ -10,7 +10,7 @@ import (
 	"github.com/h2non/filetype"
 	"github.com/h2non/filetype/types"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/sashabaranov/go-openai"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 // -------- 图片相关 --------

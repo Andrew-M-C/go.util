@@ -6,7 +6,7 @@ import (
 
 	hutil "github.com/Andrew-M-C/go.util/net/http"
 	"github.com/Andrew-M-C/go.util/openai/anthropic"
-	"github.com/sashabaranov/go-openai"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 func connectAnthropic(
@@ -32,11 +32,11 @@ func connectAnthropic(
 	}
 
 	// 构建 header：Anthropic 使用 x-api-key，而非 Authorization: Bearer
-	h := http.Header{
-		"Content-Type":      {"application/json"},
-		"x-api-key":         {config.APIKey},
-		"anthropic-version": {"2023-06-01"},
-	}
+	h := http.Header{}
+	h.Set("Content-Type", "application/json")
+	h.Set("x-api-key", config.APIKey)
+	h.Set("anthropic-version", "2023-06-01")
+
 	// 用户自定义 header 覆盖默认值
 	for key, vals := range opt.extraHeaders {
 		h[key] = vals

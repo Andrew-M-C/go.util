@@ -5,7 +5,7 @@ import (
 	"context"
 
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/sashabaranov/go-openai"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 // ModelConfig 模型配置
@@ -51,3 +51,9 @@ type InitializedMCPClient interface {
 
 // ToolManager 表示一个工具管理器。实际上 MCP 也只不过是 tool call 的封装，这里只是借用 mcp package 来包装一些字段
 type ToolManager InitializedMCPClient
+
+// Tool 表示一个独立的工具
+type Tool interface {
+	GetTool() mcp.Tool
+	CallTool(ctx context.Context, request mcp.CallToolParams) (*mcp.CallToolResult, error)
+}

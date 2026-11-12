@@ -13,7 +13,7 @@ import (
 	hutil "github.com/Andrew-M-C/go.util/net/http"
 	mcpclient "github.com/mark3labs/mcp-go/client"
 	"github.com/mark3labs/mcp-go/mcp"
-	"github.com/sashabaranov/go-openai"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 // mcpClientNameSeparator 连接 MCP id 与工具名。只能使用 [A-Za-z0-9_-]，
@@ -318,22 +318,22 @@ func (p *toolProcessor) do(ctx context.Context) {
 		go func(tc openai.ToolCall) {
 			defer wg.Done()
 
-			res, e := p.doToolCall(ctx, tc)
+			m, e := p.doToolCall(ctx, tc)
 			if e != nil {
-				res = fmt.Sprintf("工具调用失败, 错误: '%v', 工具 %v", e, tc.Function.Name)
-				p.Opts.debugf("%s", res)
+				m = openai.ChatCompletionMessage{
+					Role:       openai.ChatMessageRoleTool,
+					Content:    fmt.Sprintf("工具调用失败, 错误: '%v', 工具 %v", e, tc.Function.Name),
+					ToolCallID: tc.ID,
+				}
+				p.Opts.debugf("%s", m.Content)
+			} else if m.Content != "" {
+				p.Opts.debugf("工具调用返回: %s", m.Content)
 			} else {
-				p.Opts.debugf("工具调用返回: %v", toJSON{res})
+				p.Opts.debugf("工具调用返回: %d 段内容", len(m.MultiContent))
 			}
 
 			lck.Lock()
 			defer lck.Unlock()
-			m := openai.ChatCompletionMessage{
-				Role:       openai.ChatMessageRoleTool,
-				Content:    res,
-				ToolCallID: tc.ID,
-			}
-
 			p.Messages = append(p.Messages, m)
 			p.Opts.toolCallResponseCallback(m)
 		}(tc)
@@ -341,21 +341,30 @@ func (p *toolProcessor) do(ctx context.Context) {
 	wg.Wait()
 }
 
-func (p *toolProcessor) doToolCall(ctx context.Context, tc openai.ToolCall) (string, error) {
+func (p *toolProcessor) doToolCall(ctx context.Context, tc openai.ToolCall) (openai.ChatCompletionMessage, error) {
+	msg := openai.ChatCompletionMessage{
+		Role:       openai.ChatMessageRoleTool,
+		ToolCallID: tc.ID,
+	}
+
+	rawArgs := tc.Function.Arguments
+	if strings.TrimSpace(rawArgs) == "" {
+		rawArgs = "{}"
+	}
 	var args map[string]any
-	if err := json.Unmarshal([]byte(tc.Function.Arguments), &args); err != nil {
-		return "", fmt.Errorf("解析工具调用参数失败 (%w)", err)
+	if err := json.Unmarshal([]byte(rawArgs), &args); err != nil {
+		return msg, fmt.Errorf("解析工具调用参数失败 (%w)", err)
 	}
 
 	parts := strings.SplitN(tc.Function.Name, mcpClientNameSeparator, 2)
 	if len(parts) < 2 {
-		return "", fmt.Errorf("工具调用名称格式错误 (%s)", tc.Function.Name)
+		return msg, fmt.Errorf("工具调用名称格式错误 (%s)", tc.Function.Name)
 	}
 
 	clientID, toolName := parts[0], parts[1]
 	client, exist := p.mcpClientByID[clientID]
 	if !exist {
-		return "", fmt.Errorf("未找到 MCP 客户端 (%s)", clientID)
+		return msg, fmt.Errorf("未找到 MCP 客户端 (%s)", clientID)
 	}
 
 	req := mcp.CallToolRequest{
@@ -370,18 +379,63 @@ func (p *toolProcessor) doToolCall(ctx context.Context, tc openai.ToolCall) (str
 
 	rsp, err := client.CallTool(ctx, req)
 	if err != nil {
-		return "", fmt.Errorf("调用 MCP 工具 '%s' 失败 (%w)", toolName, err)
+		return msg, fmt.Errorf("调用 MCP 工具 '%s' 失败 (%w)", toolName, err)
 	}
-	if len(rsp.Content) == 0 {
-		return "", fmt.Errorf("调用 MCP 工具 '%s' 但没有返回", toolName)
-	}
-	text, ok := rsp.Content[0].(mcp.TextContent)
-	if !ok {
-		return "", fmt.Errorf("content is not a text content (%v)", reflect.TypeOf(rsp.Content[0]))
+	if rsp == nil || len(rsp.Content) == 0 {
+		return msg, fmt.Errorf("调用 MCP 工具 '%s' 但没有返回", toolName)
 	}
 
-	p.Opts.debugf("调用工具 '%s', 返回 '%s'", toolName, text.Text)
-	return text.Text, nil
+	hasImage := false
+	for _, c := range rsp.Content {
+		if _, ok := c.(mcp.ImageContent); ok {
+			hasImage = true
+			break
+		}
+	}
+	if !hasImage {
+		text, ok := rsp.Content[0].(mcp.TextContent)
+		if !ok {
+			return msg, fmt.Errorf("content is not a text content (%v)", reflect.TypeOf(rsp.Content[0]))
+		}
+		msg.Content = text.Text
+		p.Opts.debugf("调用工具 '%s', 返回 '%s'", toolName, text.Text)
+		return msg, nil
+	}
+
+	content := make([]openai.ChatMessagePart, 0, len(rsp.Content))
+	for _, c := range rsp.Content {
+		switch v := c.(type) {
+		case mcp.TextContent:
+			content = append(content, openai.ChatMessagePart{
+				Type: openai.ChatMessagePartTypeText,
+				Text: v.Text,
+			})
+		case mcp.ImageContent:
+			content = append(content, imageContentPart(v))
+		default:
+			return msg, fmt.Errorf("content is not a text content (%v)", reflect.TypeOf(c))
+		}
+	}
+	msg.MultiContent = content
+	p.Opts.debugf("调用工具 '%s', 返回图片内容 %d 段", toolName, len(content))
+	return msg, nil
+}
+
+func imageContentPart(v mcp.ImageContent) openai.ChatMessagePart {
+	mime := v.MIMEType
+	if mime == "" {
+		mime = "image/png"
+	}
+	url := v.Data
+	if !strings.HasPrefix(url, "data:") {
+		url = "data:" + mime + ";base64," + v.Data
+	}
+	return openai.ChatMessagePart{
+		Type: openai.ChatMessagePartTypeImageURL,
+		ImageURL: &openai.ChatMessageImageURL{
+			URL: url,
+		},
+	}
 }
 
 // -------- 内部函数 --------

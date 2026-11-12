@@ -7,7 +7,8 @@ import (
 
 	jsonvalue "github.com/Andrew-M-C/go.jsonvalue"
 	"github.com/mark3labs/mcp-go/client/transport"
-	"github.com/sashabaranov/go-openai"
+	"github.com/mark3labs/mcp-go/mcp"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 type options struct {
@@ -214,6 +215,28 @@ func WithInitializedMCP(c InitializedMCPClient, id string) Option {
 // WithTools 设置可调用的工具
 func WithTools(tools ToolManager, id string) Option {
 	return WithInitializedMCP(tools, id)
+}
+
+// WithTool 添加一个独立的工具
+func WithTool(tool Tool) Option {
+	w := wrappedToolManagerWithSingleTool{
+		tool: tool,
+	}
+	return WithInitializedMCP(w, tool.GetTool().Name)
+}
+
+type wrappedToolManagerWithSingleTool struct {
+	tool Tool
+}
+
+func (w wrappedToolManagerWithSingleTool) ListTools(ctx context.Context, request mcp.ListToolsRequest) (*mcp.ListToolsResult, error) {
+	return &mcp.ListToolsResult{
+		Tools: []mcp.Tool{w.tool.GetTool()},
+	}, nil
+}
+
+func (w wrappedToolManagerWithSingleTool) CallTool(ctx context.Context, request mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+	return w.tool.CallTool(ctx, request.Params)
 }
 
 // WithInitializedMCPAndSpecifyTools 同 WithInitializedMCP, 但明确指定只引用其中的某些工具。

@@ -3,7 +3,7 @@ package openai
 import (
 	"strings"
 
-	"github.com/sashabaranov/go-openai"
+	openai "github.com/sashabaranov/go-openai"
 )
 
 // streamBuilder 流式响应构建器
