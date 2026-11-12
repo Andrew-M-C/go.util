@@ -4,7 +4,7 @@ go 1.25.0
 
 require (
 	github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3
-	github.com/Andrew-M-C/go.jsonvalue v1.4.3
+	github.com/Andrew-M-C/go.jsonvalue v1.4.4-0.20260828093412-2fa15a8ccd70
 	github.com/smartystreets/goconvey v1.8.1
 	golang.org/x/net v0.55.0
 	golang.org/x/text v0.37.0

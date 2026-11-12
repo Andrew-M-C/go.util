@@ -1,6 +1,6 @@
 #
 
-GO_VER_MIN=1.19
+GO_VER_MIN=1.25
 SUB_GO_MOD_FILES=$(shell find . -name 'go.mod')
 SUB_GO_MOD_DIRS=$(subst ./,, $(sort $(dir $(SUB_GO_MOD_FILES))))
 

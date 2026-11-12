@@ -11,7 +11,7 @@ require (
 )
 
 require (
-	github.com/Andrew-M-C/go.jsonvalue v1.4.3 // indirect
+	github.com/Andrew-M-C/go.jsonvalue v1.4.4-0.20260828093412-2fa15a8ccd70 // indirect
 	github.com/Andrew-M-C/go.util/slice v0.0.0-20240221044053-8b90aa4683c0 // indirect
 	github.com/Andrew-M-C/go.util/time v0.0.0-20240221044053-8b90aa4683c0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect

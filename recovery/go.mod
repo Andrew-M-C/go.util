@@ -12,10 +12,10 @@ require (
 	github.com/Andrew-M-C/go-bytesize v0.0.0-20230105080248-c93b078d58b3 // indirect
 	github.com/Andrew-M-C/go.objectid v1.0.3 // indirect
 	github.com/Andrew-M-C/go.util/time v1.0.1-0.20260112084229-7b0e1916deb4 // indirect
-	github.com/fatih/color v1.18.0 // indirect
+	github.com/fatih/color v1.19.0 // indirect
 	github.com/gopherjs/gopherjs v1.17.2 // indirect
 	github.com/jtolds/gls v4.20.0+incompatible // indirect
-	github.com/mattn/go-colorable v0.1.13 // indirect
+	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/smarty/assertions v1.15.0 // indirect
 	github.com/valyala/fastrand v1.1.0 // indirect
